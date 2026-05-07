@@ -1,0 +1,9 @@
+.DS_Store
+.next/
+.playwright-cli/
+node_modules/
+tsconfig.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env*.local
