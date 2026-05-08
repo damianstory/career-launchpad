@@ -7,10 +7,21 @@ export function applyContentFilters(
   if (!filters.category && !filters.format) return content;
 
   return content.filter((item) => {
-    if (filters.category && item.category !== filters.category) return false;
+    if (filters.category && !item.categories.includes(filters.category)) return false;
     if (filters.format && item.format !== filters.format) return false;
     return true;
   });
+}
+
+export function orderContentForFeed(
+  content: LaunchpadContent[],
+  filters: ContentFilters
+): LaunchpadContent[] {
+  if (filters.format) return content;
+
+  const videos = content.filter((item) => item.format === 'video');
+  const nonVideos = content.filter((item) => item.format !== 'video');
+  return [...videos, ...nonVideos];
 }
 
 export function getContentBySlug(
@@ -48,6 +59,8 @@ export function getYouTubeId(url: string | undefined): string | null {
     if (parsed.hostname.includes('youtu.be')) return parsed.pathname.slice(1);
     if (parsed.searchParams.has('v')) return parsed.searchParams.get('v');
     const embedMatch = parsed.pathname.match(/\/embed\/([^/?]+)/);
+    const shortsMatch = parsed.pathname.match(/\/shorts\/([^/?]+)/);
+    if (shortsMatch?.[1]) return shortsMatch[1];
     return embedMatch?.[1] ?? null;
   } catch {
     return null;

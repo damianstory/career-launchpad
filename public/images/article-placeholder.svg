@@ -1,0 +1,22 @@
+<svg width="800" height="450" viewBox="0 0 800 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="800" height="450" fill="#F4F4F5"/>
+
+  <!-- Document icon -->
+  <g transform="translate(340, 145)">
+    <!-- Paper -->
+    <rect x="0" y="0" width="120" height="160" rx="8" fill="white" stroke="#D4D4D8" stroke-width="2"/>
+
+    <!-- Folded corner -->
+    <path d="M90 0 L120 30 L90 30 Z" fill="#E4E4E7"/>
+    <path d="M90 0 L120 30" stroke="#D4D4D8" stroke-width="2"/>
+
+    <!-- Text lines -->
+    <rect x="20" y="50" width="80" height="8" rx="2" fill="#0092FF"/>
+    <rect x="20" y="70" width="70" height="6" rx="2" fill="#D4D4D8"/>
+    <rect x="20" y="85" width="80" height="6" rx="2" fill="#D4D4D8"/>
+    <rect x="20" y="100" width="60" height="6" rx="2" fill="#D4D4D8"/>
+    <rect x="20" y="120" width="75" height="6" rx="2" fill="#D4D4D8"/>
+    <rect x="20" y="135" width="50" height="6" rx="2" fill="#D4D4D8"/>
+  </g>
+</svg>

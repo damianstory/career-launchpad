@@ -122,6 +122,53 @@ input {
   outline-offset: 4px;
 }
 
+.learn-more-cta__button {
+  background: var(--primary-blue, #0092ff);
+  color: #ffffff;
+  border: 0;
+  box-shadow:
+    0 10px 24px -8px rgba(15, 23, 42, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+  transform: translateY(0);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    filter 140ms ease;
+  will-change: transform;
+}
+
+.learn-more-cta__button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 0;
+  box-shadow:
+    0 10px 24px -8px rgba(15, 23, 42, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+    0 0 0 6px var(--primary-blue, #0092ff);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .learn-more-cta__button:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 14px 28px -10px rgba(15, 23, 42, 0.55),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    filter: brightness(1.04);
+  }
+
+  .learn-more-cta__button:focus-visible:hover {
+    box-shadow:
+      0 14px 28px -10px rgba(15, 23, 42, 0.55),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+      0 0 0 6px var(--primary-blue, #0092ff);
+  }
+}
+
+.learn-more-cta__button:active {
+  transform: translateY(0);
+  transition-duration: 60ms;
+  filter: brightness(0.98);
+}
+
 @keyframes lp-fade-in {
   from {
     opacity: 0;

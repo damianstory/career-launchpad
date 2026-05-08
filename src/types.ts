@@ -10,22 +10,34 @@ export type CategorySlug =
 
 export type ContentFormat = 'video' | 'article' | 'playbook';
 
+export type VideoOrientation = 'vertical' | 'horizontal';
+
+export interface LaunchpadCategory {
+  slug: CategorySlug;
+  name: string;
+  displayOrder: number;
+}
+
 export interface LaunchpadContent {
   id: string;
   slug: string;
   title: string;
   description: string;
-  category: CategorySlug;
+  categories: CategorySlug[];
+  primaryCategory: CategorySlug;
   format: ContentFormat;
   thumbnailUrl: string;
+  publishedAt: string;
   mediaUrl?: string;
   articleUrl?: string;
+  articleSourceName?: string;
   durationSeconds?: number;
-  playbookContent?: string[];
+  videoOrientation?: VideoOrientation;
+  readingTimeMinutes?: number;
   learnMore: {
-    whyItMatters: string;
-    planningConnection: string;
-    takeaway: string;
+    whyItMatters?: string;
+    planningConnection?: string;
+    takeaway?: string;
     relatedContentIds: string[];
   };
 }
@@ -41,6 +53,7 @@ export type AnalyticsEventType =
   | 'content_open'
   | 'video_play'
   | 'video_progress'
+  | 'video_complete'
   | 'learn_more_open'
   | 'category_filter'
   | 'format_filter'

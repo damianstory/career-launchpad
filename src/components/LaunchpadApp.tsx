@@ -1,16 +1,13 @@
 'use client';
 
 import {
-  ArrowRight,
+  ArrowUp,
   ArrowUpRight,
   BookOpen,
-  Bookmark,
-  BookmarkCheck,
   Brain,
   Briefcase,
   ChevronsDown,
   Clipboard,
-  ClipboardList,
   Clock,
   Eye,
   GraduationCap,
@@ -29,6 +26,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   type CSSProperties,
   type ComponentType,
@@ -40,16 +38,17 @@ import {
   useState,
 } from 'react';
 
-import { categories, formats, launchpadContent } from '@/data/content';
+import { formats } from '@/data/content';
 import {
   applyContentFilters,
   formatDuration,
   getContentBySlug,
   getRelatedContent,
   getYouTubeId,
+  orderContentForFeed,
 } from '@/lib/content';
 import { trackEvent } from '@/lib/analytics';
-import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadContent } from '@/types';
+import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types';
 
 const LearnMorePanel = dynamic(
   () => import('@/components/LearnMorePanel').then((mod) => mod.LearnMorePanel),
@@ -67,12 +66,89 @@ const BORDER = '#E5E9F1';
 const FEED_NUDGE_KEY = 'career-launchpad-feed-nudge-seen';
 const FEED_TRANSITION_MS = 280;
 const FEED_NAV_LOCK_MS = 320;
+const BRAND_MARK_SRC = '/launchpad-logo.svg';
 
 type AutoplayMode = 'audible' | 'muted-fallback';
 type FeedDirection = 'next' | 'prev';
 type FeedMediaVariant = 'mobile' | 'desktop-immersive';
 
-type IconCmp = ComponentType<{ size?: number; className?: string; strokeWidth?: number; style?: CSSProperties }>;
+type IconCmp = ComponentType<{
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
+  style?: CSSProperties;
+  fill?: string;
+}>;
+
+function BrandMark({ size }: { size: number }) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: size,
+        height: size,
+        flexShrink: 0,
+        display: 'block',
+        backgroundImage: `url(${BRAND_MARK_SRC})`,
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 'contain',
+      }}
+    />
+  );
+}
+
+function LearnMoreCta({
+  format,
+  variant,
+  onClick,
+}: {
+  format: ContentFormat;
+  variant: 'mobile' | 'desktop';
+  onClick: () => void;
+}) {
+  const isMobileVariant = variant === 'mobile';
+  const isArticle = format === 'article';
+  const label = isArticle ? 'Read it' : 'Learn More';
+
+  return (
+    <div
+      className="learn-more-cta"
+      style={{
+        position: 'absolute',
+        left: '50%',
+        bottom: isMobileVariant ? 'calc(22px + env(safe-area-inset-bottom))' : -8,
+        transform: isMobileVariant ? 'translateX(-50%)' : 'translate(-50%, 50%)',
+        zIndex: isMobileVariant ? 8 : 5,
+        width: isMobileVariant ? 'min(60vw, 280px)' : 'min(340px, 72%)',
+        minWidth: isMobileVariant ? 220 : undefined,
+      }}
+    >
+      <button
+        type="button"
+        className="learn-more-cta__button"
+        data-testid="learn-more-primary-cta"
+        data-variant={variant}
+        onClick={onClick}
+        style={{
+          width: '100%',
+          height: isMobileVariant ? 56 : 58,
+          borderRadius: 'var(--radius-xl, 16px)',
+          fontSize: isMobileVariant ? 15 : 16,
+          fontWeight: 800,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          letterSpacing: 0,
+        }}
+      >
+        {label} <ArrowUp size={isMobileVariant ? 16 : 18} />
+      </button>
+    </div>
+  );
+}
 
 type YouTubePlayerInstance = {
   playVideo: () => void;
@@ -119,7 +195,7 @@ const CATEGORY_ICON: Record<CategorySlug, IconCmp> = {
   'how-i-got-here': MapPin,
   'problems-to-solve': Puzzle,
   'post-secondary': GraduationCap,
-  'job-board': ClipboardList,
+  'job-board': ListChecks,
 };
 
 const CATEGORY_BLOCK_BG: Record<CategorySlug, string> = {
@@ -139,6 +215,12 @@ const FORMAT_ICON: Record<ContentFormat, IconCmp> = {
   playbook: ListChecks,
 };
 
+const FORMAT_LABEL: Record<ContentFormat, string> = {
+  video: 'Video',
+  article: 'Article',
+  playbook: 'Playbook',
+};
+
 function readSavedIds(): string[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -153,16 +235,25 @@ function writeSavedIds(ids: string[]) {
   window.localStorage.setItem(SAVED_KEY, JSON.stringify(ids));
 }
 
-function fmtViews(n: number | undefined): string {
-  if (!n) return '0';
-  if (n < 1000) return String(n);
-  if (n < 10000) return (n / 1000).toFixed(1) + 'K';
-  if (n < 1000000) return Math.round(n / 1000) + 'K';
-  return (n / 1000000).toFixed(1) + 'M';
+function categoryLabel(categories: LaunchpadCategory[], slug: CategorySlug): string {
+  return categories.find((c) => c.slug === slug)?.name ?? slug;
 }
 
-function categoryLabel(slug: CategorySlug): string {
-  return categories.find((c) => c.slug === slug)?.label ?? slug;
+function categoryShortLabel(category: LaunchpadCategory): string {
+  if (category.slug === 'emerging-careers') return 'Emerging';
+  if (category.slug === 'how-i-got-here') return 'Paths';
+  if (category.slug === 'problems-to-solve') return 'Problems';
+  if (category.slug === 'job-board') return 'Jobs';
+  return category.name;
+}
+
+function hasLearnMore(item: LaunchpadContent): boolean {
+  return Boolean(
+    item.learnMore.whyItMatters ||
+      item.learnMore.planningConnection ||
+      item.learnMore.takeaway ||
+      item.learnMore.relatedContentIds.length
+  );
 }
 
 function useIsMobile(): boolean {
@@ -346,7 +437,20 @@ function useFeedNavigation(
   }, [disabled, feedRef, onNavigate]);
 }
 
-export function LaunchpadApp() {
+type LaunchpadAppProps = {
+  initialContent: LaunchpadContent[];
+  initialCategories: LaunchpadCategory[];
+  initialContentSlug?: string | null;
+};
+
+export function LaunchpadApp({
+  initialContent,
+  initialCategories,
+  initialContentSlug = null,
+}: LaunchpadAppProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState<ContentFilters>({ category: null, format: null });
   const [query, setQuery] = useState('');
   const [feedIdx, setFeedIdx] = useState(0);
@@ -359,20 +463,27 @@ export function LaunchpadApp() {
   const [playingContentId, setPlayingContentId] = useState<string | null>(null);
   const [autoplayMode, setAutoplayMode] = useState<AutoplayMode>('audible');
   const toastTimer = useRef<number | null>(null);
+  const navSurfaceRef = useRef<HTMLDivElement | null>(null);
   const feedDeckRef = useRef<HTMLDivElement | null>(null);
   const navLockedUntilRef = useRef(0);
   const activePlayerRef = useRef<YouTubePlayerInstance | null>(null);
   const isMobile = useIsMobile();
   const reducedMotion = usePrefersReducedMotion();
+  const previewContent = useMemo(
+    () => initialContent.filter((content) => content.format !== 'playbook'),
+    [initialContent]
+  );
 
   const filteredContent = useMemo(() => {
-    const base = applyContentFilters(launchpadContent, filters);
-    if (!query.trim()) return base;
-    const q = query.trim().toLowerCase();
-    return base.filter((item) =>
-      [item.title, item.description, item.category, item.format].join(' ').toLowerCase().includes(q)
-    );
-  }, [filters, query]);
+    const base = applyContentFilters(previewContent, filters);
+    const visible = query.trim()
+      ? base.filter((item) => {
+          const q = query.trim().toLowerCase();
+          return [item.title, item.description, ...item.categories, item.format].join(' ').toLowerCase().includes(q);
+        })
+      : base;
+    return orderContentForFeed(visible, filters);
+  }, [filters, previewContent, query]);
 
   // Reset feedIdx when filters/query change — React-recommended "store info from
   // previous renders" pattern: detect the change during render and reset before paint.
@@ -385,6 +496,7 @@ export function LaunchpadApp() {
 
   const safeIdx = filteredContent.length === 0 ? 0 : Math.min(feedIdx, filteredContent.length - 1);
   const item: LaunchpadContent | undefined = filteredContent[safeIdx];
+  const nextItem = filteredContent[safeIdx + 1] ?? null;
   const effectivePlayingContentId = item?.id === playingContentId && isPlayableContent(item) ? playingContentId : null;
 
   const showToast = useCallback((message: string) => {
@@ -396,30 +508,29 @@ export function LaunchpadApp() {
   // Initial load
   useEffect(() => {
     queueMicrotask(() => setSavedIds(readSavedIds()));
-    trackEvent('entry_view', { metadata: { contentCount: launchpadContent.length } });
-  }, []);
+    trackEvent('entry_view', { metadata: { contentCount: previewContent.length } });
+  }, [previewContent.length]);
 
   // Deep link
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const contentSlug = params.get('content');
-    const linked = getContentBySlug(launchpadContent, contentSlug);
+    const linked = getContentBySlug(previewContent, initialContentSlug ?? null);
     if (linked) {
       queueMicrotask(() => setSelected(linked));
       trackEvent('learn_more_open', { contentId: linked.id, metadata: { source: 'direct_link' } });
-    } else if (contentSlug) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('content');
-      window.history.replaceState({}, '', url);
-      queueMicrotask(() => showToast('That content is not available anymore'));
+    } else if (initialContentSlug) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('content');
+      const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(nextUrl);
+      queueMicrotask(() => showToast('Content not available'));
     }
     const onPop = () => {
       const next = new URLSearchParams(window.location.search);
-      setSelected(getContentBySlug(launchpadContent, next.get('content')) ?? null);
+      setSelected(getContentBySlug(previewContent, next.get('content')) ?? null);
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, [showToast]);
+  }, [initialContentSlug, pathname, previewContent, router, searchParams, showToast]);
 
   const setCategory = useCallback((category: CategorySlug | null) => {
     setFilters((current) => ({ ...current, category }));
@@ -479,9 +590,9 @@ export function LaunchpadApp() {
   );
 
   const navigateFeed = useCallback(
-    (direction: FeedDirection) => {
+    (direction: FeedDirection, options: { ignoreLock?: boolean } = {}) => {
       const t = nowMs();
-      if (t < navLockedUntilRef.current) return false;
+      if (!options.ignoreLock && t < navLockedUntilRef.current) return false;
 
       const delta = direction === 'next' ? 1 : -1;
       const nextIdx = Math.max(0, Math.min(filteredContent.length - 1, safeIdx + delta));
@@ -507,7 +618,7 @@ export function LaunchpadApp() {
     navigateFeed('prev');
   }, [navigateFeed]);
 
-  useFeedNavigation(feedDeckRef, {
+  useFeedNavigation(navSurfaceRef, {
     disabled: Boolean(selected || searchOpen),
     onNavigate: navigateFeed,
   });
@@ -521,6 +632,14 @@ export function LaunchpadApp() {
   const stopPlayback = useCallback(() => {
     setPlayingContentId(null);
   }, []);
+
+  const handleVideoEnd = useCallback(() => {
+    if (item) {
+      trackEvent('video_complete', { contentId: item.id });
+    }
+    const advanced = navigateFeed('next', { ignoreLock: true });
+    if (!advanced) setPlayingContentId(null);
+  }, [item, navigateFeed]);
 
   const handlePlayerReady = useCallback((player: YouTubePlayerInstance | null) => {
     activePlayerRef.current = player;
@@ -560,7 +679,7 @@ export function LaunchpadApp() {
     lastImpressionId.current = item.id;
     trackEvent('feed_impression', {
       contentId: item.id,
-      metadata: { category: item.category, format: item.format },
+      metadata: { category: item.primaryCategory, categories: item.categories, format: item.format },
     });
   }, [item]);
 
@@ -578,6 +697,9 @@ export function LaunchpadApp() {
   const isSaved = savedIds.includes(item.id);
   const stageProps = {
     item,
+    nextItem,
+    categories: initialCategories,
+    hasLearnMore: hasLearnMore(item),
     isSaved,
     activeCategory: filters.category,
     activeFormat: filters.format,
@@ -600,8 +722,10 @@ export function LaunchpadApp() {
     autoplayMode,
     onPlay: () => playItem(item),
     onPause: stopPlayback,
+    onVideoEnd: handleVideoEnd,
     onAutoplayModeChange: setAutoplayMode,
     onPlayerReady: handlePlayerReady,
+    navSurfaceRef,
   };
 
   return (
@@ -611,7 +735,8 @@ export function LaunchpadApp() {
       {selected && (
         <LearnMorePanel
           item={selected}
-          related={getRelatedContent(launchpadContent, selected)}
+          categories={initialCategories}
+          related={getRelatedContent(initialContent, selected)}
           isSaved={savedIds.includes(selected.id)}
           mobile={isMobile}
           onClose={closePanel}
@@ -635,6 +760,8 @@ export function LaunchpadApp() {
 
       {searchOpen && (
         <SearchModal
+          content={previewContent}
+          categories={initialCategories}
           mobile={isMobile}
           onClose={() => setSearchOpen(false)}
           onPick={(picked) => {
@@ -654,12 +781,15 @@ export function LaunchpadApp() {
 // ============================================================
 type StageProps = {
   item: LaunchpadContent;
+  nextItem: LaunchpadContent | null;
+  categories: LaunchpadCategory[];
+  hasLearnMore: boolean;
   isSaved: boolean;
   activeCategory: CategorySlug | null;
   activeFormat: ContentFormat | null;
   setCategory: (slug: CategorySlug | null) => void;
   setFormat: (format: ContentFormat | null) => void;
-  onLearnMore: () => void;
+  onLearnMore?: () => void;
   onSave: () => void;
   onShare: () => void;
   onSearch: () => void;
@@ -669,6 +799,7 @@ type StageProps = {
   feedTotal: number;
   onNext: () => void;
   onPrev: () => void;
+  navSurfaceRef: RefObject<HTMLDivElement | null>;
   feedDeckRef: RefObject<HTMLDivElement | null>;
   navDirection: FeedDirection;
   reducedMotion: boolean;
@@ -676,12 +807,16 @@ type StageProps = {
   autoplayMode: AutoplayMode;
   onPlay: () => void;
   onPause: () => void;
+  onVideoEnd: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: YouTubePlayerInstance | null) => void;
 };
 
 function DesktopStage({
   item,
+  nextItem,
+  categories,
+  hasLearnMore,
   isSaved,
   activeCategory,
   activeFormat,
@@ -695,6 +830,7 @@ function DesktopStage({
   setFormatMenuOpen,
   feedIdx,
   feedTotal,
+  navSurfaceRef,
   feedDeckRef,
   navDirection,
   reducedMotion,
@@ -702,14 +838,19 @@ function DesktopStage({
   autoplayMode,
   onPlay,
   onPause,
+  onVideoEnd,
   onAutoplayModeChange,
   onPlayerReady,
 }: StageProps) {
-  const blockColor = CATEGORY_BLOCK_BG[item.category] ?? BLUE;
+  const blockColor = CATEGORY_BLOCK_BG[item.primaryCategory] ?? BLUE;
   const DESKTOP_STAGE_MAX_WIDTH = 1720;
 
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div
+      ref={navSurfaceRef}
+      data-testid="launchpad-navigation-surface"
+      style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+    >
       {/* Header */}
       <header
         style={{
@@ -730,24 +871,10 @@ function DesktopStage({
             gap: 12,
             fontWeight: 900,
             fontSize: 18,
-            letterSpacing: '-0.01em',
+            letterSpacing: 0,
           }}
         >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: BLUE,
-              display: 'grid',
-              placeItems: 'center',
-              color: '#fff',
-              fontWeight: 900,
-            }}
-            aria-hidden
-          >
-            m
-          </div>
+          <BrandMark size={32} />
           Career LaunchPAD
         </div>
         <div style={{ flex: 1 }} />
@@ -825,7 +952,7 @@ function DesktopStage({
             <CategoryChip
               key={c.slug}
               slug={c.slug}
-              label={c.label}
+              label={c.name}
               icon={CATEGORY_ICON[c.slug]}
               active={activeCategory === c.slug}
               onClick={() => setCategory(c.slug)}
@@ -869,6 +996,7 @@ function DesktopStage({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <div style={{ transform: 'rotate(-2deg)', display: 'inline-block' }}>
               <div
+                data-testid="desktop-category-pill"
                 style={{
                   background: blockColor,
                   color: '#fff',
@@ -880,9 +1008,10 @@ function DesktopStage({
                   display: 'inline-block',
                 }}
               >
-                {categoryLabel(item.category)}
+                {categoryLabel(categories, item.primaryCategory)}
               </div>
             </div>
+            <FormatPill type={item.format} />
           </div>
 
           <h1
@@ -925,12 +1054,12 @@ function DesktopStage({
               <Meta icon={Clock} label={formatDuration(item.durationSeconds) ?? ''} />
             )}
             {item.format === 'article' && <Meta icon={BookOpen} label="Article" />}
-            {item.format === 'playbook' && item.playbookContent && (
-              <Meta icon={ListChecks} label={`${item.playbookContent.length} steps`} />
+            {item.format === 'article' && item.readingTimeMinutes && (
+              <Meta icon={Clock} label={`${item.readingTimeMinutes} min read`} />
             )}
             <Meta
               icon={Eye}
-              label={`${fmtViews(deriveViews(item))} views · item ${feedIdx + 1} / ${feedTotal}`}
+              label={`Item ${feedIdx + 1} / ${feedTotal}`}
             />
           </div>
 
@@ -948,27 +1077,6 @@ function DesktopStage({
             {pullQuoteFor(item)}
           </div>
 
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
-            <button
-              onClick={onLearnMore}
-              style={{
-                background: BLUE,
-                color: '#fff',
-                border: 'none',
-                padding: '14px 24px',
-                borderRadius: 12,
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                boxShadow: `0 8px 20px ${BLUE}55`,
-              }}
-            >
-              Learn more <ArrowRight size={16} />
-            </button>
-          </div>
         </div>
 
         {/* CENTER: media */}
@@ -983,6 +1091,7 @@ function DesktopStage({
           <FeedMediaDeck
             deckRef={feedDeckRef}
             item={item}
+            nextItem={nextItem}
             blockColor={blockColor}
             variant="desktop-immersive"
             direction={navDirection}
@@ -992,9 +1101,10 @@ function DesktopStage({
             autoplayMode={autoplayMode}
             onPlay={onPlay}
             onPause={onPause}
+            onVideoEnd={onVideoEnd}
             onSave={onSave}
             onShare={onShare}
-            onLearnMore={onLearnMore}
+            onLearnMore={hasLearnMore ? onLearnMore : undefined}
             onAutoplayModeChange={onAutoplayModeChange}
             onPlayerReady={onPlayerReady}
           />
@@ -1010,6 +1120,8 @@ function DesktopStage({
 // ============================================================
 function MobileStage({
   item,
+  categories,
+  hasLearnMore,
   isSaved,
   activeCategory,
   setCategory,
@@ -1017,6 +1129,7 @@ function MobileStage({
   onSave,
   onShare,
   onSearch,
+  navSurfaceRef,
   feedDeckRef,
   navDirection,
   reducedMotion,
@@ -1024,11 +1137,14 @@ function MobileStage({
   autoplayMode,
   onPlay,
   onPause,
+  onVideoEnd,
   onAutoplayModeChange,
   onPlayerReady,
 }: StageProps) {
   return (
     <div
+      ref={navSurfaceRef}
+      data-testid="launchpad-navigation-surface"
       style={{
         width: '100%',
         height: '100vh',
@@ -1053,21 +1169,7 @@ function MobileStage({
           background: SURFACE,
         }}
       >
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 6,
-            background: BLUE,
-            display: 'grid',
-            placeItems: 'center',
-            color: '#fff',
-            fontWeight: 900,
-            fontSize: 14,
-          }}
-        >
-          m
-        </div>
+        <BrandMark size={28} />
         <div style={{ fontWeight: 900, fontSize: 15 }}>Career LaunchPAD</div>
         <div style={{ flex: 1 }} />
         <button
@@ -1103,7 +1205,7 @@ function MobileStage({
           <CategoryChip
             key={c.slug}
             slug={c.slug}
-            label={c.shortLabel}
+            label={categoryShortLabel(c)}
             icon={CATEGORY_ICON[c.slug]}
             active={activeCategory === c.slug}
             onClick={() => setCategory(c.slug)}
@@ -1117,7 +1219,8 @@ function MobileStage({
         <FeedMediaDeck
           deckRef={feedDeckRef}
           item={item}
-          blockColor={CATEGORY_BLOCK_BG[item.category]}
+          nextItem={null}
+          blockColor={CATEGORY_BLOCK_BG[item.primaryCategory]}
           variant="mobile"
           direction={navDirection}
           reducedMotion={reducedMotion}
@@ -1126,9 +1229,10 @@ function MobileStage({
           autoplayMode={autoplayMode}
           onPlay={onPlay}
           onPause={onPause}
+          onVideoEnd={onVideoEnd}
           onSave={onSave}
           onShare={onShare}
-          onLearnMore={onLearnMore}
+          onLearnMore={hasLearnMore ? onLearnMore : undefined}
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
         />
@@ -1146,9 +1250,8 @@ function MobileStage({
             zIndex: 6,
           }}
         >
-          <MobileRailBtn icon={Heart} label={fmtViews(deriveViews(item))} />
           <MobileRailBtn
-            icon={isSaved ? BookmarkCheck : Bookmark}
+            icon={Heart}
             label="Save"
             active={isSaved}
             onClick={onSave}
@@ -1189,38 +1292,9 @@ function MobileStage({
           </div>
         </div>
 
-        {/* Learn More — overlaid bottom */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 16,
-            right: 80,
-            bottom: 18,
-            zIndex: 7,
-          }}
-        >
-          <button
-            onClick={onLearnMore}
-            style={{
-              width: '100%',
-              background: BLUE,
-              color: '#fff',
-              border: 'none',
-              padding: '13px 18px',
-              borderRadius: 12,
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              boxShadow: '0 8px 24px rgba(0,146,255,0.45)',
-            }}
-          >
-            Learn more <ArrowRight size={14} />
-          </button>
-        </div>
+        {hasLearnMore && onLearnMore && (
+          <LearnMoreCta format={item.format} variant="mobile" onClick={onLearnMore} />
+        )}
       </div>
     </div>
   );
@@ -1237,6 +1311,7 @@ type MediaDeckCard = {
 function FeedMediaDeck({
   deckRef,
   item,
+  nextItem,
   blockColor,
   variant,
   direction,
@@ -1246,6 +1321,7 @@ function FeedMediaDeck({
   autoplayMode,
   onPlay,
   onPause,
+  onVideoEnd,
   onSave,
   onShare,
   onLearnMore,
@@ -1254,6 +1330,7 @@ function FeedMediaDeck({
 }: {
   deckRef: RefObject<HTMLDivElement | null>;
   item: LaunchpadContent;
+  nextItem: LaunchpadContent | null;
   blockColor: string;
   variant: FeedMediaVariant;
   direction: FeedDirection;
@@ -1263,9 +1340,10 @@ function FeedMediaDeck({
   autoplayMode: AutoplayMode;
   onPlay: () => void;
   onPause: () => void;
+  onVideoEnd: () => void;
   onSave: () => void;
   onShare: () => void;
-  onLearnMore: () => void;
+  onLearnMore?: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: YouTubePlayerInstance | null) => void;
 }) {
@@ -1350,8 +1428,12 @@ function FeedMediaDeck({
       };
 
   const cardStyle = (role: 'current' | 'previous'): CSSProperties => {
+    const baseStyle: CSSProperties = isMobileVariant
+      ? { position: 'absolute', inset: 0 }
+      : { position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' };
+
     if (!transitioning || reducedMotion) {
-      return { position: 'absolute', inset: 0, transform: 'translate3d(0, 0, 0)', opacity: 1 };
+      return { ...baseStyle, transform: 'translate3d(0, 0, 0)', opacity: 1 };
     }
 
     const enteringFrom = transitionDirection === 'next' ? '100%' : '-100%';
@@ -1359,8 +1441,7 @@ function FeedMediaDeck({
     const isPreparing = transitionPhase === 'prepare';
 
     return {
-      position: 'absolute',
-      inset: 0,
+      ...baseStyle,
       transform:
         role === 'current'
           ? `translate3d(0, ${isPreparing ? enteringFrom : '0'}, 0)`
@@ -1387,11 +1468,13 @@ function FeedMediaDeck({
           {!isMobileVariant && <ImmersiveBackdrop item={previous.item} />}
           <MediaStage
             item={previous.item}
+            nextItem={null}
             variant={variant}
             isPlaying={false}
             autoplayMode={autoplayMode}
             onPlay={onPlay}
             onPause={onPause}
+            onVideoEnd={onVideoEnd}
             onAutoplayModeChange={onAutoplayModeChange}
             onPlayerReady={onPlayerReady}
           />
@@ -1401,11 +1484,14 @@ function FeedMediaDeck({
         {!isMobileVariant && <ImmersiveBackdrop item={current.item} />}
         <MediaStage
           item={current.item}
+          nextItem={nextItem}
           variant={variant}
           isPlaying={isPlaying}
           autoplayMode={autoplayMode}
           onPlay={onPlay}
           onPause={onPause}
+          onVideoEnd={onVideoEnd}
+          onLearnMore={onLearnMore}
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
         />
@@ -1465,7 +1551,7 @@ function DesktopOverlayRail({
   isSaved: boolean;
   onSave: () => void;
   onShare: () => void;
-  onLearnMore: () => void;
+  onLearnMore?: () => void;
 }) {
   return (
     <div
@@ -1483,13 +1569,13 @@ function DesktopOverlayRail({
       }}
     >
       <DesktopRailBtn
-        icon={isSaved ? BookmarkCheck : Bookmark}
+        icon={Heart}
         label={isSaved ? 'Saved' : 'Save'}
         active={isSaved}
         onClick={onSave}
       />
       <DesktopRailBtn icon={Share2} label="Share" onClick={onShare} />
-      <DesktopRailBtn icon={Info} label="More" onClick={onLearnMore} />
+      {onLearnMore && <DesktopRailBtn icon={Info} label="More" onClick={onLearnMore} />}
       <div
         data-testid="desktop-scroll-hint"
         style={{
@@ -1527,17 +1613,20 @@ function YouTubePlayer({
   title,
   autoplayMode,
   onAutoplayModeChange,
+  onVideoEnd,
   onPlayerReady,
 }: {
   videoId: string;
   title: string;
   autoplayMode: AutoplayMode;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
+  onVideoEnd: () => void;
   onPlayerReady: (player: YouTubePlayerInstance | null) => void;
 }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const playedRef = useRef(false);
+  const endedRef = useRef(false);
   const fallbackTimerRef = useRef<number | null>(null);
   const initialAutoplayModeRef = useRef(autoplayMode);
   const [hasPlayed, setHasPlayed] = useState(false);
@@ -1618,6 +1707,10 @@ function YouTubePlayer({
               playedRef.current = true;
               setHasPlayed(true);
               clearFallbackTimer();
+            } else if (event.data === YT.PlayerState.ENDED && !endedRef.current) {
+              endedRef.current = true;
+              clearFallbackTimer();
+              onVideoEnd();
             }
           },
           onAutoplayBlocked: fallbackToMuted,
@@ -1639,7 +1732,7 @@ function YouTubePlayer({
       onPlayerReady(null);
       if (hostElement) hostElement.textContent = '';
     };
-  }, [onAutoplayModeChange, onPlayerReady, title, videoId]);
+  }, [onAutoplayModeChange, onPlayerReady, onVideoEnd, title, videoId]);
 
   return (
     <div
@@ -1661,22 +1754,28 @@ function YouTubePlayer({
 
 function MediaStage({
   item,
+  nextItem,
   variant,
   isPlaying,
   autoplayMode,
   onPlay,
   onPause,
+  onLearnMore,
   onAutoplayModeChange,
   onPlayerReady,
+  onVideoEnd,
 }: {
   item: LaunchpadContent;
+  nextItem: LaunchpadContent | null;
   variant: FeedMediaVariant;
   isPlaying: boolean;
   autoplayMode: AutoplayMode;
   onPlay: () => void;
   onPause: () => void;
+  onLearnMore?: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: YouTubePlayerInstance | null) => void;
+  onVideoEnd: () => void;
 }) {
   const progressTracked = useRef(new Set<number>());
   const videoId = getYouTubeId(item.mediaUrl);
@@ -1758,6 +1857,7 @@ function MediaStage({
               autoplayMode={autoplayMode}
               onAutoplayModeChange={onAutoplayModeChange}
               onPlayerReady={onPlayerReady}
+              onVideoEnd={onVideoEnd}
             />
             <div
               data-testid="youtube-scroll-overlay"
@@ -1772,59 +1872,18 @@ function MediaStage({
             style={{
               position: 'absolute',
               inset: 0,
-              padding: '20px 20px 92px',
+              padding: '20px 20px calc(136px + env(safe-area-inset-bottom))',
               display: 'flex',
               alignItems: 'flex-end',
               color: '#fff',
             }}
           >
-            <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.01em' }}>
+            <div
+              data-testid="media-article-copy"
+              style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.01em' }}
+            >
               {item.title}
             </div>
-          </div>
-        )}
-        {item.format === 'playbook' && item.playbookContent && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              padding: '20px 20px 92px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              color: '#fff',
-            }}
-          >
-            {item.playbookContent.slice(0, 3).map((step, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  marginBottom: 6,
-                }}
-              >
-                <span
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.22)',
-                    backdropFilter: 'blur(6px)',
-                    display: 'grid',
-                    placeItems: 'center',
-                    fontSize: 11,
-                    fontWeight: 800,
-                  }}
-                >
-                  {i + 1}
-                </span>
-                {step}
-              </div>
-            ))}
           </div>
         )}
       </div>
@@ -1838,10 +1897,13 @@ function MediaStage({
       style={{
         position: 'relative',
         aspectRatio: '9 / 16',
-        height: 'min(calc(100% - 48px), 860px)',
-        maxWidth: 'calc(100% - 112px)',
+        height: 'min(calc(100dvh - 214px), 1040px)',
+        maxHeight: 'calc(100% - 56px)',
+        maxWidth: 'calc(100% - 132px)',
         width: 'auto',
-        margin: '24px auto',
+        margin: '0 auto',
+        overflow: 'visible',
+        transform: 'translateY(-14px)',
         zIndex: 2,
       }}
     >
@@ -1871,7 +1933,6 @@ function MediaStage({
               'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 30%, transparent 65%, rgba(0,0,0,0.6) 100%)',
           }}
         />
-        <FormatBadge type={item.format} top={44} left={14} />
         {isPlayableVideo && !isPlaying && (
           <button
             onClick={onPlay}
@@ -1910,6 +1971,7 @@ function MediaStage({
               autoplayMode={autoplayMode}
               onAutoplayModeChange={onAutoplayModeChange}
               onPlayerReady={onPlayerReady}
+              onVideoEnd={onVideoEnd}
             />
             <div
               data-testid="youtube-scroll-overlay"
@@ -1957,89 +2019,75 @@ function MediaStage({
             style={{
               position: 'absolute',
               inset: 0,
-              padding: '32px 20px 24px',
+              padding: '32px 20px 104px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-end',
               color: '#fff',
             }}
           >
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                opacity: 0.85,
-                marginBottom: 10,
-              }}
-            >
-              The read
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.01em' }}>
-              {item.title}
-            </div>
-          </div>
-        )}
-        {item.format === 'playbook' && item.playbookContent && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              padding: '32px 20px 24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              color: '#fff',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                opacity: 0.85,
-                marginBottom: 12,
-              }}
-            >
-              Playbook
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {item.playbookContent.slice(0, 4).map((step, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 999,
-                      background: 'rgba(255,255,255,0.22)',
-                      backdropFilter: 'blur(6px)',
-                      display: 'grid',
-                      placeItems: 'center',
-                      fontSize: 11,
-                      fontWeight: 800,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {i + 1}
-                  </span>
-                  {step}
-                </div>
-              ))}
+            <div data-testid="media-article-copy">
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  opacity: 0.85,
+                  marginBottom: 10,
+                }}
+              >
+                The read
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.01em' }}>
+                {item.title}
+              </div>
             </div>
           </div>
         )}
       </div>
+      {nextItem && (
+        <div
+          data-testid="desktop-next-card-peek"
+          data-next-slug={nextItem.slug}
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 24px)',
+            left: '50%',
+            width: '90%',
+            aspectRatio: '9 / 16',
+            transform: 'translateX(-50%)',
+            overflow: 'hidden',
+            borderRadius: 14,
+            background: '#000',
+            opacity: 0.82,
+            zIndex: 0,
+            boxShadow: '0 22px 42px rgba(8,8,26,0.26)',
+            pointerEvents: 'none',
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={nextItem.thumbnailUrl}
+            alt=""
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              filter: 'saturate(0.9)',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(8,8,26,0.48))',
+            }}
+          />
+        </div>
+      )}
+      {onLearnMore && <LearnMoreCta format={item.format} variant="desktop" onClick={onLearnMore} />}
     </div>
   );
 }
@@ -2095,10 +2143,9 @@ function HighlightedTitle({ title, accent }: { title: string; accent: string }) 
 // Smaller building blocks
 // ============================================================
 function FormatBadge({ type, top, left }: { type: ContentFormat; top: number; left: number }) {
-  const labels: Record<ContentFormat, string> = { video: 'Video', article: 'Article', playbook: 'Playbook' };
   const Cmp = FORMAT_ICON[type];
   return (
-    <div style={{ position: 'absolute', top, left, zIndex: 3 }}>
+    <div data-testid="media-format-badge" style={{ position: 'absolute', top, left, zIndex: 3 }}>
       <span
         style={{
           display: 'inline-flex',
@@ -2116,8 +2163,35 @@ function FormatBadge({ type, top, left }: { type: ContentFormat; top: number; le
         }}
       >
         <Cmp size={13} />
-        {labels[type]}
+        {FORMAT_LABEL[type]}
       </span>
+    </div>
+  );
+}
+
+function FormatPill({ type }: { type: ContentFormat }) {
+  const Cmp = FORMAT_ICON[type];
+  return (
+    <div
+      data-testid="desktop-format-pill"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 7,
+        border: `1px solid ${BORDER}`,
+        background: SURFACE,
+        color: INK,
+        padding: '6px 12px',
+        fontSize: 11,
+        fontWeight: 800,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        borderRadius: 999,
+        boxShadow: '0 4px 14px rgba(34,34,76,0.06)',
+      }}
+    >
+      <Cmp size={13} />
+      {FORMAT_LABEL[type]}
     </div>
   );
 }
@@ -2208,7 +2282,7 @@ function DesktopRailBtn({
           backdropFilter: 'blur(10px)',
         }}
       >
-        <IconCmp size={21} />
+        <IconCmp size={21} fill={active ? 'currentColor' : 'none'} />
       </span>
       <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.01em' }}>{label}</span>
     </button>
@@ -2253,7 +2327,7 @@ function MobileRailBtn({
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         }}
       >
-        <IconCmp size={16} />
+        <IconCmp size={16} fill={active ? 'currentColor' : 'none'} />
       </div>
       <span
         style={{
@@ -2402,10 +2476,14 @@ function FormatOption({
 // Spotlight Search Modal
 // ============================================================
 function SearchModal({
+  content,
+  categories,
   mobile,
   onClose,
   onPick,
 }: {
+  content: LaunchpadContent[];
+  categories: LaunchpadCategory[];
   mobile: boolean;
   onClose: () => void;
   onPick: (item: LaunchpadContent) => void;
@@ -2426,15 +2504,15 @@ function SearchModal({
   }, [onClose]);
 
   const results = useMemo(() => {
-    if (!q.trim()) return launchpadContent.slice(0, 6);
+    if (!q.trim()) return content.slice(0, 6);
     const needle = q.trim().toLowerCase();
-    return launchpadContent.filter((entry) =>
-      [entry.title, entry.description, entry.category, entry.format]
+    return content.filter((entry) =>
+      [entry.title, entry.description, ...entry.categories, entry.format]
         .join(' ')
         .toLowerCase()
         .includes(needle)
     );
-  }, [q]);
+  }, [content, q]);
 
   return (
     <div
@@ -2476,7 +2554,7 @@ function SearchModal({
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search careers, skills, playbooks…"
+            placeholder="Search careers, skills, articles…"
             style={{
               flex: 1,
               border: 'none',
@@ -2554,7 +2632,7 @@ function SearchModal({
                       gap: 8,
                     }}
                   >
-                    <span>{entry.format}</span> · <span>{categoryLabel(entry.category)}</span>
+                    <span>{entry.format}</span> · <span>{categoryLabel(categories, entry.primaryCategory)}</span>
                   </div>
                 </div>
                 <ArrowUpRight size={16} style={{ color: INK2 }} />
@@ -2650,19 +2728,8 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 // ============================================================
 // Helpers
 // ============================================================
-// Synthesize a stable view count from id so the social rail has a believable number.
-function deriveViews(item: LaunchpadContent): number {
-  let hash = 0;
-  for (let i = 0; i < item.id.length; i += 1) {
-    hash = (hash * 31 + item.id.charCodeAt(i)) >>> 0;
-  }
-  return 800 + (hash % 38000);
-}
-
 function pullQuoteFor(item: LaunchpadContent): string {
-  if (item.format === 'playbook') return 'A small advantage you can use this week. No assignment required.';
-  if (item.format === 'article') return 'Selected by myBlueprint editorial - vetted, recent, Canadian.';
-  return 'Real workdays, real Canadians. Not a recruitment ad.';
+  return item.learnMore.takeaway ?? item.description;
 }
 
 // Suppress unused import warning on Clipboard — kept available for future share UI.

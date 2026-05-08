@@ -3,16 +3,17 @@ import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { launchpadContent } from '@/data/content';
 import { getRelatedContent } from '@/lib/content';
+import { fixtureCategories, fixtureContent } from '@/test/fixtures/content';
 
 import { LearnMorePanel } from './LearnMorePanel';
 
 function renderPanel(overrides: Partial<ComponentProps<typeof LearnMorePanel>> = {}) {
-  const item = overrides.item ?? launchpadContent.find((entry) => entry.format === 'article') ?? launchpadContent[0];
-  const related = overrides.related ?? getRelatedContent(launchpadContent, item);
+  const item = overrides.item ?? fixtureContent.find((entry) => entry.format === 'article') ?? fixtureContent[0];
+  const related = overrides.related ?? getRelatedContent(fixtureContent, item);
   const props: ComponentProps<typeof LearnMorePanel> = {
     item,
+    categories: fixtureCategories,
     related,
     isSaved: false,
     mobile: false,
@@ -29,7 +30,7 @@ function renderPanel(overrides: Partial<ComponentProps<typeof LearnMorePanel>> =
 
 describe('LearnMorePanel', () => {
   it('renders articles as outbound-only previews without an iframe', () => {
-    const article = launchpadContent.find((entry) => entry.id === 'article-first-internship');
+    const article = fixtureContent.find((entry) => entry.id === 'article-first-internship');
     if (!article) throw new Error('Missing article fixture');
 
     const { props } = renderPanel({ item: article });
@@ -38,7 +39,7 @@ describe('LearnMorePanel', () => {
     expect(within(dialog).getByRole('heading', { name: article.title })).toBeInTheDocument();
     expect(within(dialog).queryByTitle(article.title)).not.toBeInTheDocument();
 
-    const outbound = within(dialog).getByRole('link', { name: /open article/i });
+    const outbound = within(dialog).getByRole('link', { name: /open on indeed/i });
     expect(outbound).toHaveAttribute('href', article.articleUrl);
     expect(outbound).toHaveAttribute('target', '_blank');
     expect(outbound).toHaveAttribute('rel', expect.stringContaining('noopener'));
@@ -79,8 +80,8 @@ describe('LearnMorePanel', () => {
   });
 
   it('swaps related content without closing and resets the scroll container to the top', () => {
-    const item = launchpadContent[0];
-    const related = getRelatedContent(launchpadContent, item);
+    const item = fixtureContent[0];
+    const related = getRelatedContent(fixtureContent, item);
     const onRelated = vi.fn();
     const { rerender } = renderPanel({ item, related, onRelated });
     const body = screen.getByTestId('learn-more-body');
@@ -92,7 +93,8 @@ describe('LearnMorePanel', () => {
     rerender(
       <LearnMorePanel
         item={related[0]}
-        related={getRelatedContent(launchpadContent, related[0])}
+        categories={fixtureCategories}
+        related={getRelatedContent(fixtureContent, related[0])}
         isSaved={false}
         mobile={false}
         onClose={vi.fn()}

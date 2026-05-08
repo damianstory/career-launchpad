@@ -1,9 +1,19 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { launchpadContent } from '@/data/content';
+import { fixtureCategories, fixtureContent } from '@/test/fixtures/content';
 
 import { LaunchpadApp } from './LaunchpadApp';
+
+const { replaceMock } = vi.hoisted(() => ({
+  replaceMock: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
+  useRouter: () => ({ replace: replaceMock }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
 
 type PlayerEvents = {
   onReady?: () => void;
@@ -25,13 +35,18 @@ type MockPlayer = {
 
 const players: MockPlayer[] = [];
 let reducedMotion = false;
+let mobileViewport = false;
 
 function installMatchMedia() {
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     writable: true,
     value: vi.fn((query: string) => ({
-      matches: query.includes('prefers-reduced-motion') ? reducedMotion : false,
+      matches: query.includes('prefers-reduced-motion')
+        ? reducedMotion
+        : query.includes('max-width: 860px')
+          ? mobileViewport
+          : false,
       media: query,
       onchange: null,
       addEventListener: vi.fn(),
@@ -81,12 +96,22 @@ function installYouTubeMock() {
   });
 }
 
-function renderLaunchpad() {
-  return render(<LaunchpadApp />);
+function renderLaunchpad(initialContentSlug: string | null = null, content = fixtureContent) {
+  return render(
+    <LaunchpadApp
+      initialContent={content}
+      initialCategories={fixtureCategories}
+      initialContentSlug={initialContentSlug}
+    />
+  );
 }
 
 function feedDeck() {
   return screen.getByTestId('feed-media-deck');
+}
+
+function navigationSurface() {
+  return screen.getByTestId('launchpad-navigation-surface');
 }
 
 function desktopRail() {
@@ -134,11 +159,13 @@ async function flushAsyncWork() {
 beforeEach(() => {
   vi.useFakeTimers();
   reducedMotion = false;
+  mobileViewport = false;
   installMatchMedia();
   installYouTubeMock();
   window.localStorage.clear();
   window.sessionStorage.clear();
   window.history.replaceState({}, '', '/');
+  replaceMock.mockClear();
 });
 
 afterEach(() => {
@@ -148,7 +175,7 @@ afterEach(() => {
 });
 
 describe('LaunchpadApp feed navigation', () => {
-  it('registers cancelable wheel and touchmove listeners on the feed deck and advances once for wheel inertia', async () => {
+  it('registers cancelable wheel and touchmove listeners on the full page surface and advances once for wheel inertia', async () => {
     const elementAdd = vi.spyOn(HTMLElement.prototype, 'addEventListener');
     const windowAdd = vi.spyOn(window, 'addEventListener');
 
@@ -158,53 +185,52 @@ describe('LaunchpadApp feed navigation', () => {
     expect(elementAdd).toHaveBeenCalledWith('touchmove', expect.any(Function), { passive: false });
     expect(windowAdd).not.toHaveBeenCalledWith('wheel', expect.any(Function), expect.anything());
 
-    const deck = feedDeck();
+    const heading = screen.getByRole('heading');
     act(() => {
-      dispatchWheel(deck, 42);
-      dispatchWheel(deck, 46);
-      dispatchWheel(deck, 120);
+      dispatchWheel(heading, 42);
+      dispatchWheel(heading, 46);
+      dispatchWheel(heading, 120);
     });
 
     await finishTransition();
 
-    expectHeading('The Skills That Travel With You');
-    expect(screen.getByText(/item 2 \/ 16/i)).toBeInTheDocument();
+    expectHeading('The Career Path Was Not a Straight Line');
+    expect(screen.getByText(/item 2 \/ 5/i)).toBeInTheDocument();
   });
 
   it('axis-locks vertical touch movement, prevents default only after lock, and ignores horizontal gestures', async () => {
     renderLaunchpad();
-    const deck = feedDeck();
+    const surface = navigationSurface();
 
     act(() => {
-      dispatchTouch(deck, 'touchstart', 100, 300);
+      dispatchTouch(surface, 'touchstart', 100, 300);
     });
-    const verticalMove = dispatchTouch(deck, 'touchmove', 104, 236);
+    const verticalMove = dispatchTouch(surface, 'touchmove', 104, 236);
 
     expect(verticalMove.defaultPrevented).toBe(true);
     await finishTransition();
-    expectHeading('The Skills That Travel With You');
+    expectHeading('The Career Path Was Not a Straight Line');
 
     act(() => {
-      dispatchTouch(deck, 'touchstart', 100, 300);
+      dispatchTouch(surface, 'touchstart', 100, 300);
     });
-    const horizontalMove = dispatchTouch(deck, 'touchmove', 172, 292);
+    const horizontalMove = dispatchTouch(surface, 'touchmove', 172, 292);
 
     expect(horizontalMove.defaultPrevented).toBe(false);
     await finishTransition();
-    expectHeading('The Skills That Travel With You');
+    expectHeading('The Career Path Was Not a Straight Line');
   });
 
   it('keeps edge navigation as a no-op with no transition animation', async () => {
     renderLaunchpad();
-    const deck = feedDeck();
 
     act(() => {
-      dispatchWheel(deck, -120);
+      dispatchWheel(navigationSurface(), -120);
     });
     await finishTransition();
 
     expectHeading('AI Tools That Make Schoolwork Less Messy');
-    expect(deck).toHaveAttribute('data-transitioning', 'false');
+    expect(feedDeck()).toHaveAttribute('data-transitioning', 'false');
   });
 
   it('uses keyboard navigation and ignores shortcuts from interactive controls', async () => {
@@ -212,13 +238,13 @@ describe('LaunchpadApp feed navigation', () => {
 
     fireEvent.keyDown(window, { key: 'j' });
     await finishTransition();
-    expectHeading('The Skills That Travel With You');
+    expectHeading('The Career Path Was Not a Straight Line');
 
-    screen.getByRole('button', { name: /learn more/i }).focus();
+    screen.getByTestId('learn-more-primary-cta').focus();
     fireEvent.keyDown(window, { key: 'k' });
     await finishTransition();
 
-    expectHeading('The Skills That Travel With You');
+    expectHeading('The Career Path Was Not a Straight Line');
   });
 
   it('skips slide transitions and the first-session nudge for reduced-motion users', async () => {
@@ -227,11 +253,11 @@ describe('LaunchpadApp feed navigation', () => {
     renderLaunchpad();
 
     act(() => {
-      dispatchWheel(feedDeck(), 90);
+      dispatchWheel(navigationSurface(), 90);
       vi.advanceTimersByTime(500);
     });
 
-    expectHeading('The Skills That Travel With You');
+    expectHeading('The Career Path Was Not a Straight Line');
     expect(feedDeck()).toHaveAttribute('data-transitioning', 'false');
     expect(feedDeck()).toHaveAttribute('data-nudging', 'false');
   });
@@ -264,8 +290,52 @@ describe('LaunchpadApp feed navigation', () => {
 
     expect(screen.getByTestId('desktop-immersive-backdrop')).toHaveAttribute(
       'src',
-      launchpadContent[0].thumbnailUrl
+      fixtureContent[0].thumbnailUrl
     );
+  });
+
+  it('moves the format label beside the category and keeps it off the desktop media frame', async () => {
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    const primaryCategory = fixtureCategories.find((category) => category.slug === fixtureContent[0].primaryCategory);
+    expect(screen.getByTestId('desktop-category-pill')).toHaveTextContent(primaryCategory?.name ?? '');
+    expect(screen.getByTestId('desktop-format-pill')).toHaveTextContent('Video');
+    expect(screen.queryByTestId('media-format-badge')).not.toBeInTheDocument();
+  });
+
+  it('uses a larger desktop media frame and previews the next card at the bottom', () => {
+    renderLaunchpad();
+
+    expect(screen.getByTestId('desktop-immersive-media-frame')).toHaveStyle({
+      height: 'min(calc(100dvh - 214px), 1040px)',
+      maxHeight: 'calc(100% - 56px)',
+      transform: 'translateY(-14px)',
+    });
+
+    const peek = screen.getByTestId('desktop-next-card-peek');
+    expect(peek).toHaveAttribute('data-next-slug', fixtureContent[2].slug);
+    expect(peek.querySelector('img')).toHaveAttribute('src', fixtureContent[2].thumbnailUrl);
+    expect(peek).toHaveStyle({
+      top: 'calc(100% + 24px)',
+      width: '90%',
+      opacity: '0.82',
+    });
+  });
+
+  it('starts with video content even when articles arrive first from the server', () => {
+    const articleFirst = [fixtureContent[1], fixtureContent[0], fixtureContent[3], fixtureContent[2], fixtureContent[4]];
+
+    renderLaunchpad(null, articleFirst);
+
+    expectHeading('AI Tools That Make Schoolwork Less Messy');
+    expect(screen.getByTestId('desktop-format-pill')).toHaveTextContent('Video');
+  });
+
+  it('does not render the desktop next-card preview on the final item', () => {
+    renderLaunchpad(null, [fixtureContent[0]]);
+
+    expect(screen.queryByTestId('desktop-next-card-peek')).not.toBeInTheDocument();
   });
 
   it('does not render source-type labels in the feed or Learn More panel', async () => {
@@ -295,18 +365,84 @@ describe('LaunchpadApp feed navigation', () => {
     expect(rail.queryByRole('button', { name: /^[\d.]+K?$/ })).not.toBeInTheDocument();
   });
 
-  it('keeps focus order from left Learn More to play, Save, Share, and More', () => {
+  it('renders one desktop primary Learn More CTA and opens the panel from it', async () => {
+    renderLaunchpad();
+
+    const primaryCtas = screen.getAllByTestId('learn-more-primary-cta');
+    expect(primaryCtas).toHaveLength(1);
+    expect(primaryCtas[0]).toHaveAttribute('data-variant', 'desktop');
+    expect(primaryCtas[0]).toHaveAccessibleName('Learn More');
+
+    fireEvent.click(primaryCtas[0]);
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+  });
+
+  it('uses Read it as the primary CTA on article cards and opens the panel from it', async () => {
+    renderLaunchpad();
+
+    act(() => {
+      dispatchWheel(navigationSurface(), 90);
+    });
+    await finishTransition();
+    act(() => {
+      dispatchWheel(navigationSurface(), 90);
+    });
+    await finishTransition();
+
+    const primaryCta = screen.getByTestId('learn-more-primary-cta');
+    expect(primaryCta).toHaveAttribute('data-variant', 'desktop');
+    expect(primaryCta).toHaveAccessibleName('Read it');
+    expect(screen.getByTestId('media-article-copy')).toBeInTheDocument();
+
+    fireEvent.click(primaryCta);
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /the skills that travel/i })).toBeInTheDocument();
+  });
+
+  it('keeps the Playbooks filter option but excludes playbook examples from the preview feed', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /filter by format/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Playbooks' }));
+
+    expect(screen.getByRole('heading', { name: /no matches yet/i })).toBeInTheDocument();
+    expect(screen.queryByText('How to Write a Cold Email That Gets a Reply')).not.toBeInTheDocument();
+  });
+
+  it('renders the centered mobile primary Learn More CTA and opens the panel from it', async () => {
+    mobileViewport = true;
+    installMatchMedia();
+    renderLaunchpad();
+
+    const primaryCta = screen.getByTestId('learn-more-primary-cta');
+    expect(primaryCta).toHaveAttribute('data-variant', 'mobile');
+    expect(primaryCta).toHaveAccessibleName('Learn More');
+    expect(primaryCta).toHaveStyle({
+      width: '100%',
+      height: '56px',
+    });
+
+    fireEvent.click(primaryCta);
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+  });
+
+  it('keeps focus order from play to Learn More, Save, Share, and More', () => {
     renderLaunchpad();
 
     const buttons = screen.getAllByRole('button');
-    const learnMoreIdx = buttons.indexOf(screen.getByRole('button', { name: /learn more/i }));
     const playIdx = buttons.indexOf(screen.getByRole('button', { name: /play ai tools/i }));
+    const learnMoreIdx = buttons.indexOf(screen.getByTestId('learn-more-primary-cta'));
     const saveIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Save' }));
     const shareIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Share' }));
     const moreIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'More' }));
 
-    expect([learnMoreIdx, playIdx, saveIdx, shareIdx, moreIdx]).toEqual(
-      [...[learnMoreIdx, playIdx, saveIdx, shareIdx, moreIdx]].sort((a, b) => a - b)
+    expect([playIdx, learnMoreIdx, saveIdx, shareIdx, moreIdx]).toEqual(
+      [...[playIdx, learnMoreIdx, saveIdx, shareIdx, moreIdx]].sort((a, b) => a - b)
     );
   });
 });
@@ -389,9 +525,17 @@ describe('LaunchpadApp playback', () => {
     });
     await finishTransition();
 
+    expectHeading('The Career Path Was Not a Straight Line');
+    expect(screen.getByTestId('youtube-scroll-overlay')).toBeInTheDocument();
+    expect(players[0].destroy).toHaveBeenCalled();
+
+    act(() => {
+      dispatchWheel(screen.getByTestId('youtube-scroll-overlay'), 90);
+    });
+    await finishTransition();
+
     expectHeading('The Skills That Travel With You');
     expect(screen.queryByTestId('youtube-scroll-overlay')).not.toBeInTheDocument();
-    expect(players[0].destroy).toHaveBeenCalled();
   });
 
   it('captures wheel navigation from desktop rail buttons while a video is playing', async () => {
@@ -405,8 +549,8 @@ describe('LaunchpadApp playback', () => {
     });
     await finishTransition();
 
-    expectHeading('The Skills That Travel With You');
-    expect(screen.queryByTestId('youtube-scroll-overlay')).not.toBeInTheDocument();
+    expectHeading('The Career Path Was Not a Straight Line');
+    expect(screen.getByTestId('youtube-scroll-overlay')).toBeInTheDocument();
   });
 
   it('carries user-started autoplay between videos and recreates the player when scrolling back', async () => {
@@ -435,6 +579,61 @@ describe('LaunchpadApp playback', () => {
     expectHeading('AI Tools That Make Schoolwork Less Messy');
     expect(players.at(-1)?.videoId).toBe('5MgBikgcWnY');
     expect(players.filter((player) => player.videoId === '5MgBikgcWnY')).toHaveLength(2);
+  });
+
+  it('auto-advances to the next video when the current video ends', async () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
+    act(() => {
+      players[0].events.onReady?.();
+      players[0].events.onStateChange?.({ data: 1 });
+      players[0].events.onStateChange?.({ data: 0 });
+    });
+    await finishTransition();
+
+    expectHeading('The Career Path Was Not a Straight Line');
+    expect(screen.getByTestId('youtube-scroll-overlay')).toBeInTheDocument();
+    expect(players.at(-1)?.videoId).toBe('arj7oStGLkU');
+
+    act(() => {
+      players[0].events.onStateChange?.({ data: 0 });
+    });
+    await finishTransition();
+
+    expectHeading('The Career Path Was Not a Straight Line');
+  });
+
+  it('auto-advances to an article and stops playback when the ended video is followed by non-video content', async () => {
+    renderLaunchpad(null, [fixtureContent[0], fixtureContent[1]]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
+    act(() => {
+      players[0].events.onReady?.();
+      players[0].events.onStateChange?.({ data: 1 });
+      players[0].events.onStateChange?.({ data: 0 });
+    });
+    await finishTransition();
+
+    expectHeading('The Skills That Travel With You');
+    expect(screen.queryByTestId('youtube-scroll-overlay')).not.toBeInTheDocument();
+    expect(screen.getByTestId('media-article-copy')).toBeInTheDocument();
+  });
+
+  it('stops playback when the final video ends', async () => {
+    renderLaunchpad(null, [fixtureContent[0]]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
+    act(() => {
+      players[0].events.onReady?.();
+      players[0].events.onStateChange?.({ data: 1 });
+      players[0].events.onStateChange?.({ data: 0 });
+    });
+    await finishTransition();
+
+    expectHeading('AI Tools That Make Schoolwork Less Messy');
+    expect(screen.queryByTestId('youtube-scroll-overlay')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /play ai tools/i })).toBeInTheDocument();
   });
 
   it('opens Learn More from the desktop More rail action', async () => {
@@ -475,10 +674,10 @@ describe('LaunchpadApp playback', () => {
   it('strips invalid direct content links and explains recovery', async () => {
     window.history.replaceState({}, '', '/?content=missing-slug');
 
-    renderLaunchpad();
+    renderLaunchpad('missing-slug');
     await flushAsyncWork();
 
-    expect(window.location.search).toBe('');
-    expect(screen.getByText(/that content is not available anymore/i)).toBeInTheDocument();
+    expect(replaceMock).toHaveBeenCalledWith('/');
+    expect(screen.getByText(/content not available/i)).toBeInTheDocument();
   });
 });

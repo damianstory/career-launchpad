@@ -8,25 +8,24 @@ import {
   BookmarkCheck,
   Clock,
   ExternalLink,
-  ListChecks,
   Play,
   Share2,
   X,
 } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef } from 'react';
 
-import { categories } from '@/data/content';
 import { formatDuration } from '@/lib/content';
-import type { ContentFormat, LaunchpadContent } from '@/types';
+import type { ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types';
 
 const FORMAT_ICON: Record<ContentFormat, typeof Play> = {
   video: Play,
   article: BookOpen,
-  playbook: ListChecks,
+  playbook: BookOpen,
 };
 
 type LearnMorePanelProps = {
   item: LaunchpadContent;
+  categories: LaunchpadCategory[];
   related: LaunchpadContent[];
   isSaved: boolean;
   mobile: boolean;
@@ -39,6 +38,7 @@ type LearnMorePanelProps = {
 
 export function LearnMorePanel({
   item,
+  categories,
   related,
   isSaved,
   mobile,
@@ -112,11 +112,17 @@ export function LearnMorePanel({
                 <Icon size={13} />
                 {item.format}
               </span>
-              <span className="learn-more-category">{categoryLabel(item)}</span>
+              <span className="learn-more-category">{categoryLabel(categories, item)}</span>
               {item.format === 'video' && item.durationSeconds ? (
                 <span className="learn-more-muted">
                   <Clock size={12} />
                   {formatDuration(item.durationSeconds)}
+                </span>
+              ) : null}
+              {item.format === 'article' && item.readingTimeMinutes ? (
+                <span className="learn-more-muted">
+                  <Clock size={12} />
+                  {item.readingTimeMinutes} min read
                 </span>
               ) : null}
             </div>
@@ -186,34 +192,27 @@ export function LearnMorePanel({
                     onClick={() => item.articleUrl && onOutboundClick(item.articleUrl)}
                   >
                     <ExternalLink size={16} />
-                    Open article
+                    {item.articleSourceName ? `Open on ${item.articleSourceName}` : 'Read article'}
                   </a>
                 ) : null}
               </div>
             </div>
 
-            <PanelSection title="Why this matters">{item.learnMore.whyItMatters}</PanelSection>
-            <PanelSection title="How it connects to career planning">
-              {item.learnMore.planningConnection}
-            </PanelSection>
-
-            {item.format === 'playbook' && item.playbookContent ? (
-              <PanelSection title={`The ${item.playbookContent.length} steps`}>
-                <div className="learn-more-steps">
-                  {item.playbookContent.map((step, index) => (
-                    <div key={step} className="learn-more-step">
-                      <span>{index + 1}</span>
-                      <p>{step}</p>
-                    </div>
-                  ))}
-                </div>
+            {item.learnMore.whyItMatters ? (
+              <PanelSection title="Why this matters">{item.learnMore.whyItMatters}</PanelSection>
+            ) : null}
+            {item.learnMore.planningConnection ? (
+              <PanelSection title="How it connects to career planning">
+                {item.learnMore.planningConnection}
               </PanelSection>
             ) : null}
 
-            <div className="learn-more-takeaway">
-              <div>Key takeaway</div>
-              <p>{item.learnMore.takeaway}</p>
-            </div>
+            {item.learnMore.takeaway ? (
+              <div className="learn-more-takeaway">
+                <div>Key takeaway</div>
+                <p>{item.learnMore.takeaway}</p>
+              </div>
+            ) : null}
 
             {related.length > 0 ? (
               <PanelSection title="Related">
@@ -255,6 +254,6 @@ function PanelSection({ title, children }: { title: string; children: ReactNode 
   );
 }
 
-function categoryLabel(item: LaunchpadContent): string {
-  return categories.find((category) => category.slug === item.category)?.label ?? item.category;
+function categoryLabel(categories: LaunchpadCategory[], item: LaunchpadContent): string {
+  return categories.find((category) => category.slug === item.primaryCategory)?.name ?? item.primaryCategory;
 }
