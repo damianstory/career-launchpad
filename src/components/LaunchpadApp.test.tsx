@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fixtureCategories, fixtureContent } from '@/test/fixtures/content';
+import type { LaunchpadContent } from '@/types';
 
 import { LaunchpadApp } from './LaunchpadApp';
 
@@ -104,6 +105,13 @@ function renderLaunchpad(initialContentSlug: string | null = null, content = fix
       initialContentSlug={initialContentSlug}
     />
   );
+}
+
+function contentVariant(
+  base: LaunchpadContent,
+  overrides: Partial<LaunchpadContent> & Pick<LaunchpadContent, 'id' | 'slug' | 'title'>
+): LaunchpadContent {
+  return { ...base, ...overrides };
 }
 
 function feedDeck() {
@@ -361,22 +369,40 @@ describe('LaunchpadApp feed navigation', () => {
 
     expect(rail.getByRole('button', { name: 'Save' })).toBeInTheDocument();
     expect(rail.getByRole('button', { name: 'Share' })).toBeInTheDocument();
-    expect(rail.getByRole('button', { name: 'More' })).toBeInTheDocument();
+    expect(rail.getByRole('button', { name: 'Info' })).toBeInTheDocument();
     expect(rail.queryByRole('button', { name: /^[\d.]+K?$/ })).not.toBeInTheDocument();
   });
 
-  it('renders one desktop primary Learn More CTA and opens the panel from it', async () => {
+  it('renders the desktop primary Learn More CTA in the editorial column and opens the panel from it', async () => {
     renderLaunchpad();
 
     const primaryCtas = screen.getAllByTestId('learn-more-primary-cta');
     expect(primaryCtas).toHaveLength(1);
     expect(primaryCtas[0]).toHaveAttribute('data-variant', 'desktop');
     expect(primaryCtas[0]).toHaveAccessibleName('Learn More');
+    expect(primaryCtas[0].parentElement).toHaveStyle({ position: 'static' });
+    expect(
+      within(screen.getByTestId('desktop-immersive-media-frame')).queryByTestId('learn-more-primary-cta')
+    ).not.toBeInTheDocument();
 
     fireEvent.click(primaryCtas[0]);
     await flushAsyncWork();
 
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+  });
+
+  it('keeps Learn More entry points visible for rows without rich Learn More fields', async () => {
+    renderLaunchpad(null, [fixtureContent[4]]);
+
+    expect(screen.getByTestId('learn-more-primary-cta')).toHaveAccessibleName('Read it');
+    expect(within(desktopRail()).getByRole('button', { name: 'Info' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /article with no learn more copy/i })).toBeInTheDocument();
+    expect(screen.queryByText(/why this matters/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/how it connects to career planning/i)).not.toBeInTheDocument();
   });
 
   it('uses Read it as the primary CTA on article cards and opens the panel from it', async () => {
@@ -420,6 +446,7 @@ describe('LaunchpadApp feed navigation', () => {
     const primaryCta = screen.getByTestId('learn-more-primary-cta');
     expect(primaryCta).toHaveAttribute('data-variant', 'mobile');
     expect(primaryCta).toHaveAccessibleName('Learn More');
+    expect(screen.getByRole('button', { name: 'Info' })).toBeInTheDocument();
     expect(primaryCta).toHaveStyle({
       width: '100%',
       height: '56px',
@@ -431,7 +458,7 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
   });
 
-  it('keeps focus order from play to Learn More, Save, Share, and More', () => {
+  it('keeps focus order from left Learn More to play, Save, Share, and Info', () => {
     renderLaunchpad();
 
     const buttons = screen.getAllByRole('button');
@@ -439,11 +466,83 @@ describe('LaunchpadApp feed navigation', () => {
     const learnMoreIdx = buttons.indexOf(screen.getByTestId('learn-more-primary-cta'));
     const saveIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Save' }));
     const shareIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Share' }));
-    const moreIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'More' }));
+    const infoIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Info' }));
 
-    expect([playIdx, learnMoreIdx, saveIdx, shareIdx, moreIdx]).toEqual(
-      [...[playIdx, learnMoreIdx, saveIdx, shareIdx, moreIdx]].sort((a, b) => a - b)
+    expect([learnMoreIdx, playIdx, saveIdx, shareIdx, infoIdx]).toEqual(
+      [...[learnMoreIdx, playIdx, saveIdx, shareIdx, infoIdx]].sort((a, b) => a - b)
     );
+  });
+
+  it('shows video-first default search results before articles', () => {
+    const articleBase = fixtureContent[1];
+    const videoBase = fixtureContent[0];
+    const content: LaunchpadContent[] = [
+      contentVariant(articleBase, { id: 'article-a', slug: 'article-a', title: 'Article A' }),
+      contentVariant(articleBase, { id: 'article-b', slug: 'article-b', title: 'Article B' }),
+      ...Array.from({ length: 6 }, (_, index) =>
+        contentVariant(videoBase, {
+          id: `video-${index}`,
+          slug: `video-${index}`,
+          title: `Video Result ${index + 1}`,
+        })
+      ),
+    ];
+
+    renderLaunchpad(null, content);
+    fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
+
+    const results = screen.getAllByTestId('search-result');
+    expect(results).toHaveLength(6);
+    expect(results.map((result) => result.dataset.format)).toEqual([
+      'video',
+      'video',
+      'video',
+      'video',
+      'video',
+      'video',
+    ]);
+    expect(results.map((result) => result.textContent)).toEqual(
+      expect.arrayContaining(['Video Result 1video · Life Skills'])
+    );
+  });
+
+  it('keeps typed search results in matching content order', () => {
+    const articleMatch = contentVariant(fixtureContent[1], {
+      id: 'article-alpha',
+      slug: 'article-alpha',
+      title: 'Alpha Article',
+    });
+    const videoMatch = contentVariant(fixtureContent[0], {
+      id: 'video-alpha',
+      slug: 'video-alpha',
+      title: 'Alpha Video',
+    });
+
+    renderLaunchpad(null, [articleMatch, videoMatch]);
+    fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
+    fireEvent.change(screen.getByPlaceholderText(/search careers/i), { target: { value: 'alpha' } });
+
+    const results = screen.getAllByTestId('search-result');
+    expect(results.map((result) => result.textContent)).toEqual([
+      'Alpha Articlearticle · Mindsets',
+      'Alpha Videovideo · Life Skills',
+    ]);
+  });
+
+  it('jumps from a search result to the feed card without opening Learn More', async () => {
+    renderLaunchpad();
+    fireEvent.click(screen.getByRole('button', { name: 'Life Skills' }));
+    window.history.replaceState({}, '', '/?content=stale-content');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
+    fireEvent.click(screen.getByRole('button', { name: /what your first internship/i }));
+    await flushAsyncWork();
+
+    expectHeading('What Your First Internship Actually Teaches You');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/search careers/i)).not.toBeInTheDocument();
+    expect(window.location.search).not.toContain('content=');
+    expect(screen.getByText(/item 4 \/ 5/i)).toBeInTheDocument();
   });
 });
 
@@ -636,10 +735,10 @@ describe('LaunchpadApp playback', () => {
     expect(screen.getByRole('button', { name: /play ai tools/i })).toBeInTheDocument();
   });
 
-  it('opens Learn More from the desktop More rail action', async () => {
+  it('opens Learn More from the desktop Info rail action', async () => {
     renderLaunchpad();
 
-    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'More' }));
+    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'Info' }));
     await flushAsyncWork();
 
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
@@ -654,7 +753,7 @@ describe('LaunchpadApp playback', () => {
       players[0].events.onStateChange?.({ data: 1 });
     });
 
-    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'More' }));
+    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'Info' }));
     await flushAsyncWork();
 
     expect(players[0].pauseVideo).toHaveBeenCalledTimes(1);

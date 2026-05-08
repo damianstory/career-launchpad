@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  ArrowUp,
   ArrowUpRight,
   BookOpen,
   Brain,
@@ -115,12 +114,12 @@ function LearnMoreCta({
     <div
       className="learn-more-cta"
       style={{
-        position: 'absolute',
-        left: '50%',
-        bottom: isMobileVariant ? 'calc(22px + env(safe-area-inset-bottom))' : -8,
-        transform: isMobileVariant ? 'translateX(-50%)' : 'translate(-50%, 50%)',
-        zIndex: isMobileVariant ? 8 : 5,
-        width: isMobileVariant ? 'min(60vw, 280px)' : 'min(340px, 72%)',
+        position: isMobileVariant ? 'absolute' : 'static',
+        left: isMobileVariant ? '50%' : undefined,
+        bottom: isMobileVariant ? 'calc(22px + env(safe-area-inset-bottom))' : undefined,
+        transform: isMobileVariant ? 'translateX(-50%)' : undefined,
+        zIndex: isMobileVariant ? 8 : undefined,
+        width: isMobileVariant ? 'min(60vw, 280px)' : 'fit-content',
         minWidth: isMobileVariant ? 220 : undefined,
       }}
     >
@@ -136,6 +135,7 @@ function LearnMoreCta({
           borderRadius: 'var(--radius-xl, 16px)',
           fontSize: isMobileVariant ? 15 : 16,
           fontWeight: 800,
+          padding: isMobileVariant ? undefined : '0 24px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -144,7 +144,7 @@ function LearnMoreCta({
           letterSpacing: 0,
         }}
       >
-        {label} <ArrowUp size={isMobileVariant ? 16 : 18} />
+        {label} <ArrowUpRight size={isMobileVariant ? 16 : 18} />
       </button>
     </div>
   );
@@ -245,15 +245,6 @@ function categoryShortLabel(category: LaunchpadCategory): string {
   if (category.slug === 'problems-to-solve') return 'Problems';
   if (category.slug === 'job-board') return 'Jobs';
   return category.name;
-}
-
-function hasLearnMore(item: LaunchpadContent): boolean {
-  return Boolean(
-    item.learnMore.whyItMatters ||
-      item.learnMore.planningConnection ||
-      item.learnMore.takeaway ||
-      item.learnMore.relatedContentIds.length
-  );
 }
 
 function useIsMobile(): boolean {
@@ -473,6 +464,10 @@ export function LaunchpadApp({
     () => initialContent.filter((content) => content.format !== 'playbook'),
     [initialContent]
   );
+  const unfilteredFeedContent = useMemo(
+    () => orderContentForFeed(previewContent, { category: null, format: null }),
+    [previewContent]
+  );
 
   const filteredContent = useMemo(() => {
     const base = applyContentFilters(previewContent, filters);
@@ -559,6 +554,27 @@ export function LaunchpadApp({
     url.searchParams.delete('content');
     window.history.replaceState({}, '', url);
   }, []);
+
+  const jumpToSearchResult = useCallback(
+    (target: LaunchpadContent) => {
+      activePlayerRef.current?.pauseVideo?.();
+      setPlayingContentId(null);
+      setSearchOpen(false);
+      setSelected(null);
+      setFilters({ category: null, format: null });
+      setQuery('');
+      setPrevFilterKey('||');
+      setNavDirection('next');
+      setFeedIdx(Math.max(0, unfilteredFeedContent.findIndex((entry) => entry.id === target.id)));
+      navLockedUntilRef.current = 0;
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete('content');
+      window.history.replaceState({}, '', url);
+      trackEvent('content_open', { contentId: target.id, metadata: { source: 'search' } });
+    },
+    [unfilteredFeedContent]
+  );
 
   const toggleSave = useCallback(
     (target: LaunchpadContent) => {
@@ -699,7 +715,6 @@ export function LaunchpadApp({
     item,
     nextItem,
     categories: initialCategories,
-    hasLearnMore: hasLearnMore(item),
     isSaved,
     activeCategory: filters.category,
     activeFormat: filters.format,
@@ -765,8 +780,7 @@ export function LaunchpadApp({
           mobile={isMobile}
           onClose={() => setSearchOpen(false)}
           onPick={(picked) => {
-            setSearchOpen(false);
-            openPanel(picked, 'search');
+            jumpToSearchResult(picked);
           }}
         />
       )}
@@ -783,13 +797,12 @@ type StageProps = {
   item: LaunchpadContent;
   nextItem: LaunchpadContent | null;
   categories: LaunchpadCategory[];
-  hasLearnMore: boolean;
   isSaved: boolean;
   activeCategory: CategorySlug | null;
   activeFormat: ContentFormat | null;
   setCategory: (slug: CategorySlug | null) => void;
   setFormat: (format: ContentFormat | null) => void;
-  onLearnMore?: () => void;
+  onLearnMore: () => void;
   onSave: () => void;
   onShare: () => void;
   onSearch: () => void;
@@ -816,7 +829,6 @@ function DesktopStage({
   item,
   nextItem,
   categories,
-  hasLearnMore,
   isSaved,
   activeCategory,
   activeFormat,
@@ -1077,6 +1089,8 @@ function DesktopStage({
             {pullQuoteFor(item)}
           </div>
 
+          <LearnMoreCta format={item.format} variant="desktop" onClick={onLearnMore} />
+
         </div>
 
         {/* CENTER: media */}
@@ -1104,7 +1118,7 @@ function DesktopStage({
             onVideoEnd={onVideoEnd}
             onSave={onSave}
             onShare={onShare}
-            onLearnMore={hasLearnMore ? onLearnMore : undefined}
+            onLearnMore={onLearnMore}
             onAutoplayModeChange={onAutoplayModeChange}
             onPlayerReady={onPlayerReady}
           />
@@ -1121,7 +1135,6 @@ function DesktopStage({
 function MobileStage({
   item,
   categories,
-  hasLearnMore,
   isSaved,
   activeCategory,
   setCategory,
@@ -1232,7 +1245,7 @@ function MobileStage({
           onVideoEnd={onVideoEnd}
           onSave={onSave}
           onShare={onShare}
-          onLearnMore={hasLearnMore ? onLearnMore : undefined}
+          onLearnMore={onLearnMore}
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
         />
@@ -1257,6 +1270,7 @@ function MobileStage({
             onClick={onSave}
           />
           <MobileRailBtn icon={Share2} label="Share" onClick={onShare} />
+          <MobileRailBtn icon={Info} label="Info" onClick={onLearnMore} />
 
           <div
             style={{
@@ -1292,9 +1306,7 @@ function MobileStage({
           </div>
         </div>
 
-        {hasLearnMore && onLearnMore && (
-          <LearnMoreCta format={item.format} variant="mobile" onClick={onLearnMore} />
-        )}
+        <LearnMoreCta format={item.format} variant="mobile" onClick={onLearnMore} />
       </div>
     </div>
   );
@@ -1343,7 +1355,7 @@ function FeedMediaDeck({
   onVideoEnd: () => void;
   onSave: () => void;
   onShare: () => void;
-  onLearnMore?: () => void;
+  onLearnMore: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: YouTubePlayerInstance | null) => void;
 }) {
@@ -1491,7 +1503,6 @@ function FeedMediaDeck({
           onPlay={onPlay}
           onPause={onPause}
           onVideoEnd={onVideoEnd}
-          onLearnMore={onLearnMore}
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
         />
@@ -1575,7 +1586,7 @@ function DesktopOverlayRail({
         onClick={onSave}
       />
       <DesktopRailBtn icon={Share2} label="Share" onClick={onShare} />
-      {onLearnMore && <DesktopRailBtn icon={Info} label="More" onClick={onLearnMore} />}
+      {onLearnMore && <DesktopRailBtn icon={Info} label="Info" onClick={onLearnMore} />}
       <div
         data-testid="desktop-scroll-hint"
         style={{
@@ -1760,7 +1771,6 @@ function MediaStage({
   autoplayMode,
   onPlay,
   onPause,
-  onLearnMore,
   onAutoplayModeChange,
   onPlayerReady,
   onVideoEnd,
@@ -1772,7 +1782,6 @@ function MediaStage({
   autoplayMode: AutoplayMode;
   onPlay: () => void;
   onPause: () => void;
-  onLearnMore?: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: YouTubePlayerInstance | null) => void;
   onVideoEnd: () => void;
@@ -2087,7 +2096,6 @@ function MediaStage({
           />
         </div>
       )}
-      {onLearnMore && <LearnMoreCta format={item.format} variant="desktop" onClick={onLearnMore} />}
     </div>
   );
 }
@@ -2504,7 +2512,7 @@ function SearchModal({
   }, [onClose]);
 
   const results = useMemo(() => {
-    if (!q.trim()) return content.slice(0, 6);
+    if (!q.trim()) return orderContentForFeed(content, { category: null, format: null }).slice(0, 6);
     const needle = q.trim().toLowerCase();
     return content.filter((entry) =>
       [entry.title, entry.description, ...entry.categories, entry.format]
@@ -2588,6 +2596,8 @@ function SearchModal({
             results.map((entry) => (
               <button
                 key={entry.id}
+                data-testid="search-result"
+                data-format={entry.format}
                 onClick={() => onPick(entry)}
                 style={{
                   display: 'flex',
