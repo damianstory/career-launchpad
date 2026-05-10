@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-09T00:00:00Z",
+  "title": "Design System: Career LaunchPAD",
+  "extensions": {
+    "colorMeta": {
+      "signal-blue": {
+        "role": "primary",
+        "displayName": "Signal Blue",
+        "canonical": "#0092ff",
+        "tonalRamp": ["#001a33", "#003f73", "#0064ad", "#0082e5", "#0092ff", "#3aabff", "#74c4ff", "#aedcff"]
+      },
+      "signal-blue-deep": {
+        "role": "primary",
+        "displayName": "Signal Blue Deep",
+        "canonical": "#0082e5",
+        "tonalRamp": ["#001426", "#002c52", "#00497f", "#006bbe", "#0082e5", "#3aa2ec", "#74c1f3", "#aedef9"]
+      },
+      "soft-sky": {
+        "role": "secondary",
+        "displayName": "Soft Sky",
+        "canonical": "#c6e7ff",
+        "tonalRamp": ["#0a2235", "#1a4566", "#2d6c97", "#5e9ec7", "#9bc8e8", "#c6e7ff", "#dbf0ff", "#f0f8ff"]
+      },
+      "pale-sky": {
+        "role": "secondary",
+        "displayName": "Pale Sky",
+        "canonical": "#e6f4ff",
+        "tonalRamp": ["#0d2335", "#1d4665", "#306c93", "#629dc1", "#9fc8e1", "#cee1f1", "#e6f4ff", "#f4faff"]
+      },
+      "anchor-navy": {
+        "role": "neutral",
+        "displayName": "Anchor Navy",
+        "canonical": "#22224c",
+        "tonalRamp": ["#0f0f23", "#16162e", "#1c1c3d", "#22224c", "#3a3a6a", "#5a5a85", "#8585a3", "#b6b6cb"]
+      },
+      "slate-deep": {
+        "role": "neutral",
+        "displayName": "Slate Deep",
+        "canonical": "#252a33",
+        "tonalRamp": ["#0d0f12", "#15171c", "#1d2027", "#252a33", "#444a55", "#6a7180", "#9aa1ad", "#c8ccd3"]
+      },
+      "slate-ink": {
+        "role": "neutral",
+        "displayName": "Slate Ink",
+        "canonical": "#485163",
+        "tonalRamp": ["#161a20", "#1f242c", "#2a313c", "#363e4d", "#485163", "#6a7488", "#929baf", "#c0c5d2"]
+      },
+      "slate-body": {
+        "role": "neutral",
+        "displayName": "Slate Body",
+        "canonical": "#65738b",
+        "tonalRamp": ["#1a1f27", "#252b35", "#323a48", "#48536a", "#65738b", "#8893a8", "#aeb6c5", "#d3d8e0"]
+      },
+      "slate-echo": {
+        "role": "neutral",
+        "displayName": "Slate Echo",
+        "canonical": "#aab7cb",
+        "tonalRamp": ["#1d232c", "#2c3340", "#3f4858", "#5d6878", "#7e8a9d", "#9aa6ba", "#aab7cb", "#d6dde6"]
+      },
+      "slate-frame-mid": {
+        "role": "neutral",
+        "displayName": "Slate Frame Mid",
+        "canonical": "#d9dfea",
+        "tonalRamp": ["#1c2029", "#2c333f", "#414957", "#5e6776", "#828b9c", "#a9b0bf", "#cad0db", "#d9dfea"]
+      },
+      "slate-frame-light": {
+        "role": "neutral",
+        "displayName": "Slate Frame Light",
+        "canonical": "#e5e9f1",
+        "tonalRamp": ["#1f242c", "#303542", "#454c5b", "#646c7d", "#8b94a4", "#b3bac8", "#d3d8e3", "#e5e9f1"]
+      },
+      "studio-off-white": {
+        "role": "neutral",
+        "displayName": "Studio Off-White",
+        "canonical": "#f6f6ff",
+        "tonalRamp": ["#22224c", "#3a3a6a", "#5a5a85", "#8585a3", "#b6b6cb", "#dadae4", "#ececf3", "#f6f6ff"]
+      },
+      "pure-white": {
+        "role": "neutral",
+        "displayName": "Pure White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#22224c", "#3a3a6a", "#5a5a85", "#8585a3", "#b6b6cb", "#dadae4", "#f0f0f5", "#ffffff"]
+      }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Page-level titles. Used sparingly." },
+      "title": { "displayName": "Title", "purpose": "Content card titles, sheet primary heading." },
+      "body": { "displayName": "Body", "purpose": "Long-form description, sheet body paragraphs. Cap at 65–75ch." },
+      "body-tight": { "displayName": "Body Tight", "purpose": "Step copy, related-card titles, dense list items." },
+      "label": { "displayName": "Label", "purpose": "Format/category/eyebrow chips and section heads. Always uppercase, 800 weight, 0.08–0.12em letter-spacing." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 2px rgba(34, 34, 76, 0.05)", "purpose": "Reserved for future use. Default surfaces ship without shadow." },
+      { "name": "shadow-md", "value": "0 4px 6px rgba(34, 34, 76, 0.10)", "purpose": "Mid-elevation. Available for floating popovers." },
+      { "name": "shadow-lg", "value": "0 10px 15px rgba(34, 34, 76, 0.15)", "purpose": "Reserved for dropdowns, menus, elevated tiles." },
+      { "name": "shadow-glow-blue", "value": "0 0 30px rgba(0, 146, 255, 0.30)", "purpose": "Signal-blue presence. Active video play marker; rare emphasis." },
+      { "name": "shadow-sheet-up", "value": "0 -24px 70px rgba(8, 8, 26, 0.28)", "purpose": "Upward cast on the learn-more bottom sheet. The only upward shadow in the system." },
+      { "name": "shadow-poster", "value": "0 14px 32px rgba(34, 34, 76, 0.18)", "purpose": "Video poster tile shadow inside the learn-more sheet." },
+      { "name": "focus-halo", "value": "0 0 0 6px #0092ff", "purpose": "Primary CTA focus ring. Wide solid Signal Blue." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for state transitions and overlay fades." },
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Sheet entrance and confident slide-ups." },
+      { "name": "dur-fast", "value": "150ms", "purpose": "Micro-interactions: chip activation, icon button toggle." },
+      { "name": "dur-base", "value": "200ms", "purpose": "Default transition: button hover, focus ring." },
+      { "name": "dur-slow", "value": "300ms", "purpose": "Surface entrance: overlay fade, sheet slide." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-max", "value": "860px", "purpose": "The learn-more sheet drops the side margins and goes full-bleed below this width." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary CTA Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Signal Blue pill CTA, lifts on hover, Signal Blue focus halo. The system's default primary action.",
+      "html": "<button class=\"ds-btn-primary\">Watch the video</button>",
+      "css": ".ds-btn-primary { background: var(--primary-blue, #0092ff); color: #ffffff; border: 0; border-radius: 9999px; padding: 12px 20px; font-family: 'Open Sans', system-ui, sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 0.04em; box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.42); transform: translateY(0); transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease; cursor: pointer; will-change: transform; } .ds-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 28px -10px rgba(15, 23, 42, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.5); filter: brightness(1.04); } .ds-btn-primary:focus-visible { outline: 2px solid #ffffff; outline-offset: 0; box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.42), 0 0 0 6px var(--primary-blue, #0092ff); } .ds-btn-primary:active { transform: translateY(0); transition-duration: 60ms; filter: brightness(0.98); } @media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition-duration: 1ms; } .ds-btn-primary:hover { transform: none; } }"
+    },
+    {
+      "name": "Outbound Button",
+      "kind": "button",
+      "refersTo": "button-outbound",
+      "description": "Anchor Navy pill button used to leave the product or descend into a source. Deeper than the primary CTA.",
+      "html": "<a class=\"ds-btn-outbound\" href=\"#\">Read the article</a>",
+      "css": ".ds-btn-outbound { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 15px; border-radius: 9999px; background: #22224c; color: #ffffff; font-family: 'Open Sans', system-ui, sans-serif; font-size: 14px; font-weight: 800; text-decoration: none; transition: filter 140ms ease, box-shadow 140ms ease; } .ds-btn-outbound:hover { filter: brightness(1.08); box-shadow: 0 8px 18px -8px rgba(34, 34, 76, 0.45); } .ds-btn-outbound:focus-visible { outline: 3px solid #0092ff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Pill Outline Action",
+      "kind": "button",
+      "refersTo": "button-pill-outline",
+      "description": "Secondary pill action (Save, Share). Becomes filled Signal Blue when toggled active.",
+      "html": "<button class=\"ds-btn-pill-outline\">Save</button>\n<button class=\"ds-btn-pill-outline\" data-active=\"true\">Saved</button>",
+      "css": ".ds-btn-pill-outline { min-height: 34px; padding: 0 12px; border-radius: 9999px; border: 1px solid #d9dfea; background: transparent; color: #22224c; font-family: 'Open Sans', system-ui, sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; transition: background 140ms ease, color 140ms ease, border-color 140ms ease; } .ds-btn-pill-outline:hover { background: #f6f6ff; } .ds-btn-pill-outline:focus-visible { outline: 3px solid #0092ff; outline-offset: 2px; } .ds-btn-pill-outline[data-active='true'] { background: #0092ff; border-color: #0092ff; color: #ffffff; }"
+    },
+    {
+      "name": "Format / Category Chip",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Uppercase 10–11px metadata chip. Typographic, not container-shaped. Color carries the role.",
+      "html": "<span class=\"ds-chip ds-chip--format\">\n  <svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"6 4 20 12 6 20 6 4\"></polygon></svg>\n  Video\n</span>\n<span class=\"ds-chip ds-chip--category\">Trades</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 5px; font-family: 'Open Sans', system-ui, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; } .ds-chip--format { color: #0092ff; } .ds-chip--category { color: #485163; }"
+    },
+    {
+      "name": "Content Card / Tile",
+      "kind": "card",
+      "refersTo": "card-content",
+      "description": "Studio Off-White tile with soft Slate Frame Light border. Flat at rest. Used for related cards, step tiles, content list items.",
+      "html": "<a class=\"ds-card\" href=\"#\">\n  <span class=\"ds-card__meta\">Article · 4 min</span>\n  <strong class=\"ds-card__title\">What a junior product designer actually does</strong>\n  <svg class=\"ds-card__arrow\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"7\" y1=\"17\" x2=\"17\" y2=\"7\"></line><polyline points=\"7 7 17 7 17 17\"></polyline></svg>\n</a>",
+      "css": ".ds-card { position: relative; display: flex; flex-direction: column; gap: 9px; min-height: 112px; padding: 14px; border: 1px solid #e5e9f1; border-radius: 12px; background: #f6f6ff; color: #22224c; text-align: left; text-decoration: none; transition: background 140ms ease, border-color 140ms ease, transform 140ms ease; } .ds-card:hover { background: #ffffff; border-color: #d9dfea; transform: translateY(-1px); } .ds-card:focus-visible { outline: 3px solid #0092ff; outline-offset: 2px; } .ds-card__meta { color: #485163; font-family: 'Open Sans', system-ui, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; } .ds-card__title { padding-right: 20px; font-family: 'Open Sans', system-ui, sans-serif; font-size: 14px; font-weight: 700; line-height: 1.32; } .ds-card__arrow { position: absolute; right: 13px; bottom: 13px; color: #65738b; }"
+    },
+    {
+      "name": "Takeaway Callout",
+      "kind": "card",
+      "refersTo": "callout-takeaway",
+      "description": "Pale Sky tinted card with Signal Blue border at low alpha. Used for key insights inside long-form content.",
+      "html": "<aside class=\"ds-callout-takeaway\">\n  <div class=\"ds-callout-takeaway__eyebrow\">Key Takeaway</div>\n  <p class=\"ds-callout-takeaway__body\">Internships beat resumes in the first three years — specifically Canadian roles you can name.</p>\n</aside>",
+      "css": ".ds-callout-takeaway { padding: 18px; border: 1px solid rgba(0, 146, 255, 0.22); border-radius: 14px; background: #e6f4ff; } .ds-callout-takeaway__eyebrow { margin-bottom: 8px; color: #0092ff; font-family: 'Open Sans', system-ui, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; } .ds-callout-takeaway__body { margin: 0; color: #22224c; font-family: 'Open Sans', system-ui, sans-serif; font-size: 16px; font-weight: 700; line-height: 1.45; }"
+    },
+    {
+      "name": "Numbered Step Tile",
+      "kind": "card",
+      "refersTo": null,
+      "description": "Step list item with a 30×30 Signal Blue badge. The most assertive single application of Signal Blue in the system.",
+      "html": "<div class=\"ds-step\">\n  <span class=\"ds-step__badge\">1</span>\n  <p class=\"ds-step__body\">Pick three career lanes that catch your eye — don't filter for realism yet.</p>\n</div>",
+      "css": ".ds-step { display: flex; gap: 13px; padding: 14px; border: 1px solid #e5e9f1; border-radius: 12px; background: #f6f6ff; } .ds-step__badge { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 9999px; background: #0092ff; color: #ffffff; font-family: 'Open Sans', system-ui, sans-serif; font-size: 13px; font-weight: 900; } .ds-step__body { margin: 0; color: #22224c; font-family: 'Open Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.5; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lit Switchboard",
+    "overview": "Career LaunchPAD is a switchboard of possibilities, lit up. The stage is Studio Off-White (#f6f6ff) — bright, calm, low-commitment — anchored by Anchor Navy (#22224c) as the steady ink and inverse surface. Signal Blue (#0092ff) is the spark: a single accent that lights up the active path, marking the 'this connects to that' moment for a student moving through content. The palette is small, the chrome is quiet, and the content is loud.\n\nThe system serves a student who is browsing ambiently inside myBlueprint, not arriving with intent. It must earn attention without demanding it: typography-forward, generously spaced, flat at rest, and confident on press. Motion is responsive — buttons lift on hover, the learn-more sheet rises from the bottom of the viewport — but never choreographed for its own sake. Reduced-motion preferences are honored at the keyframe level, not as an afterthought.\n\nThis system explicitly rejects the LMS / school-software aesthetic, the Government-of-Canada portal stuffiness, the SaaS-dashboard cliché, and the corporate career site framing. Career LaunchPAD is content-first, not a dashboard; exploration, not job-hunting; current, not commemorative.",
+    "keyCharacteristics": [
+      "Off-white stage, navy ink, single signal-blue accent — disciplined three-color palette.",
+      "Open Sans across every register, leaning on weight (300–900) and case (uppercase 10/11px labels) for hierarchy instead of multiple type families.",
+      "8px spacing grid; 4 / 8 / 12 / 16 / 9999 (pill) radii.",
+      "Flat at rest, lifted on intent — shadow is a state signal, not decoration.",
+      "Pill-shaped CTAs with bold focus halos; uppercase 10–11px label chips for category and format metadata.",
+      "Bottom-anchored learn-more sheet as the one true overlay surface."
+    ],
+    "rules": [
+      { "name": "The One Spark Rule", "body": "Signal Blue covers ≤10% of any rendered screen. If a comp shows blue on more than one CTA per fold, the second one is wrong. Active states win over decorative ones.", "section": "colors" },
+      { "name": "The No-Pure-Neutrals Rule", "body": "Never #000 and never #fff for text or large surfaces. Studio Off-White carries page background; Pure White is reserved for elevated card surfaces. Anchor Navy carries body ink; Slate Ink and below carry secondary copy.", "section": "colors" },
+      { "name": "The Tinted-Border Rule", "body": "Every border is on the navy-hue ramp (Slate Frame Light through Slate Echo). Never a chromaless gray. Never a colored side-stripe.", "section": "colors" },
+      { "name": "The Uppercase-Label Rule", "body": "Metadata chips (format, category, eyebrow, section head) are always uppercase, 10 or 11px, 800 weight, 0.08–0.12em letter-spacing. Sentence-case at this size is forbidden — it reads as small body copy and breaks the rhythm.", "section": "typography" },
+      { "name": "The Weight-Over-Family Rule", "body": "Hierarchy is achieved by weight (and occasionally case) within Open Sans. A second display family is forbidden. Prefer 800/900 weight contrast with 400/500 over reaching for a serif.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "New components ship with no shadow. If a designer wants to elevate a card, the question is: is this currently the focus, or is it just a card? If it's just a card, it stays flat.", "section": "elevation" },
+      { "name": "The Up-Cast Exception", "body": "The learn-more sheet is the only surface that casts a shadow upward. Every other elevation goes downward. Don't add new up-cast surfaces.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Signal Blue (#0092ff) at ≤10% of any rendered screen. Reserve it for the primary action, the active focus halo, the play marker, and the format chip color.",
+      "Do use Open Sans for everything. Reach for weight (300–900) and case (UPPERCASE 10–11px labels at 0.08–0.12em letter-spacing) before reaching for a second family.",
+      "Do pill-shape every button (border-radius: 9999px). Rectangles are reserved for cards and tiles.",
+      "Do ship surfaces flat by default. Add shadow only when something is actively elevated (sheet, hovered CTA, focus halo).",
+      "Do tint every neutral toward the navy hue ramp. Borders are Slate Frame Light / Mid / Echo, never chromaless gray.",
+      "Do honor prefers-reduced-motion at the keyframe level. The learn-more sheet entrance already does this — every new animation must too.",
+      "Do put the focus ring on every interactive element. The 6px Signal Blue halo on the primary CTA is the reference. Never outline: none without a replacement.",
+      "Do lead with content (videos, articles, real Canadians). The UI scaffolds the content; it is not the hero."
+    ],
+    "donts": [
+      "Don't use #000 or #fff for body text or large surfaces. Studio Off-White and Anchor Navy are the closest you go.",
+      "Don't ship a purple-to-blue SaaS gradient. The system has one accent; the only 'gradient' is the focus halo on the primary CTA, and it isn't really a gradient.",
+      "Don't stack identical icon-card grids ('hero-metric template' or 'feature-grid SaaS'). Career LaunchPAD is content-first; varied tiles beat a uniform grid.",
+      "Don't introduce a serif display family. The Weight-Over-Family Rule is a hard line.",
+      "Don't use border-left or border-right greater than 1px as a colored stripe accent. Side-stripes are an absolute ban.",
+      "Don't apply Inter, system-default sans, or any non-Open-Sans face to ship. Inter is a flag for AI slop in this register.",
+      "Don't reach for glassmorphism outside the learn-more overlay. The 8px backdrop-blur on the sheet wash is the only blurred surface in the system.",
+      "Don't stage the Government-of-Canada / Service Canada aesthetic — dense forms, gray-on-gray tables, 'official' framing.",
+      "Don't lean on red maple leaves, mountain photography, or hockey imagery to signal 'Canadian.' Trust through specificity earns it instead.",
+      "Don't use bounce / elastic easing. Easing is ease-out (cubic-bezier(0.16, 1, 0.3, 1)) or ease-standard (cubic-bezier(0.4, 0, 0.2, 1)). Never spring overshoot.",
+      "Don't animate CSS layout properties (top, left, width, height). Use transform for entrances, opacity for fades.",
+      "Don't force students through pop-ups, mandatory sign-ups, or completion-guilt UI. The system earns attention; it doesn't extract it."
+    ]
+  }
+}

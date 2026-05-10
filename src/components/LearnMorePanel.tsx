@@ -4,10 +4,9 @@ import * as Dialog from '@radix-ui/react-dialog';
 import {
   ArrowUpRight,
   BookOpen,
-  Bookmark,
-  BookmarkCheck,
   Clock,
   ExternalLink,
+  Heart,
   Play,
   Share2,
   X,
@@ -139,11 +138,11 @@ export function LearnMorePanel({
               <button
                 type="button"
                 className="learn-more-icon-button"
-                aria-label={isSaved ? 'Remove from saves' : 'Save'}
+                aria-label={isSaved ? 'Unlike' : 'Like'}
                 data-active={isSaved ? 'true' : 'false'}
                 onClick={onSave}
               >
-                {isSaved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+                <Heart size={15} fill={isSaved ? 'currentColor' : 'none'} />
               </button>
               <button type="button" className="learn-more-icon-button" aria-label="Share" onClick={onShare}>
                 <Share2 size={15} />

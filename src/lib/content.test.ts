@@ -13,7 +13,7 @@ import {
 describe('content filtering', () => {
   it('filters by category and format without mutating the source list', () => {
     const result = applyContentFilters(fixtureContent, {
-      category: 'life-skills',
+      categories: ['life-skills'],
       format: 'video',
     });
 
@@ -24,7 +24,7 @@ describe('content filtering', () => {
   });
 
   it('returns all content when filters are empty', () => {
-    expect(applyContentFilters(fixtureContent, { category: null, format: null })).toEqual(fixtureContent);
+    expect(applyContentFilters(fixtureContent, { categories: [], format: null })).toEqual(fixtureContent);
   });
 });
 
@@ -32,7 +32,7 @@ describe('feed ordering', () => {
   it('promotes videos first when no format filter is selected', () => {
     const articleFirst = [fixtureContent[1], fixtureContent[0], fixtureContent[3], fixtureContent[2]];
 
-    const result = orderContentForFeed(articleFirst, { category: null, format: null });
+    const result = orderContentForFeed(articleFirst, { categories: [], format: null });
 
     expect(result.map((item) => item.slug)).toEqual([
       'ai-tools-student-workflow',
@@ -61,8 +61,8 @@ describe('feed ordering', () => {
       },
     ];
 
-    const filtered = applyContentFilters(categoryContent, { category: 'life-skills', format: null });
-    const result = orderContentForFeed(filtered, { category: 'life-skills', format: null });
+    const filtered = applyContentFilters(categoryContent, { categories: ['life-skills'], format: null });
+    const result = orderContentForFeed(filtered, { categories: ['life-skills'], format: null });
 
     expect(result.map((item) => item.format)).toEqual(['video', 'article', 'article']);
   });
@@ -70,7 +70,7 @@ describe('feed ordering', () => {
   it('preserves explicit format-filter order', () => {
     const articleFirst = [fixtureContent[1], fixtureContent[0], fixtureContent[3], fixtureContent[2]];
 
-    expect(orderContentForFeed(articleFirst, { category: null, format: 'video' })).toEqual(articleFirst);
+    expect(orderContentForFeed(articleFirst, { categories: [], format: 'video' })).toEqual(articleFirst);
   });
 });
 

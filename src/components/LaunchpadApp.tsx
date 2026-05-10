@@ -3,23 +3,13 @@
 import {
   ArrowUpRight,
   BookOpen,
-  Brain,
-  Briefcase,
   ChevronsDown,
-  Clipboard,
+  ChevronRight,
   Clock,
-  Eye,
-  GraduationCap,
   Heart,
   Info,
-  LayoutList,
-  Lightbulb,
   ListChecks,
-  ListFilter,
-  MapPin,
   Play,
-  Puzzle,
-  Rocket,
   Search,
   Share2,
   Sparkles,
@@ -37,7 +27,6 @@ import {
   useState,
 } from 'react';
 
-import { formats } from '@/data/content';
 import {
   applyContentFilters,
   formatDuration,
@@ -49,27 +38,28 @@ import {
 import { trackEvent } from '@/lib/analytics';
 import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types';
 
+import { BrowseDrawer } from '@/components/BrowseDrawer';
+
 const LearnMorePanel = dynamic(
   () => import('@/components/LearnMorePanel').then((mod) => mod.LearnMorePanel),
   { ssr: false }
 );
 
-const SAVED_KEY = 'career-launchpad-saved-content';
+const LIKED_KEY = 'career-launchpad-liked-content';
+const LEGACY_SAVED_KEY = 'career-launchpad-saved-content';
 const NAVY = '#22224C';
 const BLUE = '#0092FF';
-const STAGE_BG = '#F6F6FF';
-const SURFACE = '#FFFFFF';
-const INK = '#22224C';
-const INK2 = '#485163';
-const BORDER = '#E5E9F1';
 const FEED_NUDGE_KEY = 'career-launchpad-feed-nudge-seen';
 const FEED_TRANSITION_MS = 280;
 const FEED_NAV_LOCK_MS = 320;
+const RAIL_FEEDBACK_MS = 1800;
 const BRAND_MARK_SRC = '/launchpad-logo.svg';
 
 type AutoplayMode = 'audible' | 'muted-fallback';
 type FeedDirection = 'next' | 'prev';
 type FeedMediaVariant = 'mobile' | 'desktop-immersive';
+type RailFeedbackAction = 'share' | 'info';
+type RailFeedback = { action: RailFeedbackAction; contentId: string };
 
 type IconCmp = ComponentType<{
   size?: number;
@@ -187,17 +177,6 @@ declare global {
   }
 }
 
-const CATEGORY_ICON: Record<CategorySlug, IconCmp> = {
-  'emerging-careers': Rocket,
-  'on-the-job': Briefcase,
-  'life-skills': Lightbulb,
-  mindsets: Brain,
-  'how-i-got-here': MapPin,
-  'problems-to-solve': Puzzle,
-  'post-secondary': GraduationCap,
-  'job-board': ListChecks,
-};
-
 const CATEGORY_BLOCK_BG: Record<CategorySlug, string> = {
   'emerging-careers': BLUE,
   'on-the-job': NAVY,
@@ -224,7 +203,7 @@ const FORMAT_LABEL: Record<ContentFormat, string> = {
 function readSavedIds(): string[] {
   if (typeof window === 'undefined') return [];
   try {
-    const stored = window.localStorage.getItem(SAVED_KEY);
+    const stored = window.localStorage.getItem(LIKED_KEY) ?? window.localStorage.getItem(LEGACY_SAVED_KEY);
     return stored ? (JSON.parse(stored) as string[]) : [];
   } catch {
     return [];
@@ -232,19 +211,11 @@ function readSavedIds(): string[] {
 }
 
 function writeSavedIds(ids: string[]) {
-  window.localStorage.setItem(SAVED_KEY, JSON.stringify(ids));
+  window.localStorage.setItem(LIKED_KEY, JSON.stringify(ids));
 }
 
 function categoryLabel(categories: LaunchpadCategory[], slug: CategorySlug): string {
   return categories.find((c) => c.slug === slug)?.name ?? slug;
-}
-
-function categoryShortLabel(category: LaunchpadCategory): string {
-  if (category.slug === 'emerging-careers') return 'Emerging';
-  if (category.slug === 'how-i-got-here') return 'Paths';
-  if (category.slug === 'problems-to-solve') return 'Problems';
-  if (category.slug === 'job-board') return 'Jobs';
-  return category.name;
 }
 
 function useIsMobile(): boolean {
@@ -442,18 +413,21 @@ export function LaunchpadApp({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [filters, setFilters] = useState<ContentFilters>({ category: null, format: null });
+  const [filters, setFilters] = useState<ContentFilters>({ categories: [], format: null });
   const [query, setQuery] = useState('');
   const [feedIdx, setFeedIdx] = useState(0);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [selected, setSelected] = useState<LaunchpadContent | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [formatMenuOpen, setFormatMenuOpen] = useState(false);
+  const [pathsDrawerOpen, setPathsDrawerOpen] = useState(false);
+  const [formatsDrawerOpen, setFormatsDrawerOpen] = useState(false);
   const [navDirection, setNavDirection] = useState<FeedDirection>('next');
   const [playingContentId, setPlayingContentId] = useState<string | null>(null);
   const [autoplayMode, setAutoplayMode] = useState<AutoplayMode>('audible');
+  const [activeRailFeedback, setActiveRailFeedback] = useState<RailFeedback | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const railFeedbackTimer = useRef<number | null>(null);
   const navSurfaceRef = useRef<HTMLDivElement | null>(null);
   const feedDeckRef = useRef<HTMLDivElement | null>(null);
   const navLockedUntilRef = useRef(0);
@@ -465,7 +439,7 @@ export function LaunchpadApp({
     [initialContent]
   );
   const unfilteredFeedContent = useMemo(
-    () => orderContentForFeed(previewContent, { category: null, format: null }),
+    () => orderContentForFeed(previewContent, { categories: [], format: null }),
     [previewContent]
   );
 
@@ -482,7 +456,7 @@ export function LaunchpadApp({
 
   // Reset feedIdx when filters/query change — React-recommended "store info from
   // previous renders" pattern: detect the change during render and reset before paint.
-  const filterKey = `${filters.category ?? ''}|${filters.format ?? ''}|${query}`;
+  const filterKey = `${filters.categories.join(',')}|${filters.format ?? ''}|${query}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (prevFilterKey !== filterKey) {
     setPrevFilterKey(filterKey);
@@ -500,11 +474,24 @@ export function LaunchpadApp({
     toastTimer.current = window.setTimeout(() => setToast(null), 1800);
   }, []);
 
+  const showRailFeedback = useCallback((action: RailFeedbackAction, contentId: string) => {
+    setActiveRailFeedback({ action, contentId });
+    if (railFeedbackTimer.current) window.clearTimeout(railFeedbackTimer.current);
+    railFeedbackTimer.current = window.setTimeout(() => setActiveRailFeedback(null), RAIL_FEEDBACK_MS);
+  }, []);
+
   // Initial load
   useEffect(() => {
     queueMicrotask(() => setSavedIds(readSavedIds()));
     trackEvent('entry_view', { metadata: { contentCount: previewContent.length } });
   }, [previewContent.length]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+      if (railFeedbackTimer.current) window.clearTimeout(railFeedbackTimer.current);
+    };
+  }, []);
 
   // Deep link
   useEffect(() => {
@@ -527,9 +514,19 @@ export function LaunchpadApp({
     return () => window.removeEventListener('popstate', onPop);
   }, [initialContentSlug, pathname, previewContent, router, searchParams, showToast]);
 
-  const setCategory = useCallback((category: CategorySlug | null) => {
-    setFilters((current) => ({ ...current, category }));
-    trackEvent('category_filter', { metadata: { category: category ?? 'all' } });
+  const toggleCategory = useCallback((slug: CategorySlug) => {
+    setFilters((current) => {
+      const next = current.categories.includes(slug)
+        ? current.categories.filter((s) => s !== slug)
+        : [...current.categories, slug];
+      trackEvent('category_filter', { metadata: { category: slug, action: current.categories.includes(slug) ? 'remove' : 'add' } });
+      return { ...current, categories: next };
+    });
+  }, []);
+
+  const clearCategories = useCallback(() => {
+    setFilters((current) => ({ ...current, categories: [] }));
+    trackEvent('category_filter', { metadata: { category: 'all' } });
   }, []);
 
   const setFormat = useCallback((format: ContentFormat | null) => {
@@ -561,7 +558,7 @@ export function LaunchpadApp({
       setPlayingContentId(null);
       setSearchOpen(false);
       setSelected(null);
-      setFilters({ category: null, format: null });
+      setFilters({ categories: [], format: null });
       setQuery('');
       setPrevFilterKey('||');
       setNavDirection('next');
@@ -582,8 +579,8 @@ export function LaunchpadApp({
         const wasSaved = current.includes(target.id);
         const next = wasSaved ? current.filter((id) => id !== target.id) : [...current, target.id];
         writeSavedIds(next);
-        trackEvent('save', { contentId: target.id, metadata: { saved: !wasSaved } });
-        showToast(wasSaved ? 'Removed from saves' : 'Saved · check back anytime');
+        trackEvent('like', { contentId: target.id, metadata: { liked: !wasSaved } });
+        showToast(wasSaved ? 'Like removed' : 'Liked');
         return next;
       });
     },
@@ -703,7 +700,7 @@ export function LaunchpadApp({
     return (
       <EmptyState
         onClear={() => {
-          setFilters({ category: null, format: null });
+          setFilters({ categories: [], format: null });
           setQuery('');
         }}
       />
@@ -711,21 +708,34 @@ export function LaunchpadApp({
   }
 
   const isSaved = savedIds.includes(item.id);
+  const currentRailFeedback = activeRailFeedback?.contentId === item.id ? activeRailFeedback.action : null;
   const stageProps = {
     item,
     nextItem,
     categories: initialCategories,
     isSaved,
-    activeCategory: filters.category,
+    activeRailFeedback: currentRailFeedback,
+    activeCategories: filters.categories,
     activeFormat: filters.format,
-    setCategory,
+    toggleCategory,
+    clearCategories,
     setFormat,
     onLearnMore: () => openPanel(item, 'feed'),
+    onInfo: () => {
+      showRailFeedback('info', item.id);
+      openPanel(item, 'feed');
+    },
     onSave: () => toggleSave(item),
-    onShare: () => shareItem(item),
+    onShare: () => {
+      showRailFeedback('share', item.id);
+      void shareItem(item);
+    },
     onSearch: () => setSearchOpen(true),
-    formatMenuOpen,
-    setFormatMenuOpen,
+    pathsDrawerOpen,
+    setPathsDrawerOpen,
+    formatsDrawerOpen,
+    setFormatsDrawerOpen,
+    content: initialContent,
     feedIdx: safeIdx,
     feedTotal: filteredContent.length,
     onNext: stepNext,
@@ -744,8 +754,39 @@ export function LaunchpadApp({
   };
 
   return (
-    <main style={{ minHeight: '100vh', background: STAGE_BG, color: INK, fontFamily: 'var(--font-primary)' }}>
+    <main style={{ minHeight: '100vh', background: 'var(--off-white)', color: 'var(--navy)', fontFamily: 'var(--font-primary)' }}>
       {isMobile ? <MobileStage {...stageProps} /> : <DesktopStage {...stageProps} />}
+
+      <BrowseDrawer
+        mode="paths"
+        open={pathsDrawerOpen}
+        mobile={isMobile}
+        categories={initialCategories}
+        content={initialContent}
+        activeCategories={filters.categories}
+        activeFormat={filters.format}
+        onToggleCategory={toggleCategory}
+        onClearCategories={clearCategories}
+        onPickFormat={() => {}}
+        onClose={() => setPathsDrawerOpen(false)}
+      />
+
+      <BrowseDrawer
+        mode="formats"
+        open={formatsDrawerOpen}
+        mobile={isMobile}
+        categories={initialCategories}
+        content={initialContent}
+        activeCategories={filters.categories}
+        activeFormat={filters.format}
+        onToggleCategory={() => {}}
+        onClearCategories={() => {}}
+        onPickFormat={(format) => {
+          setFormat(format);
+          setFormatsDrawerOpen(false);
+        }}
+        onClose={() => setFormatsDrawerOpen(false)}
+      />
 
       {selected && (
         <LearnMorePanel
@@ -798,16 +839,22 @@ type StageProps = {
   nextItem: LaunchpadContent | null;
   categories: LaunchpadCategory[];
   isSaved: boolean;
-  activeCategory: CategorySlug | null;
+  activeRailFeedback: RailFeedbackAction | null;
+  activeCategories: CategorySlug[];
   activeFormat: ContentFormat | null;
-  setCategory: (slug: CategorySlug | null) => void;
+  toggleCategory: (slug: CategorySlug) => void;
+  clearCategories: () => void;
   setFormat: (format: ContentFormat | null) => void;
   onLearnMore: () => void;
+  onInfo: () => void;
   onSave: () => void;
   onShare: () => void;
   onSearch: () => void;
-  formatMenuOpen: boolean;
-  setFormatMenuOpen: (open: boolean) => void;
+  pathsDrawerOpen: boolean;
+  setPathsDrawerOpen: (open: boolean) => void;
+  formatsDrawerOpen: boolean;
+  setFormatsDrawerOpen: (open: boolean) => void;
+  content: LaunchpadContent[];
   feedIdx: number;
   feedTotal: number;
   onNext: () => void;
@@ -830,18 +877,18 @@ function DesktopStage({
   nextItem,
   categories,
   isSaved,
-  activeCategory,
+  activeRailFeedback,
+  activeCategories,
   activeFormat,
-  setCategory,
-  setFormat,
   onLearnMore,
+  onInfo,
   onSave,
   onShare,
   onSearch,
-  formatMenuOpen,
-  setFormatMenuOpen,
-  feedIdx,
-  feedTotal,
+  pathsDrawerOpen,
+  setPathsDrawerOpen,
+  formatsDrawerOpen,
+  setFormatsDrawerOpen,
   navSurfaceRef,
   feedDeckRef,
   navDirection,
@@ -857,11 +904,19 @@ function DesktopStage({
   const blockColor = CATEGORY_BLOCK_BG[item.primaryCategory] ?? BLUE;
   const DESKTOP_STAGE_MAX_WIDTH = 1720;
 
+  const pathsCtaText = (() => {
+    if (activeCategories.length === 0) return null;
+    if (activeCategories.length === 1) return categoryLabel(categories, activeCategories[0]);
+    return `${activeCategories.length} Paths`;
+  })();
+  const pathsAriaLabel = pathsCtaText ?? '9 Paths';
+
   return (
     <div
       ref={navSurfaceRef}
       data-testid="launchpad-navigation-surface"
-      style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+      className="lp-fullheight"
+      style={{ width: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
     >
       {/* Header */}
       <header
@@ -870,10 +925,10 @@ function DesktopStage({
           display: 'flex',
           alignItems: 'center',
           padding: '0 32px',
-          borderBottom: `1px solid ${BORDER}`,
+          borderBottom: '1px solid var(--border-1)',
           flexShrink: 0,
           gap: 16,
-          background: SURFACE,
+          background: 'var(--white)',
         }}
       >
         <div
@@ -891,15 +946,45 @@ function DesktopStage({
         </div>
         <div style={{ flex: 1 }} />
 
-        <FormatChooser
-          active={activeFormat}
-          open={formatMenuOpen}
-          setOpen={setFormatMenuOpen}
-          onPick={(value) => {
-            setFormat(value);
-            setFormatMenuOpen(false);
-          }}
-        />
+        <button
+          type="button"
+          className="lp-header-browse-cta"
+          onClick={() => setPathsDrawerOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={pathsDrawerOpen}
+          aria-label={pathsAriaLabel}
+          data-active={activeCategories.length > 0 ? 'true' : 'false'}
+        >
+          {pathsCtaText === null ? (
+            <>
+              <span className="num" aria-hidden="true">9</span>
+              <span aria-hidden="true">Paths</span>
+            </>
+          ) : (
+            <span aria-hidden="true">{pathsCtaText}</span>
+          )}
+          <ChevronRight size={12} aria-hidden="true" />
+        </button>
+
+        <button
+          type="button"
+          className="lp-header-browse-cta"
+          onClick={() => setFormatsDrawerOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={formatsDrawerOpen}
+          aria-label={activeFormat === null ? '3 Formats' : FORMAT_LABEL[activeFormat]}
+          data-active={activeFormat !== null ? 'true' : 'false'}
+        >
+          {activeFormat === null ? (
+            <>
+              <span className="num" aria-hidden="true">3</span>
+              <span aria-hidden="true">Formats</span>
+            </>
+          ) : (
+            <span aria-hidden="true">{FORMAT_LABEL[activeFormat]}</span>
+          )}
+          <ChevronRight size={12} aria-hidden="true" />
+        </button>
 
         <button
           onClick={onSearch}
@@ -907,25 +992,25 @@ function DesktopStage({
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            background: SURFACE,
-            border: `1px solid ${BORDER}`,
+            background: 'var(--white)',
+            border: '1px solid var(--border-1)',
             borderRadius: 999,
             padding: '8px 14px',
             fontSize: 13,
-            color: INK2,
+            color: 'var(--neutral-5)',
             cursor: 'pointer',
             minWidth: 240,
           }}
           aria-label="Open search"
         >
           <Search size={14} />
-          <span>Search careers, skills…</span>
+          <span>Search careers, skills, articles…</span>
           <span
             style={{
               marginLeft: 'auto',
               fontSize: 10,
               padding: '2px 6px',
-              border: `1px solid ${BORDER}`,
+              border: '1px solid var(--border-1)',
               borderRadius: 4,
             }}
           >
@@ -933,45 +1018,6 @@ function DesktopStage({
           </span>
         </button>
       </header>
-
-      {/* Filter rail — outer is purely a horizontal scroll wrapper; inner row centers via margin auto */}
-      <div
-        style={{
-          padding: '14px 32px',
-          borderBottom: `1px solid ${BORDER}`,
-          overflowX: 'auto',
-          flexShrink: 0,
-          background: SURFACE,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            width: 'max-content',
-            minWidth: 'max-content',
-            margin: '0 auto',
-          }}
-        >
-          <CategoryChip
-            slug={null}
-            label="For you"
-            icon={Sparkles}
-            active={activeCategory === null}
-            onClick={() => setCategory(null)}
-          />
-          {categories.map((c) => (
-            <CategoryChip
-              key={c.slug}
-              slug={c.slug}
-              label={c.name}
-              icon={CATEGORY_ICON[c.slug]}
-              active={activeCategory === c.slug}
-              onClick={() => setCategory(c.slug)}
-            />
-          ))}
-        </div>
-      </div>
 
       {/* Stage */}
       <div
@@ -1011,7 +1057,7 @@ function DesktopStage({
                 data-testid="desktop-category-pill"
                 style={{
                   background: blockColor,
-                  color: '#fff',
+                  color: 'var(--white)',
                   padding: '6px 12px',
                   fontSize: 11,
                   fontWeight: 900,
@@ -1043,7 +1089,7 @@ function DesktopStage({
             style={{
               fontSize: 17,
               lineHeight: 1.55,
-              color: INK2,
+              color: 'var(--neutral-5)',
               margin: 0,
               textWrap: 'pretty' as CSSProperties['textWrap'],
             }}
@@ -1058,7 +1104,7 @@ function DesktopStage({
               gap: 16,
               fontSize: 12,
               fontWeight: 700,
-              color: INK2,
+              color: 'var(--neutral-5)',
               flexWrap: 'wrap',
             }}
           >
@@ -1069,24 +1115,32 @@ function DesktopStage({
             {item.format === 'article' && item.readingTimeMinutes && (
               <Meta icon={Clock} label={`${item.readingTimeMinutes} min read`} />
             )}
-            <Meta
-              icon={Eye}
-              label={`Item ${feedIdx + 1} / ${feedTotal}`}
-            />
           </div>
 
-          <div
-            style={{
-              borderLeft: `3px solid ${BLUE}`,
-              paddingLeft: 16,
-              fontSize: 15,
-              lineHeight: 1.5,
-              color: INK,
-              fontStyle: 'italic',
-              fontWeight: 500,
-            }}
-          >
-            {pullQuoteFor(item)}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'var(--primary-blue)',
+              }}
+            >
+              Why it matters
+            </span>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 17,
+                lineHeight: 1.5,
+                color: 'var(--navy)',
+                fontStyle: 'italic',
+                fontWeight: 500,
+              }}
+            >
+              {pullQuoteFor(item)}
+            </p>
           </div>
 
           <LearnMoreCta format={item.format} variant="desktop" onClick={onLearnMore} />
@@ -1112,13 +1166,14 @@ function DesktopStage({
             reducedMotion={reducedMotion}
             isPlaying={isPlaying}
             isSaved={isSaved}
+            activeRailFeedback={activeRailFeedback}
             autoplayMode={autoplayMode}
             onPlay={onPlay}
             onPause={onPause}
             onVideoEnd={onVideoEnd}
             onSave={onSave}
             onShare={onShare}
-            onLearnMore={onLearnMore}
+            onLearnMore={onInfo}
             onAutoplayModeChange={onAutoplayModeChange}
             onPlayerReady={onPlayerReady}
           />
@@ -1136,12 +1191,18 @@ function MobileStage({
   item,
   categories,
   isSaved,
-  activeCategory,
-  setCategory,
+  activeRailFeedback,
+  activeCategories,
+  activeFormat,
   onLearnMore,
+  onInfo,
   onSave,
   onShare,
   onSearch,
+  pathsDrawerOpen,
+  setPathsDrawerOpen,
+  formatsDrawerOpen,
+  setFormatsDrawerOpen,
   navSurfaceRef,
   feedDeckRef,
   navDirection,
@@ -1154,15 +1215,21 @@ function MobileStage({
   onAutoplayModeChange,
   onPlayerReady,
 }: StageProps) {
+  const pathsCtaText = (() => {
+    if (activeCategories.length === 0) return null;
+    if (activeCategories.length === 1) return categoryLabel(categories, activeCategories[0]);
+    return `${activeCategories.length} Paths`;
+  })();
+  const pathsAriaLabel = pathsCtaText ?? '9 Paths';
   return (
     <div
       ref={navSurfaceRef}
       data-testid="launchpad-navigation-surface"
+      className="lp-fullheight"
       style={{
         width: '100%',
-        height: '100vh',
-        background: STAGE_BG,
-        color: INK,
+        background: 'var(--off-white)',
+        color: 'var(--navy)',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
@@ -1176,55 +1243,63 @@ function MobileStage({
           display: 'flex',
           alignItems: 'center',
           padding: '0 16px',
-          borderBottom: `1px solid ${BORDER}`,
-          gap: 10,
+          borderBottom: '1px solid var(--border-1)',
+          gap: 8,
           flexShrink: 0,
-          background: SURFACE,
+          background: 'var(--white)',
         }}
       >
         <BrandMark size={28} />
         <div style={{ fontWeight: 900, fontSize: 15 }}>Career LaunchPAD</div>
         <div style={{ flex: 1 }} />
+
+        <button
+          type="button"
+          className="lp-header-browse-cta"
+          onClick={() => setPathsDrawerOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={pathsDrawerOpen}
+          aria-label={pathsAriaLabel}
+          data-active={activeCategories.length > 0 ? 'true' : 'false'}
+        >
+          {pathsCtaText === null ? (
+            <>
+              <span className="num" aria-hidden="true">9</span>
+              <span aria-hidden="true">Paths</span>
+            </>
+          ) : (
+            <span aria-hidden="true">{pathsCtaText}</span>
+          )}
+          <ChevronRight size={12} aria-hidden="true" />
+        </button>
+
+        <button
+          type="button"
+          className="lp-header-browse-cta"
+          onClick={() => setFormatsDrawerOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={formatsDrawerOpen}
+          aria-label={activeFormat === null ? '3 Formats' : FORMAT_LABEL[activeFormat]}
+          data-active={activeFormat !== null ? 'true' : 'false'}
+        >
+          {activeFormat === null ? (
+            <>
+              <span className="num" aria-hidden="true">3</span>
+              <span aria-hidden="true">Formats</span>
+            </>
+          ) : (
+            <span aria-hidden="true">{FORMAT_LABEL[activeFormat]}</span>
+          )}
+          <ChevronRight size={12} aria-hidden="true" />
+        </button>
+
         <button
           onClick={onSearch}
-          style={{ background: 'transparent', border: 'none', color: INK, padding: 8, cursor: 'pointer' }}
+          style={{ background: 'transparent', border: 'none', color: 'var(--navy)', padding: 8, cursor: 'pointer' }}
           aria-label="Open search"
         >
           <Search size={20} />
         </button>
-      </div>
-
-      {/* category strip */}
-      <div
-        style={{
-          padding: '10px 12px',
-          borderBottom: `1px solid ${BORDER}`,
-          display: 'flex',
-          gap: 6,
-          overflowX: 'auto',
-          flexShrink: 0,
-          background: SURFACE,
-        }}
-      >
-        <CategoryChip
-          slug={null}
-          label="For you"
-          icon={Sparkles}
-          active={activeCategory === null}
-          onClick={() => setCategory(null)}
-          compact
-        />
-        {categories.map((c) => (
-          <CategoryChip
-            key={c.slug}
-            slug={c.slug}
-            label={categoryShortLabel(c)}
-            icon={CATEGORY_ICON[c.slug]}
-            active={activeCategory === c.slug}
-            onClick={() => setCategory(c.slug)}
-            compact
-          />
-        ))}
       </div>
 
       {/* Stage: video fills full space */}
@@ -1239,13 +1314,14 @@ function MobileStage({
           reducedMotion={reducedMotion}
           isPlaying={isPlaying}
           isSaved={isSaved}
+          activeRailFeedback={activeRailFeedback}
           autoplayMode={autoplayMode}
           onPlay={onPlay}
           onPause={onPause}
           onVideoEnd={onVideoEnd}
           onSave={onSave}
           onShare={onShare}
-          onLearnMore={onLearnMore}
+          onLearnMore={onInfo}
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
         />
@@ -1265,23 +1341,23 @@ function MobileStage({
         >
           <MobileRailBtn
             icon={Heart}
-            label="Save"
+            label={isSaved ? 'Liked' : 'Like'}
             active={isSaved}
             onClick={onSave}
           />
-          <MobileRailBtn icon={Share2} label="Share" onClick={onShare} />
-          <MobileRailBtn icon={Info} label="Info" onClick={onLearnMore} />
+          <MobileRailBtn icon={Share2} label="Share" active={activeRailFeedback === 'share'} onClick={onShare} />
+          <MobileRailBtn icon={Info} label="Info" active={activeRailFeedback === 'info'} onClick={onInfo} />
 
           <div
+            data-testid="mobile-scroll-hint"
             style={{
               marginTop: 6,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               gap: 2,
-              color: '#fff',
+              color: 'var(--neutral-6)',
               opacity: 0.85,
-              textShadow: '0 1px 4px rgba(0,0,0,0.5)',
             }}
           >
             <span
@@ -1330,6 +1406,7 @@ function FeedMediaDeck({
   reducedMotion,
   isPlaying,
   isSaved,
+  activeRailFeedback,
   autoplayMode,
   onPlay,
   onPause,
@@ -1349,6 +1426,7 @@ function FeedMediaDeck({
   reducedMotion: boolean;
   isPlaying: boolean;
   isSaved: boolean;
+  activeRailFeedback: RailFeedbackAction | null;
   autoplayMode: AutoplayMode;
   onPlay: () => void;
   onPause: () => void;
@@ -1477,7 +1555,6 @@ function FeedMediaDeck({
     >
       {previous && (
         <div data-testid={`feed-media-card-${previous.item.id}`} style={cardStyle('previous')}>
-          {!isMobileVariant && <ImmersiveBackdrop item={previous.item} />}
           <MediaStage
             item={previous.item}
             nextItem={null}
@@ -1493,7 +1570,6 @@ function FeedMediaDeck({
         </div>
       )}
       <div data-testid={`feed-media-card-${current.item.id}`} style={cardStyle('current')}>
-        {!isMobileVariant && <ImmersiveBackdrop item={current.item} />}
         <MediaStage
           item={current.item}
           nextItem={nextItem}
@@ -1510,6 +1586,7 @@ function FeedMediaDeck({
       {!isMobileVariant && (
         <DesktopOverlayRail
           isSaved={isSaved}
+          activeRailFeedback={activeRailFeedback}
           onSave={onSave}
           onShare={onShare}
           onLearnMore={onLearnMore}
@@ -1519,47 +1596,15 @@ function FeedMediaDeck({
   );
 }
 
-function ImmersiveBackdrop({ item }: { item: LaunchpadContent }) {
-  return (
-    <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        data-testid="desktop-immersive-backdrop"
-        src={item.thumbnailUrl}
-        alt=""
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          transform: 'scale(1.08)',
-          filter: 'blur(18px)',
-          opacity: 0.82,
-          zIndex: 0,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'linear-gradient(90deg, rgba(8,8,26,0.74) 0%, rgba(8,8,26,0.48) 38%, rgba(8,8,26,0.72) 100%)',
-          zIndex: 1,
-        }}
-      />
-    </>
-  );
-}
-
 function DesktopOverlayRail({
   isSaved,
+  activeRailFeedback,
   onSave,
   onShare,
   onLearnMore,
 }: {
   isSaved: boolean;
+  activeRailFeedback: RailFeedbackAction | null;
   onSave: () => void;
   onShare: () => void;
   onLearnMore?: () => void;
@@ -1581,12 +1626,14 @@ function DesktopOverlayRail({
     >
       <DesktopRailBtn
         icon={Heart}
-        label={isSaved ? 'Saved' : 'Save'}
+        label={isSaved ? 'Liked' : 'Like'}
         active={isSaved}
         onClick={onSave}
       />
-      <DesktopRailBtn icon={Share2} label="Share" onClick={onShare} />
-      {onLearnMore && <DesktopRailBtn icon={Info} label="Info" onClick={onLearnMore} />}
+      <DesktopRailBtn icon={Share2} label="Share" active={activeRailFeedback === 'share'} onClick={onShare} />
+      {onLearnMore && (
+        <DesktopRailBtn icon={Info} label="Info" active={activeRailFeedback === 'info'} onClick={onLearnMore} />
+      )}
       <div
         data-testid="desktop-scroll-hint"
         style={{
@@ -1595,8 +1642,7 @@ function DesktopOverlayRail({
           flexDirection: 'column',
           alignItems: 'center',
           gap: 4,
-          color: '#fff',
-          textShadow: '0 1px 5px rgba(0,0,0,0.75)',
+          color: 'var(--neutral-6)',
         }}
       >
         <ChevronsDown size={18} />
@@ -1812,7 +1858,7 @@ function MediaStage({
 
   if (isMobileVariant) {
     return (
-      <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'var(--navy)' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.thumbnailUrl}
@@ -1823,8 +1869,7 @@ function MediaStage({
           style={{
             position: 'absolute',
             inset: 0,
-            background:
-              'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, transparent 25%, transparent 55%, rgba(0,0,0,0.7) 100%)',
+            background: 'rgba(8, 8, 26, 0.5)',
           }}
         />
         <FormatBadge type={item.format} top={12} left={14} />
@@ -1848,13 +1893,13 @@ function MediaStage({
                 width: 76,
                 height: 76,
                 borderRadius: 999,
-                background: BLUE,
+                background: 'var(--primary-blue)',
                 display: 'grid',
                 placeItems: 'center',
                 boxShadow: '0 10px 30px rgba(0,146,255,0.55)',
               }}
             >
-              <Play size={32} style={{ color: '#fff', marginLeft: 3 }} />
+              <Play size={32} style={{ color: 'var(--white)', marginLeft: 3 }} />
             </div>
           </button>
         )}
@@ -1884,7 +1929,7 @@ function MediaStage({
               padding: '20px 20px calc(136px + env(safe-area-inset-bottom))',
               display: 'flex',
               alignItems: 'flex-end',
-              color: '#fff',
+              color: 'var(--white)',
             }}
           >
             <div
@@ -1922,7 +1967,7 @@ function MediaStage({
           width: '100%',
           height: '100%',
           overflow: 'hidden',
-          background: '#000',
+          background: 'var(--navy)',
           zIndex: 1,
           borderRadius: 16,
           boxShadow: '0 30px 60px rgba(34,34,76,0.18)',
@@ -1938,8 +1983,7 @@ function MediaStage({
           style={{
             position: 'absolute',
             inset: 0,
-            background:
-              'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 30%, transparent 65%, rgba(0,0,0,0.6) 100%)',
+            background: 'rgba(8, 8, 26, 0.5)',
           }}
         />
         {isPlayableVideo && !isPlaying && (
@@ -1962,13 +2006,13 @@ function MediaStage({
                 width: 80,
                 height: 80,
                 borderRadius: 999,
-                background: BLUE,
+                background: 'var(--primary-blue)',
                 display: 'grid',
                 placeItems: 'center',
                 boxShadow: '0 10px 30px rgba(0,146,255,0.6)',
               }}
             >
-              <Play size={32} style={{ color: '#fff', marginLeft: 4 }} />
+              <Play size={32} style={{ color: 'var(--white)', marginLeft: 4 }} />
             </div>
           </button>
         )}
@@ -2013,7 +2057,7 @@ function MediaStage({
             />
             <span
               style={{
-                color: '#fff',
+                color: 'var(--white)',
                 fontSize: 11,
                 fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums',
@@ -2032,7 +2076,7 @@ function MediaStage({
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-end',
-              color: '#fff',
+              color: 'var(--white)',
             }}
           >
             <div data-testid="media-article-copy">
@@ -2069,7 +2113,7 @@ function MediaStage({
             transform: 'translateX(-50%)',
             overflow: 'hidden',
             borderRadius: 14,
-            background: '#000',
+            background: 'var(--navy)',
             opacity: 0.82,
             zIndex: 0,
             boxShadow: '0 22px 42px rgba(8,8,26,0.26)',
@@ -2085,13 +2129,6 @@ function MediaStage({
               height: '100%',
               objectFit: 'cover',
               filter: 'saturate(0.9)',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(8,8,26,0.48))',
             }}
           />
         </div>
@@ -2127,7 +2164,7 @@ function HighlightedTitle({ title, accent }: { title: string; accent: string }) 
               style={{
                 display: 'inline-block',
                 background: accent,
-                color: '#fff',
+                color: 'var(--white)',
                 padding: '0.02em 0.14em 0.08em',
                 lineHeight: 0.92,
                 verticalAlign: 'baseline',
@@ -2159,10 +2196,9 @@ function FormatBadge({ type, top, left }: { type: ContentFormat; top: number; le
           display: 'inline-flex',
           alignItems: 'center',
           gap: 6,
-          background: 'rgba(255,255,255,0.14)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.22)',
-          color: '#fff',
+          background: 'rgba(34, 34, 76, 0.78)',
+          border: '1px solid rgba(255, 255, 255, 0.18)',
+          color: 'var(--white)',
           fontSize: 11,
           fontWeight: 700,
           padding: '4px 10px',
@@ -2186,9 +2222,9 @@ function FormatPill({ type }: { type: ContentFormat }) {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 7,
-        border: `1px solid ${BORDER}`,
-        background: SURFACE,
-        color: INK,
+        border: '1px solid var(--border-1)',
+        background: 'var(--white)',
+        color: 'var(--navy)',
         padding: '6px 12px',
         fontSize: 11,
         fontWeight: 800,
@@ -2201,48 +2237,6 @@ function FormatPill({ type }: { type: ContentFormat }) {
       <Cmp size={13} />
       {FORMAT_LABEL[type]}
     </div>
-  );
-}
-
-function CategoryChip({
-  slug,
-  label,
-  icon: IconCmp,
-  active,
-  onClick,
-  compact = false,
-}: {
-  slug: CategorySlug | null;
-  label: string;
-  icon: IconCmp;
-  active: boolean;
-  onClick: () => void;
-  compact?: boolean;
-}) {
-  return (
-    <button
-      data-slug={slug ?? 'all'}
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: compact ? '8px 12px' : '10px 14px',
-        borderRadius: 999,
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: 'pointer',
-        border: '1px solid',
-        transition: 'all 160ms var(--ease-standard)',
-        whiteSpace: 'nowrap',
-        background: active ? NAVY : SURFACE,
-        color: active ? '#fff' : NAVY,
-        borderColor: active ? NAVY : '#D9DFEA',
-      }}
-    >
-      <IconCmp size={14} />
-      {label}
-    </button>
   );
 }
 
@@ -2262,6 +2256,7 @@ function DesktopRailBtn({
       className="lp-overlay-rail-button"
       onClick={onClick}
       aria-label={label}
+      data-active={active ? 'true' : 'false'}
       style={{
         background: 'transparent',
         border: 'none',
@@ -2271,7 +2266,7 @@ function DesktopRailBtn({
         alignItems: 'center',
         gap: 6,
         padding: 0,
-        color: '#fff',
+        color: 'var(--white)',
         textShadow: '0 1px 5px rgba(0,0,0,0.75)',
       }}
     >
@@ -2280,9 +2275,9 @@ function DesktopRailBtn({
           width: 56,
           height: 56,
           borderRadius: 999,
-          background: active ? BLUE : 'rgba(8,8,26,0.62)',
-          border: `1px solid ${active ? BLUE : 'rgba(255,255,255,0.22)'}`,
-          color: '#fff',
+          background: active ? 'var(--primary-blue)' : 'rgba(8,8,26,0.62)',
+          border: `1px solid ${active ? 'var(--primary-blue)' : 'rgba(255,255,255,0.22)'}`,
+          color: 'var(--white)',
           display: 'grid',
           placeItems: 'center',
           transition: 'background 160ms var(--ease-standard), border-color 160ms var(--ease-standard)',
@@ -2312,6 +2307,7 @@ function MobileRailBtn({
     <button
       onClick={onClick}
       aria-label={label}
+      data-active={active ? 'true' : 'false'}
       style={{
         background: 'transparent',
         border: 'none',
@@ -2324,24 +2320,24 @@ function MobileRailBtn({
     >
       <div
         style={{
-          width: 38,
-          height: 38,
+          width: 44,
+          height: 44,
           borderRadius: 999,
-          background: active ? BLUE : 'rgba(255,255,255,0.85)',
+          background: active ? 'var(--primary-blue)' : 'rgba(255,255,255,0.85)',
           backdropFilter: 'blur(8px)',
           display: 'grid',
           placeItems: 'center',
-          color: active ? '#fff' : NAVY,
+          color: active ? 'var(--white)' : 'var(--navy)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
         }}
       >
-        <IconCmp size={16} fill={active ? 'currentColor' : 'none'} />
+        <IconCmp size={18} fill={active ? 'currentColor' : 'none'} />
       </div>
       <span
         style={{
           fontSize: 9,
           fontWeight: 800,
-          color: '#fff',
+          color: 'var(--white)',
           textShadow: '0 1px 3px rgba(0,0,0,0.5)',
           letterSpacing: '0.02em',
         }}
@@ -2358,125 +2354,6 @@ function Meta({ icon: IconCmp, label }: { icon: IconCmp; label: string }) {
       <IconCmp size={13} />
       {label}
     </span>
-  );
-}
-
-// ============================================================
-// Format chooser (small button + popover)
-// ============================================================
-function FormatChooser({
-  active,
-  open,
-  setOpen,
-  onPick,
-}: {
-  active: ContentFormat | null;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onPick: (format: ContentFormat | null) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e: globalThis.MouseEvent) => {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    window.addEventListener('mousedown', onDocClick);
-    return () => window.removeEventListener('mousedown', onDocClick);
-  }, [open, setOpen]);
-
-  const activeFormat = formats.find((f) => f.value === active);
-
-  return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        aria-label="Filter by format"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          background: SURFACE,
-          border: `1px solid ${active ? BLUE : BORDER}`,
-          borderRadius: 999,
-          padding: '8px 12px',
-          fontSize: 13,
-          fontWeight: 600,
-          color: active ? BLUE : INK2,
-          cursor: 'pointer',
-        }}
-      >
-        <ListFilter size={14} />
-        {activeFormat ? activeFormat.label : 'All formats'}
-      </button>
-
-      {open && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 8px)',
-            right: 0,
-            background: SURFACE,
-            border: `1px solid ${BORDER}`,
-            borderRadius: 12,
-            boxShadow: '0 12px 40px rgba(34,34,76,0.16)',
-            padding: 6,
-            minWidth: 180,
-            zIndex: 50,
-          }}
-        >
-          <FormatOption label="All formats" active={active === null} onClick={() => onPick(null)} icon={LayoutList} />
-          {formats.map((f) => (
-            <FormatOption
-              key={f.value}
-              label={f.label}
-              active={active === f.value}
-              onClick={() => onPick(f.value)}
-              icon={FORMAT_ICON[f.value]}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function FormatOption({
-  label,
-  active,
-  onClick,
-  icon: IconCmp,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  icon: IconCmp;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        width: '100%',
-        padding: '10px 12px',
-        borderRadius: 8,
-        background: active ? '#E6F4FF' : 'transparent',
-        color: active ? BLUE : INK,
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: 13,
-        fontWeight: 600,
-        textAlign: 'left',
-      }}
-    >
-      <IconCmp size={14} />
-      {label}
-    </button>
   );
 }
 
@@ -2512,7 +2389,7 @@ function SearchModal({
   }, [onClose]);
 
   const results = useMemo(() => {
-    if (!q.trim()) return orderContentForFeed(content, { category: null, format: null }).slice(0, 6);
+    if (!q.trim()) return orderContentForFeed(content, { categories: [], format: null }).slice(0, 6);
     const needle = q.trim().toLowerCase();
     return content.filter((entry) =>
       [entry.title, entry.description, ...entry.categories, entry.format]
@@ -2541,11 +2418,11 @@ function SearchModal({
         style={{
           width: mobile ? '92%' : 'min(680px, 92%)',
           height: 'fit-content',
-          background: SURFACE,
+          background: 'var(--white)',
           borderRadius: 16,
           overflow: 'hidden',
           boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
-          border: `1px solid ${BORDER}`,
+          border: '1px solid var(--border-1)',
         }}
       >
         <div
@@ -2554,10 +2431,10 @@ function SearchModal({
             alignItems: 'center',
             gap: 12,
             padding: '18px 20px',
-            borderBottom: `1px solid ${BORDER}`,
+            borderBottom: '1px solid var(--border-1)',
           }}
         >
-          <Search size={20} style={{ color: INK2 }} />
+          <Search size={20} style={{ color: 'var(--neutral-5)' }} />
           <input
             ref={inputRef}
             value={q}
@@ -2569,7 +2446,7 @@ function SearchModal({
               outline: 'none',
               background: 'transparent',
               fontSize: 18,
-              color: INK,
+              color: 'var(--navy)',
               fontFamily: 'inherit',
               fontWeight: 500,
             }}
@@ -2578,9 +2455,9 @@ function SearchModal({
             style={{
               fontSize: 11,
               padding: '4px 8px',
-              border: `1px solid ${BORDER}`,
+              border: '1px solid var(--border-1)',
               borderRadius: 6,
-              color: INK2,
+              color: 'var(--neutral-5)',
               fontWeight: 700,
             }}
           >
@@ -2589,8 +2466,8 @@ function SearchModal({
         </div>
         <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           {results.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: INK2 }}>
-              No matches yet — try &ldquo;internship&rdquo; or &ldquo;feedback&rdquo;
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--neutral-5)' }}>
+              No matches yet. Try &ldquo;internship&rdquo; or &ldquo;feedback&rdquo;.
             </div>
           ) : (
             results.map((entry) => (
@@ -2608,10 +2485,10 @@ function SearchModal({
                   background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  color: INK,
+                  color: 'var(--navy)',
                   textAlign: 'left',
                   fontFamily: 'inherit',
-                  borderBottom: `1px solid ${BORDER}`,
+                  borderBottom: '1px solid var(--border-1)',
                 }}
               >
                 <div
@@ -2620,7 +2497,7 @@ function SearchModal({
                     height: 60,
                     borderRadius: 6,
                     overflow: 'hidden',
-                    background: '#000',
+                    background: 'var(--navy)',
                     flexShrink: 0,
                   }}
                 >
@@ -2636,7 +2513,7 @@ function SearchModal({
                   <div
                     style={{
                       fontSize: 12,
-                      color: INK2,
+                      color: 'var(--neutral-5)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 8,
@@ -2645,7 +2522,7 @@ function SearchModal({
                     <span>{entry.format}</span> · <span>{categoryLabel(categories, entry.primaryCategory)}</span>
                   </div>
                 </div>
-                <ArrowUpRight size={16} style={{ color: INK2 }} />
+                <ArrowUpRight size={16} style={{ color: 'var(--neutral-5)' }} />
               </button>
             ))
           )}
@@ -2667,8 +2544,8 @@ function Toast({ message, show }: { message: string | null; show: boolean }) {
         left: '50%',
         transform: `translateX(-50%) translateY(${show ? 0 : 20}px)`,
         opacity: show ? 1 : 0,
-        background: NAVY,
-        color: 'white',
+        background: 'var(--navy)',
+        color: 'var(--white)',
         padding: '12px 20px',
         borderRadius: 12,
         fontSize: 14,
@@ -2696,30 +2573,30 @@ function EmptyState({ onClear }: { onClear: () => void }) {
         display: 'grid',
         placeItems: 'center',
         padding: 32,
-        background: STAGE_BG,
+        background: 'var(--off-white)',
       }}
     >
       <div
         style={{
           textAlign: 'center',
           maxWidth: 380,
-          background: SURFACE,
+          background: 'var(--white)',
           padding: 40,
           borderRadius: 16,
-          border: `1px solid ${BORDER}`,
+          border: '1px solid var(--border-1)',
           boxShadow: 'var(--shadow-md)',
         }}
       >
-        <Sparkles size={32} style={{ color: BLUE }} />
+        <Sparkles size={32} style={{ color: 'var(--primary-blue)' }} />
         <h2 style={{ margin: '12px 0 8px', fontSize: 22, fontWeight: 900 }}>No matches yet</h2>
-        <p style={{ color: INK2, margin: '0 0 20px', fontSize: 14 }}>
+        <p style={{ color: 'var(--neutral-5)', margin: '0 0 20px', fontSize: 14 }}>
           Clear a filter or try a broader search to keep exploring.
         </p>
         <button
           onClick={onClear}
           style={{
-            background: BLUE,
-            color: '#fff',
+            background: 'var(--primary-blue)',
+            color: 'var(--white)',
             border: 'none',
             padding: '12px 20px',
             borderRadius: 12,
@@ -2742,5 +2619,3 @@ function pullQuoteFor(item: LaunchpadContent): string {
   return item.learnMore.takeaway ?? item.description;
 }
 
-// Suppress unused import warning on Clipboard — kept available for future share UI.
-void Clipboard;

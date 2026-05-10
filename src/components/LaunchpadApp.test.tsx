@@ -203,7 +203,6 @@ describe('LaunchpadApp feed navigation', () => {
     await finishTransition();
 
     expectHeading('The Career Path Was Not a Straight Line');
-    expect(screen.getByText(/item 2 \/ 5/i)).toBeInTheDocument();
   });
 
   it('axis-locks vertical touch movement, prevents default only after lock, and ignores horizontal gestures', async () => {
@@ -293,15 +292,6 @@ describe('LaunchpadApp feed navigation', () => {
     expect(feedDeck()).toHaveAttribute('data-nudging', 'false');
   });
 
-  it('renders the desktop immersive backdrop from the current thumbnail', () => {
-    renderLaunchpad();
-
-    expect(screen.getByTestId('desktop-immersive-backdrop')).toHaveAttribute(
-      'src',
-      fixtureContent[0].thumbnailUrl
-    );
-  });
-
   it('moves the format label beside the category and keeps it off the desktop media frame', async () => {
     renderLaunchpad();
     await flushAsyncWork();
@@ -367,10 +357,60 @@ describe('LaunchpadApp feed navigation', () => {
     renderLaunchpad();
     const rail = within(desktopRail());
 
-    expect(rail.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(rail.getByRole('button', { name: 'Like' })).toBeInTheDocument();
     expect(rail.getByRole('button', { name: 'Share' })).toBeInTheDocument();
     expect(rail.getByRole('button', { name: 'Info' })).toBeInTheDocument();
     expect(rail.queryByRole('button', { name: /^[\d.]+K?$/ })).not.toBeInTheDocument();
+  });
+
+  it('uses Like/Liked copy and preserves legacy local saves', async () => {
+    window.localStorage.setItem('career-launchpad-saved-content', JSON.stringify([fixtureContent[0].id]));
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    const rail = within(desktopRail());
+    const likedButton = rail.getByRole('button', { name: 'Liked' });
+    expect(likedButton).toHaveAttribute('data-active', 'true');
+
+    fireEvent.click(likedButton);
+
+    expect(rail.getByRole('button', { name: 'Like' })).toHaveAttribute('data-active', 'false');
+    expect(JSON.parse(window.localStorage.getItem('career-launchpad-liked-content') ?? '[]')).toEqual([]);
+  });
+
+  it('briefly applies active rail feedback to Share and Info', async () => {
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+    renderLaunchpad();
+
+    const share = within(desktopRail()).getByRole('button', { name: 'Share' });
+    expect(share).toHaveAttribute('data-active', 'false');
+
+    fireEvent.click(share);
+
+    expect(share).toHaveAttribute('data-active', 'true');
+    await act(async () => {
+      vi.advanceTimersByTime(1800);
+    });
+    expect(within(desktopRail()).getByRole('button', { name: 'Share' })).toHaveAttribute('data-active', 'false');
+
+    const info = within(desktopRail()).getByRole('button', { name: 'Info' });
+    fireEvent.click(info);
+    await flushAsyncWork();
+
+    expect(within(desktopRail()).getByRole('button', { name: 'Info', hidden: true })).toHaveAttribute(
+      'data-active',
+      'true'
+    );
+    expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+  });
+
+  it('uses charcoal for the desktop scroll hint', () => {
+    renderLaunchpad();
+
+    expect(screen.getByTestId('desktop-scroll-hint')).toHaveStyle({ color: 'var(--neutral-6)' });
   });
 
   it('renders the desktop primary Learn More CTA in the editorial column and opens the panel from it', async () => {
@@ -431,8 +471,10 @@ describe('LaunchpadApp feed navigation', () => {
   it('keeps the Playbooks filter option but excludes playbook examples from the preview feed', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /filter by format/i }));
-    fireEvent.click(screen.getByRole('button', { name: 'Playbooks' }));
+    // Open the formats drawer and pick Playbooks
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    const drawer = screen.getByRole('dialog');
+    fireEvent.click(within(drawer).getByRole('button', { name: /Playbooks/i }));
 
     expect(screen.getByRole('heading', { name: /no matches yet/i })).toBeInTheDocument();
     expect(screen.queryByText('How to Write a Cold Email That Gets a Reply')).not.toBeInTheDocument();
@@ -451,6 +493,7 @@ describe('LaunchpadApp feed navigation', () => {
       width: '100%',
       height: '56px',
     });
+    expect(screen.getByTestId('mobile-scroll-hint')).toHaveStyle({ color: 'var(--neutral-6)' });
 
     fireEvent.click(primaryCta);
     await flushAsyncWork();
@@ -458,13 +501,13 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
   });
 
-  it('keeps focus order from left Learn More to play, Save, Share, and Info', () => {
+  it('keeps focus order from left Learn More to play, Like, Share, and Info', () => {
     renderLaunchpad();
 
     const buttons = screen.getAllByRole('button');
     const playIdx = buttons.indexOf(screen.getByRole('button', { name: /play ai tools/i }));
     const learnMoreIdx = buttons.indexOf(screen.getByTestId('learn-more-primary-cta'));
-    const saveIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Save' }));
+    const saveIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Like' }));
     const shareIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Share' }));
     const infoIdx = buttons.indexOf(within(desktopRail()).getByRole('button', { name: 'Info' }));
 
@@ -531,7 +574,11 @@ describe('LaunchpadApp feed navigation', () => {
 
   it('jumps from a search result to the feed card without opening Learn More', async () => {
     renderLaunchpad();
-    fireEvent.click(screen.getByRole('button', { name: 'Life Skills' }));
+    // Set a category filter via the paths drawer before opening search
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Life Skills/i }));
+    // Paths drawer stays open (multi-select) — close it via Done before opening search
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
     window.history.replaceState({}, '', '/?content=stale-content');
 
     fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
@@ -542,7 +589,6 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/search careers/i)).not.toBeInTheDocument();
     expect(window.location.search).not.toContain('content=');
-    expect(screen.getByText(/item 4 \/ 5/i)).toBeInTheDocument();
   });
 });
 
@@ -655,8 +701,9 @@ describe('LaunchpadApp playback', () => {
   it('carries user-started autoplay between videos and recreates the player when scrolling back', async () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /filter by format/i }));
-    fireEvent.click(screen.getByRole('button', { name: 'Videos' }));
+    // Open formats drawer and pick Videos
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Videos/i }));
     fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
     act(() => {
       players[0].events.onReady?.();
@@ -778,5 +825,119 @@ describe('LaunchpadApp playback', () => {
 
     expect(replaceMock).toHaveBeenCalledWith('/');
     expect(screen.getByText(/content not available/i)).toBeInTheDocument();
+  });
+});
+
+describe('BrowseDrawer integration (via LaunchpadApp)', () => {
+  it('opens the paths drawer when the 9 Paths button is clicked', () => {
+    renderLaunchpad();
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('browse-drawer')).toHaveAttribute('data-mode', 'paths');
+  });
+
+  it('opens the formats drawer when the 3 Formats button is clicked', () => {
+    renderLaunchpad();
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('browse-drawer')).toHaveAttribute('data-mode', 'formats');
+  });
+
+  it('keeps the drawer open and applies the category filter when a path card is clicked', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    const drawer = screen.getByRole('dialog');
+    fireEvent.click(within(drawer).getByRole('button', { name: /Mindsets/i }));
+
+    // Drawer stays open (multi-select)
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('closes the paths drawer via Done button after selecting a path', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('shows the active category name in the header CTA after a path is selected and Done is clicked', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
+
+    // The CTA should now show the active filter name, not "9 Paths"
+    expect(screen.queryByRole('button', { name: /9 paths/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mindsets/i })).toBeInTheDocument();
+  });
+
+  it('selects two paths and shows count in the header CTA', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Life Skills/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
+
+    expect(screen.getByRole('button', { name: /2 paths/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /9 paths/i })).not.toBeInTheDocument();
+  });
+
+  it('toggles a path off when clicked twice', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    const drawer = screen.getByRole('dialog');
+    fireEvent.click(within(drawer).getByRole('button', { name: /Mindsets/i }));
+    // Click again to deselect
+    fireEvent.click(within(drawer).getByRole('button', { name: /Mindsets/i }));
+    fireEvent.click(within(drawer).getByRole('button', { name: /Done/i }));
+
+    // Back to unfiltered count
+    expect(screen.getByRole('button', { name: /9 paths/i })).toBeInTheDocument();
+  });
+
+  it('clears all selected paths via the All Paths featured card', () => {
+    renderLaunchpad();
+
+    // Select Mindsets first
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
+    // Click All Paths to clear
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /All Paths/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
+
+    expect(screen.getByRole('button', { name: /9 paths/i })).toBeInTheDocument();
+  });
+
+  it('shows the active format name in the header CTA after a format is selected', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Videos/i }));
+
+    // Formats drawer closes on tap (single-select preserved)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /3 formats/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /video/i })).toBeInTheDocument();
+  });
+
+  it('closes the drawer on Escape key', () => {
+    renderLaunchpad();
+
+    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

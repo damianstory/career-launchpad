@@ -22,9 +22,9 @@ describe('analytics helpers', () => {
 
   it('stores tracked events without throwing', () => {
     trackEvent('learn_more_open', { contentId: 'playbook-1' });
-    trackEvent('save', { contentId: 'playbook-1' });
+    trackEvent('like', { contentId: 'playbook-1' });
 
     expect(getStoredEvents()).toHaveLength(2);
-    expect(getStoredEvents().map((event) => event.eventType)).toEqual(['learn_more_open', 'save']);
+    expect(getStoredEvents().map((event) => event.eventType)).toEqual(['learn_more_open', 'like']);
   });
 });

@@ -79,6 +79,17 @@ describe('LearnMorePanel', () => {
     }
   });
 
+  it('uses Like and Unlike labels for the saved action', () => {
+    const unsavedRender = renderPanel({ isSaved: false });
+
+    expect(screen.getByRole('button', { name: 'Like' })).toHaveAttribute('data-active', 'false');
+    unsavedRender.unmount();
+
+    renderPanel({ isSaved: true });
+
+    expect(screen.getByRole('button', { name: 'Unlike' })).toHaveAttribute('data-active', 'true');
+  });
+
   it('swaps related content without closing and resets the scroll container to the top', () => {
     const item = fixtureContent[0];
     const related = getRelatedContent(fixtureContent, item);

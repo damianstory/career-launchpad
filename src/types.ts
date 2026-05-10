@@ -43,7 +43,7 @@ export interface LaunchpadContent {
 }
 
 export interface ContentFilters {
-  category: CategorySlug | null;
+  categories: CategorySlug[];
   format: ContentFormat | null;
 }
 
@@ -57,7 +57,7 @@ export type AnalyticsEventType =
   | 'learn_more_open'
   | 'category_filter'
   | 'format_filter'
-  | 'save'
+  | 'like'
   | 'share'
   | 'related_content_click'
   | 'outbound_click';

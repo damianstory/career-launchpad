@@ -1,13 +1,13 @@
-import type { ContentFilters, LaunchpadContent } from '@/types';
+import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadContent } from '@/types';
 
 export function applyContentFilters(
   content: LaunchpadContent[],
   filters: ContentFilters
 ): LaunchpadContent[] {
-  if (!filters.category && !filters.format) return content;
+  if (filters.categories.length === 0 && !filters.format) return content;
 
   return content.filter((item) => {
-    if (filters.category && !item.categories.includes(filters.category)) return false;
+    if (filters.categories.length > 0 && !filters.categories.some((slug) => item.categories.includes(slug))) return false;
     if (filters.format && item.format !== filters.format) return false;
     return true;
   });
@@ -65,4 +65,36 @@ export function getYouTubeId(url: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Count content items matching a category slug (or all categories if null),
+ * optionally cross-filtered by format. Used by BrowseDrawer path cards.
+ */
+export function countContentByCategory(
+  slug: CategorySlug | null,
+  format: ContentFormat | null,
+  content: LaunchpadContent[]
+): number {
+  return content.filter((item) => {
+    if (slug !== null && !item.categories.includes(slug)) return false;
+    if (format !== null && item.format !== format) return false;
+    return true;
+  }).length;
+}
+
+/**
+ * Count content items matching a format (or all formats if null),
+ * optionally cross-filtered by an array of category slugs. Used by BrowseDrawer format cards.
+ */
+export function countContentByFormat(
+  format: ContentFormat | null,
+  categories: CategorySlug[],
+  content: LaunchpadContent[]
+): number {
+  return content.filter((item) => {
+    if (format !== null && item.format !== format) return false;
+    if (categories.length > 0 && !categories.some((slug) => item.categories.includes(slug))) return false;
+    return true;
+  }).length;
 }
