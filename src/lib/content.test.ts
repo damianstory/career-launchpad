@@ -26,6 +26,21 @@ describe('content filtering', () => {
   it('returns all content when filters are empty', () => {
     expect(applyContentFilters(fixtureContent, { categories: [], format: null })).toEqual(fixtureContent);
   });
+
+  it('keeps multi-category filters as OR unions', () => {
+    const content: LaunchpadContent[] = [
+      { ...fixtureContent[0], id: 'skills-on-job', categories: ['skills-canada', 'on-the-job'] },
+      { ...fixtureContent[1], id: 'mindset-only', categories: ['mindsets'], primaryCategory: 'mindsets' },
+      { ...fixtureContent[2], id: 'how-i-got-here-only', categories: ['how-i-got-here'] },
+    ];
+
+    const result = applyContentFilters(content, {
+      categories: ['skills-canada', 'mindsets'],
+      format: null,
+    });
+
+    expect(result.map((item) => item.id)).toEqual(['skills-on-job', 'mindset-only']);
+  });
 });
 
 describe('feed ordering', () => {

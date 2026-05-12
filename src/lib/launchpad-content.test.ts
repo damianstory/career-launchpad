@@ -58,6 +58,44 @@ describe('normalizeLaunchpadContent', () => {
     });
   });
 
+  it('keeps Skills Canada in categories but prefers the permanent category as primary', () => {
+    const result = normalizeLaunchpadContent(
+      [
+        row({
+          content_categories: [
+            { categories: { slug: 'skills-canada', name: 'Skills Canada', display_order: 0 } },
+            { categories: { slug: 'on-the-job', name: 'On the Job', display_order: 2 } },
+          ],
+        }),
+      ] as never,
+      [
+        { slug: 'skills-canada', name: 'Skills Canada', display_order: 0 },
+        { slug: 'on-the-job', name: 'On the Job', display_order: 2 },
+      ] as never
+    );
+
+    expect(result.items[0]).toMatchObject({
+      categories: ['skills-canada', 'on-the-job'],
+      primaryCategory: 'on-the-job',
+    });
+  });
+
+  it('uses Skills Canada as primary when it is the only category', () => {
+    const result = normalizeLaunchpadContent(
+      [
+        row({
+          content_categories: [{ categories: { slug: 'skills-canada', name: 'Skills Canada', display_order: 0 } }],
+        }),
+      ] as never,
+      [{ slug: 'skills-canada', name: 'Skills Canada', display_order: 0 }] as never
+    );
+
+    expect(result.items[0]).toMatchObject({
+      categories: ['skills-canada'],
+      primaryCategory: 'skills-canada',
+    });
+  });
+
   it('excludes playbooks, article-content-only rows, and rows with no known categories', () => {
     const result = normalizeLaunchpadContent(
       [

@@ -186,6 +186,7 @@ const CATEGORY_BLOCK_BG: Record<CategorySlug, string> = {
   'problems-to-solve': NAVY,
   'post-secondary': NAVY,
   'job-board': BLUE,
+  'skills-canada': NAVY,
 };
 
 const FORMAT_ICON: Record<ContentFormat, IconCmp> = {
@@ -909,7 +910,8 @@ function DesktopStage({
     if (activeCategories.length === 1) return categoryLabel(categories, activeCategories[0]);
     return `${activeCategories.length} Paths`;
   })();
-  const pathsAriaLabel = pathsCtaText ?? '9 Paths';
+  const defaultPathsCount = categories.length + 1;
+  const pathsAriaLabel = pathsCtaText ?? `${defaultPathsCount} Paths`;
 
   return (
     <div
@@ -957,7 +959,7 @@ function DesktopStage({
         >
           {pathsCtaText === null ? (
             <>
-              <span className="num" aria-hidden="true">9</span>
+              <span className="num" aria-hidden="true">{defaultPathsCount}</span>
               <span aria-hidden="true">Paths</span>
             </>
           ) : (
@@ -1220,7 +1222,8 @@ function MobileStage({
     if (activeCategories.length === 1) return categoryLabel(categories, activeCategories[0]);
     return `${activeCategories.length} Paths`;
   })();
-  const pathsAriaLabel = pathsCtaText ?? '9 Paths';
+  const defaultPathsCount = categories.length + 1;
+  const pathsAriaLabel = pathsCtaText ?? `${defaultPathsCount} Paths`;
   return (
     <div
       ref={navSurfaceRef}
@@ -1264,7 +1267,7 @@ function MobileStage({
         >
           {pathsCtaText === null ? (
             <>
-              <span className="num" aria-hidden="true">9</span>
+              <span className="num" aria-hidden="true">{defaultPathsCount}</span>
               <span aria-hidden="true">Paths</span>
             </>
           ) : (
@@ -2618,4 +2621,3 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 function pullQuoteFor(item: LaunchpadContent): string {
   return item.learnMore.takeaway ?? item.description;
 }
-

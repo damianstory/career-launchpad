@@ -575,7 +575,7 @@ describe('LaunchpadApp feed navigation', () => {
   it('jumps from a search result to the feed card without opening Learn More', async () => {
     renderLaunchpad();
     // Set a category filter via the paths drawer before opening search
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Life Skills/i }));
     // Paths drawer stays open (multi-select) — close it via Done before opening search
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
@@ -829,11 +829,11 @@ describe('LaunchpadApp playback', () => {
 });
 
 describe('BrowseDrawer integration (via LaunchpadApp)', () => {
-  it('opens the paths drawer when the 9 Paths button is clicked', () => {
+  it('opens the paths drawer when the Paths button is clicked', () => {
     renderLaunchpad();
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByTestId('browse-drawer')).toHaveAttribute('data-mode', 'paths');
   });
@@ -850,7 +850,7 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
   it('keeps the drawer open and applies the category filter when a path card is clicked', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     const drawer = screen.getByRole('dialog');
     fireEvent.click(within(drawer).getByRole('button', { name: /Mindsets/i }));
 
@@ -861,7 +861,7 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
   it('closes the paths drawer via Done button after selecting a path', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
 
@@ -871,31 +871,31 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
   it('shows the active category name in the header CTA after a path is selected and Done is clicked', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
 
-    // The CTA should now show the active filter name, not "9 Paths"
-    expect(screen.queryByRole('button', { name: /9 paths/i })).not.toBeInTheDocument();
+    // The CTA should now show the active filter name, not the default paths count.
+    expect(screen.queryByRole('button', { name: /10 paths/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /mindsets/i })).toBeInTheDocument();
   });
 
   it('selects two paths and shows count in the header CTA', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Life Skills/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
 
     expect(screen.getByRole('button', { name: /2 paths/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /9 paths/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /10 paths/i })).not.toBeInTheDocument();
   });
 
   it('toggles a path off when clicked twice', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     const drawer = screen.getByRole('dialog');
     fireEvent.click(within(drawer).getByRole('button', { name: /Mindsets/i }));
     // Click again to deselect
@@ -903,20 +903,20 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
     fireEvent.click(within(drawer).getByRole('button', { name: /Done/i }));
 
     // Back to unfiltered count
-    expect(screen.getByRole('button', { name: /9 paths/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /10 paths/i })).toBeInTheDocument();
   });
 
   it('clears all selected paths via the All Paths featured card', () => {
     renderLaunchpad();
 
     // Select Mindsets first
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
     // Click All Paths to clear
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /All Paths/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
 
-    expect(screen.getByRole('button', { name: /9 paths/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /10 paths/i })).toBeInTheDocument();
   });
 
   it('shows the active format name in the header CTA after a format is selected', () => {
@@ -934,7 +934,7 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
   it('closes the drawer on Escape key', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /9 paths/i }));
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });

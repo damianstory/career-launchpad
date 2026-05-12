@@ -15,6 +15,7 @@ import {
   Puzzle,
   Rocket,
   Sparkles,
+  Trophy,
   X,
 } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const CATEGORY_ICON: Record<CategorySlug, typeof Rocket> = {
   'post-secondary': GraduationCap,
   // Playbook-style listing: ListChecks fits better than generic icon
   'job-board': ListChecks,
+  'skills-canada': Trophy,
 };
 
 // Note: Playbook uses ListChecks here (differs from LearnMorePanel's BookOpen).
@@ -56,6 +58,7 @@ const PATH_DESCRIPTION: Record<CategorySlug, string> = {
   'problems-to-solve': 'Big problems Canadian workers are trying to solve.',
   'post-secondary': 'College, university, apprenticeship, or none of the above.',
   'job-board': 'Real openings near you, refreshed weekly.',
+  'skills-canada': 'Skilled trade stories featured for Skills Canada.',
 };
 
 const ALL_PATHS_DESCRIPTION = "Every path. Start here if you don't know where to start.";

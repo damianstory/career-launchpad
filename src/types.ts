@@ -6,7 +6,8 @@ export type CategorySlug =
   | 'how-i-got-here'
   | 'problems-to-solve'
   | 'post-secondary'
-  | 'job-board';
+  | 'job-board'
+  | 'skills-canada';
 
 export type ContentFormat = 'video' | 'article' | 'playbook';
 

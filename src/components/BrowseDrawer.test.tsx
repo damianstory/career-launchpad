@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fixtureCategories, fixtureContent } from '@/test/fixtures/content';
+import type { CategorySlug } from '@/types';
 
 import { BrowseDrawer } from './BrowseDrawer';
 
@@ -94,14 +95,32 @@ describe('BrowseDrawer — paths mode', () => {
     expect(within(drawer).getByRole('button', { name: /All Paths/i })).toBeInTheDocument();
   });
 
-  it('renders 8 path cards (one per category)', () => {
+  it('renders path cards for every category', () => {
     renderPathsDrawer();
 
     const drawer = screen.getByRole('dialog');
     const categoryButtons = fixtureCategories.map((cat) =>
       within(drawer).getByRole('button', { name: new RegExp(cat.name, 'i') })
     );
-    expect(categoryButtons).toHaveLength(8);
+    expect(categoryButtons).toHaveLength(fixtureCategories.length);
+  });
+
+  it('renders Skills Canada first with its count and description', () => {
+    const skillsCanadaContent = Array.from({ length: 160 }, (_, index) => ({
+      ...fixtureContent[0],
+      id: `skills-canada-${index + 1}`,
+      slug: `skills-canada-${index + 1}`,
+      categories: ['skills-canada', 'on-the-job'] as CategorySlug[],
+      primaryCategory: 'on-the-job' as CategorySlug,
+    }));
+
+    renderPathsDrawer({ content: skillsCanadaContent });
+
+    const drawer = screen.getByRole('dialog');
+    const firstPathCard = drawer.querySelector('[data-slug]');
+    expect(firstPathCard).toHaveAttribute('data-slug', 'skills-canada');
+    expect(firstPathCard).toHaveTextContent('160 stories');
+    expect(firstPathCard).toHaveTextContent('Skilled trade stories featured for Skills Canada.');
   });
 
   it('calls onToggleCategory with the slug when a path card is clicked', () => {

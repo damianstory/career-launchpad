@@ -10,6 +10,7 @@ const KNOWN_CATEGORY_SLUGS: CategorySlug[] = [
   'problems-to-solve',
   'post-secondary',
   'job-board',
+  'skills-canada',
 ];
 
 export type DbCategory = {
@@ -72,7 +73,9 @@ function normalizeContentRow(
   const categories = flattenCategories(row.content_categories ?? [], categoryBySlug);
   if (categories.length === 0) return null;
 
-  const primaryCategory = [...categories].sort(
+  const nonEventCategories = categories.filter((slug) => slug !== 'skills-canada');
+  const primaryCategoryPool = nonEventCategories.length > 0 ? nonEventCategories : categories;
+  const primaryCategory = [...primaryCategoryPool].sort(
     (a, b) => categoryBySlug.get(a)!.displayOrder - categoryBySlug.get(b)!.displayOrder
   )[0];
 
