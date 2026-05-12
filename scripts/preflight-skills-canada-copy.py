@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""Preflight + rollback snapshot for the Skills Canada video copy refresh.
+"""Preflight + rollback snapshot for a Skills Canada video takeaway batch.
 
-Reads SUPABASE_URL and SUPABASE_ANON_KEY from .env.local (or the process
-environment). Fetches live Skills Canada published video rows via PostgREST,
-diffs them against the editorial JSON, and writes a rollback snapshot. Exits
-non-zero on any mismatch.
+Reads a per-batch editorial JSON (e.g. life-skills, problems-to-solve, …),
+diffs it against live `public.content` rows via PostgREST, and writes a
+rollback snapshot. Exits non-zero on any mismatch.
 
-Targets only the ids present in the editorial JSON (e.g. an 8-row pilot
-batch). Unlike the non-SC preflight, this script keys on `id`, not slug —
-Skills Canada rows have stable `skills-canada-NNN` ids assigned in their seed
-migration, which makes the diff cheaper to verify.
+Batch identity is supplied via `--batch <name>`. The script derives:
+- input JSON:    scripts/data/copy-updates/skills-canada-<batch>-copy-update.json
+- rollback file: scripts/data/copy-updates/skills-canada-<batch>-copy-rollback.json
 
-If RLS blocks the anon key from reading public.content, set
-SUPABASE_SERVICE_ROLE_KEY in the environment and the script will use that
-instead.
+Per-batch expected counts and category histograms live inside each JSON's
+`meta` block, so a single pair of scripts handles every batch.
+
+Env: reads SUPABASE_URL + SUPABASE_ANON_KEY from .env.local or the process
+environment. Falls back to SUPABASE_SERVICE_ROLE_KEY if RLS blocks anon.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -28,20 +29,37 @@ from pathlib import Path
 from typing import Any
 
 
-JSON_PATH = Path("scripts/data/copy-updates/skills-canada-video-copy-update.json")
-ROLLBACK_PATH = Path("scripts/data/copy-updates/skills-canada-video-copy-rollback.json")
+COPY_UPDATES_DIR = Path("scripts/data/copy-updates")
 ENV_PATH = Path(".env.local")
 
-EXPECTED_ROW_COUNT = 8
-EXPECTED_HISTOGRAM = {"life-skills": 8}
-REQUIRED_FIELDS = ("id", "slug", "category", "title",
-                   "old_description", "new_takeaway")
+REQUIRED_ROW_FIELDS = ("id", "slug", "category", "title",
+                      "old_description", "new_takeaway")
+REQUIRED_META_FIELDS = ("batch", "expected_count", "expected_histogram")
 ID_PREFIX = "skills-canada-"
 
 
 def main() -> int:
-    rows = json.loads(JSON_PATH.read_text())
-    json_errors = validate_json(rows)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--batch", required=True,
+                        help="Batch name, e.g. life-skills, problems-to-solve")
+    args = parser.parse_args()
+
+    json_path = COPY_UPDATES_DIR / f"skills-canada-{args.batch}-copy-update.json"
+    rollback_path = COPY_UPDATES_DIR / f"skills-canada-{args.batch}-copy-rollback.json"
+
+    if not json_path.exists():
+        print(f"Editorial JSON not found: {json_path}", file=sys.stderr)
+        return 1
+
+    data = json.loads(json_path.read_text())
+    meta_errors = validate_meta(data, args.batch)
+    if meta_errors:
+        report("Meta validation failed:", meta_errors)
+        return 1
+
+    meta = data["meta"]
+    rows = data["rows"]
+    json_errors = validate_rows(rows, meta)
     if json_errors:
         report("JSON validation failed:", json_errors)
         return 1
@@ -63,16 +81,47 @@ def main() -> int:
         report("Live diff failed:", diff_errors)
         return 1
 
-    write_rollback(rows, live)
-    print(f"preflight OK; wrote {ROLLBACK_PATH}")
+    write_rollback(meta, rows, live, rollback_path)
+    print(f"preflight OK; wrote {rollback_path}")
     return 0
 
 
-def validate_json(rows: list[dict[str, Any]]) -> list[str]:
+def validate_meta(data: Any, expected_batch: str) -> list[str]:
     errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["JSON root must be an object with 'meta' and 'rows' keys"]
+    if "meta" not in data or not isinstance(data["meta"], dict):
+        errors.append("missing or invalid 'meta' block")
+    if "rows" not in data or not isinstance(data["rows"], list):
+        errors.append("missing or invalid 'rows' array")
+    if errors:
+        return errors
 
-    if len(rows) != EXPECTED_ROW_COUNT:
-        errors.append(f"row count is {len(rows)}, expected {EXPECTED_ROW_COUNT}")
+    meta = data["meta"]
+    for field in REQUIRED_META_FIELDS:
+        if field not in meta:
+            errors.append(f"meta missing field: {field!r}")
+
+    if errors:
+        return errors
+
+    if meta["batch"] != expected_batch:
+        errors.append(f"meta.batch is {meta['batch']!r}, expected {expected_batch!r}")
+    if not isinstance(meta["expected_count"], int) or meta["expected_count"] <= 0:
+        errors.append(f"meta.expected_count must be a positive int, got {meta['expected_count']!r}")
+    if not isinstance(meta["expected_histogram"], dict) or not meta["expected_histogram"]:
+        errors.append("meta.expected_histogram must be a non-empty object")
+
+    return errors
+
+
+def validate_rows(rows: list[dict[str, Any]], meta: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    expected_count = meta["expected_count"]
+    expected_histogram = meta["expected_histogram"]
+
+    if len(rows) != expected_count:
+        errors.append(f"row count is {len(rows)}, expected {expected_count}")
 
     ids = [r.get("id") for r in rows]
     if len(set(ids)) != len(ids):
@@ -85,7 +134,7 @@ def validate_json(rows: list[dict[str, Any]]) -> list[str]:
         errors.append(f"duplicate slugs: {dupes}")
 
     for index, row in enumerate(rows, start=1):
-        missing = [field for field in REQUIRED_FIELDS if field not in row]
+        missing = [field for field in REQUIRED_ROW_FIELDS if field not in row]
         if missing:
             errors.append(f"row {index} ({row.get('id')}) missing fields: {missing}")
             continue
@@ -94,12 +143,12 @@ def validate_json(rows: list[dict[str, Any]]) -> list[str]:
             errors.append(f"row {index} ({row['id']}) empty new_takeaway")
         if not isinstance(row["id"], str) or not row["id"].startswith(ID_PREFIX):
             errors.append(f"row {index} ({row['id']}) id must start with {ID_PREFIX!r}")
-        if row["category"] not in EXPECTED_HISTOGRAM:
+        if row["category"] not in expected_histogram:
             errors.append(f"row {index} ({row['id']}) unexpected category {row['category']!r}")
 
     histogram = dict(Counter(r.get("category") for r in rows))
-    if histogram != EXPECTED_HISTOGRAM:
-        errors.append(f"category histogram is {histogram}, expected {EXPECTED_HISTOGRAM}")
+    if histogram != expected_histogram:
+        errors.append(f"category histogram is {histogram}, expected {expected_histogram}")
 
     return errors
 
@@ -217,12 +266,13 @@ def validate_against_live(rows: list[dict[str, Any]], live: list[dict[str, Any]]
     return errors
 
 
-def write_rollback(rows: list[dict[str, Any]], live: list[dict[str, Any]]) -> None:
+def write_rollback(meta: dict[str, Any], rows: list[dict[str, Any]],
+                   live: list[dict[str, Any]], rollback_path: Path) -> None:
     by_id = {r["id"]: r for r in live}
-    snapshot = []
+    snapshot_rows = []
     for row in rows:
         live_row = by_id[row["id"]]
-        snapshot.append({
+        snapshot_rows.append({
             "id": row["id"],
             "slug": row["slug"],
             "category": row["category"],
@@ -230,8 +280,16 @@ def write_rollback(rows: list[dict[str, Any]], live: list[dict[str, Any]]) -> No
             "previous_description": live_row.get("description"),
             "previous_takeaway": live_row.get("takeaway"),
         })
-    ROLLBACK_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ROLLBACK_PATH.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False) + "\n")
+    snapshot = {
+        "meta": {
+            "batch": meta["batch"],
+            "expected_count": meta["expected_count"],
+            "expected_histogram": meta["expected_histogram"],
+        },
+        "rows": snapshot_rows,
+    }
+    rollback_path.parent.mkdir(parents=True, exist_ok=True)
+    rollback_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False) + "\n")
 
 
 def report(header: str, errors: list[str]) -> None:
