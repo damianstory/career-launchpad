@@ -1,0 +1,499 @@
+{
+  "meta": {
+    "batch": "on-the-job",
+    "expected_count": 61,
+    "expected_histogram": {
+      "on-the-job": 61
+    }
+  },
+  "rows": [
+    {
+      "id": "skills-canada-004",
+      "slug": "building-sets-up-just-to-tear-em-down-again-the-making-of-22-minutes",
+      "category": "on-the-job",
+      "title": "Building sets up just to tear ‘em down again | The Making of 22 Minutes",
+      "previous_description": "Step into Building sets up just to tear ‘em down again | The Making of 22 Minutes with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-005",
+      "slug": "get-it-to-air-making-the-final-touches-the-making-of-22-minutes",
+      "category": "on-the-job",
+      "title": "Get it to air! Making the final touches | The Making of 22 Minutes",
+      "previous_description": "Step into Get it to air! Making the final touches | The Making of 22 Minutes with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-011",
+      "slug": "im-starting-a-140-000-landscaping-job",
+      "category": "on-the-job",
+      "title": "I’m Starting a $140,000 Landscaping Job!!",
+      "previous_description": "Step into I’m Starting a $140,000 Landscaping Job!! with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-012",
+      "slug": "zechosborn",
+      "category": "on-the-job",
+      "title": "ZechOsborn",
+      "previous_description": "Step into ZechOsborn with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-015",
+      "slug": "the-real-reason-we-use-procreate-for-our-indie-game",
+      "category": "on-the-job",
+      "title": "The real reason we use Procreate for our indie game 🎨✨",
+      "previous_description": "Step into The real reason we use Procreate for our indie game 🎨✨ with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-018",
+      "slug": "from-vendoring-at-a-market-to-attending-a-tiff-fashion-event",
+      "category": "on-the-job",
+      "title": "From vendoring at a market to attending a TIFF Fashion Event 💙",
+      "previous_description": "Step into From vendoring at a market to attending a TIFF Fashion Event 💙 with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-019",
+      "slug": "things-you-need-to-know-to-be-a-fashion-designer",
+      "category": "on-the-job",
+      "title": "Things you need to know to be a fashion designer",
+      "previous_description": "Step into Things you need to know to be a fashion designer with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-021",
+      "slug": "day-1-of-starting-my-new-job-as-a-baker",
+      "category": "on-the-job",
+      "title": "Day 1 of starting my new job as a baker",
+      "previous_description": "Step into Day 1 of starting my new job as a baker with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-022",
+      "slug": "the-reality-of-being-a-baker-its-a-physically-demanding-job",
+      "category": "on-the-job",
+      "title": "The reality of being a baker - it’s a physically demanding job",
+      "previous_description": "Step into The reality of being a baker - it’s a physically demanding job with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-024",
+      "slug": "when-the-photographer-risks-everything",
+      "category": "on-the-job",
+      "title": "When The Photographer Risks Everything 💥",
+      "previous_description": "Step into When The Photographer Risks Everything 💥 with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-026",
+      "slug": "a-real-day-in-the-life-at-a-video-production-company",
+      "category": "on-the-job",
+      "title": "a REAL day in the life at a video production company",
+      "previous_description": "Step into a REAL day in the life at a video production company with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-029",
+      "slug": "a-typical-day-as-a-cnc-machinist",
+      "category": "on-the-job",
+      "title": "A typical day as a CNC Machinist",
+      "previous_description": "Step into A typical day as a CNC Machinist with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-030",
+      "slug": "impressive-cnc-lathe-machine-turning",
+      "category": "on-the-job",
+      "title": "Impressive CNC Lathe Machine Turning",
+      "previous_description": "Step into Impressive CNC Lathe Machine Turning with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-032",
+      "slug": "what-is-a-cloud-engineer-simplified",
+      "category": "on-the-job",
+      "title": "What is a cloud engineer? - simplified",
+      "previous_description": "Step into What is a cloud engineer? - simplified with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-034",
+      "slug": "day-in-the-life-as-a-line-cook-at-a-three-star-michelin-restaurant",
+      "category": "on-the-job",
+      "title": "day in the life as a line cook at a three star Michelin restaurant",
+      "previous_description": "Step into day in the life as a line cook at a three star Michelin restaurant with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-037",
+      "slug": "day-in-the-life-of-an-aesthetician",
+      "category": "on-the-job",
+      "title": "Day in the life of an aesthetician!",
+      "previous_description": "Step into Day in the life of an aesthetician! with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-038",
+      "slug": "day-in-the-life-as-an-esthetician",
+      "category": "on-the-job",
+      "title": "Day in the life as an Esthetician",
+      "previous_description": "Step into Day in the life as an Esthetician with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-043",
+      "slug": "day-in-the-life-of-an-apprentice-plumber",
+      "category": "on-the-job",
+      "title": "Day in the Life of an Apprentice Plumber",
+      "previous_description": "Step into Day in the Life of an Apprentice Plumber with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-044",
+      "slug": "plumbing-101-for-apprentices",
+      "category": "on-the-job",
+      "title": "Plumbing 101 for apprentices",
+      "previous_description": "Step into Plumbing 101 for apprentices with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-047",
+      "slug": "inside-sheet-metal-shop-sheet-metal-bending-process",
+      "category": "on-the-job",
+      "title": "Inside Sheet Metal Shop - Sheet Metal Bending Process",
+      "previous_description": "Step into Inside Sheet Metal Shop - Sheet Metal Bending Process with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-048",
+      "slug": "a-day-in-a-life-of-a-pipe-fitter",
+      "category": "on-the-job",
+      "title": "A day in a life of a pipe fitter",
+      "previous_description": "Step into A day in a life of a pipe fitter with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-049",
+      "slug": "a-day-in-the-life-of-a-pipefitter-at-egan",
+      "category": "on-the-job",
+      "title": "A Day in the Life of a Pipefitter at Egan",
+      "previous_description": "Step into A Day in the Life of a Pipefitter at Egan with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-052",
+      "slug": "a-day-in-the-life-of-a-welder-indeed",
+      "category": "on-the-job",
+      "title": "A Day in the Life of a Welder | Indeed",
+      "previous_description": "Step into A Day in the Life of a Welder | Indeed with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-054",
+      "slug": "day-in-the-life-of-chartered-architectural-technologist-ep2",
+      "category": "on-the-job",
+      "title": "Day in the life of Chartered Architectural Technologist Ep2",
+      "previous_description": "Step into Day in the life of Chartered Architectural Technologist Ep2 with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-057",
+      "slug": "working-with-local-1-bricklayers-in-nyc",
+      "category": "on-the-job",
+      "title": "Working with Local 1 Bricklayers 🧱 in NYC",
+      "previous_description": "Step into Working with Local 1 Bricklayers 🧱 in NYC with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-059",
+      "slug": "meet-faye-a-sprinkler-fitter-this-is-my-trade",
+      "category": "on-the-job",
+      "title": "Meet Faye, a Sprinkler Fitter | This is My Trade",
+      "previous_description": "Step into Meet Faye, a Sprinkler Fitter | This is My Trade with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-060",
+      "slug": "day-in-the-life-of-an-hvac-technician",
+      "category": "on-the-job",
+      "title": "Day in the life of an HVAC technician",
+      "previous_description": "Step into Day in the life of an HVAC technician with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-063",
+      "slug": "day-in-the-life-of-a-young-plumber-episode-6",
+      "category": "on-the-job",
+      "title": "Day in the life of a young plumber episode 6",
+      "previous_description": "Step into Plumbing with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-064",
+      "slug": "a-day-in-the-life-of-a-500k-a-year-painter",
+      "category": "on-the-job",
+      "title": "A Day in the Life of a 500k a Year Painter",
+      "previous_description": "Step into Painter with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-068",
+      "slug": "try-this-framing-technique-in-your-photos",
+      "category": "on-the-job",
+      "title": "Try this framing technique in your photos!",
+      "previous_description": "Step into Photographer with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-070",
+      "slug": "day-in-the-life-as-a-line-cook-at-a-three-star-michelin-restaurant-2",
+      "category": "on-the-job",
+      "title": "day in the life as a line cook at a three star Michelin restaurant",
+      "previous_description": "Step into Cook with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-071",
+      "slug": "day-in-the-life-of-an-electrician",
+      "category": "on-the-job",
+      "title": "Day in the Life of an Electrician⚡️",
+      "previous_description": "Step into Electrician with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-075",
+      "slug": "apprentice-is-laying-handmade-76mm-bricks",
+      "category": "on-the-job",
+      "title": "Apprentice is laying handmade 76mm bricks!!",
+      "previous_description": "Step into Bricklayer with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-077",
+      "slug": "day-three-of-being-a-baker",
+      "category": "on-the-job",
+      "title": "Day three of being a baker",
+      "previous_description": "Step into Baker with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-080",
+      "slug": "why-custom-paint-jobs-cost-50-000",
+      "category": "on-the-job",
+      "title": "Why Custom Paint Jobs Cost $50,000+",
+      "previous_description": "Step into Car Painter with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-085",
+      "slug": "work-safety",
+      "category": "on-the-job",
+      "title": "Work Safety",
+      "previous_description": "Step into Workplace Safety with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-086",
+      "slug": "a-day-in-the-life-of-a-prep-cook",
+      "category": "on-the-job",
+      "title": "A Day in the Life of a Prep Cook |",
+      "previous_description": "Step into Cook with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-090",
+      "slug": "what-does-a-plumber-do",
+      "category": "on-the-job",
+      "title": "what does a plumber do",
+      "previous_description": "Step into Plumbing with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-093",
+      "slug": "fixing-canada-s-shortage-of-skilled-trade-workers",
+      "category": "on-the-job",
+      "title": "Fixing Canada's shortage of skilled trade workers",
+      "previous_description": "Step into Carpentry with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-102",
+      "slug": "a-day-in-the-life-of-a-safety-proo",
+      "category": "on-the-job",
+      "title": "A Day in the Life of a Safety Proo",
+      "previous_description": "Step into Workplace Safety with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-103",
+      "slug": "workplace-safety-culture-osha-tips",
+      "category": "on-the-job",
+      "title": "Workplace Safety Culture | OSHA Tips",
+      "previous_description": "Step into Workplace Safety with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-104",
+      "slug": "whmis-training-in-the-workplace",
+      "category": "on-the-job",
+      "title": "WHMIS Training in the Workplace.",
+      "previous_description": "Step into Workplace Safety with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-108",
+      "slug": "auto-body-repair-a-hands-on-career-that-keeps-evolving",
+      "category": "on-the-job",
+      "title": "Auto Body Repair: A Hands-On Career That Keeps Evolving",
+      "previous_description": "Step into Autobody Repair with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-111",
+      "slug": "industrial-mechanic-millwright-apprenticeship-at-loyalist-college",
+      "category": "on-the-job",
+      "title": "Industrial Mechanic Millwright Apprenticeship at Loyalist College",
+      "previous_description": "Step into Industrial Mechanic with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-115",
+      "slug": "a-typical-day-as-a-cnc-machinist-2",
+      "category": "on-the-job",
+      "title": "A typical day as a CNC Machinist",
+      "previous_description": "Step into CNC Machining with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-125",
+      "slug": "day-in-the-life-of-an-aerospace-engineer",
+      "category": "on-the-job",
+      "title": "Day in the life of an Aerospace Engineer",
+      "previous_description": "Step into Aerospace Engineering with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-128",
+      "slug": "day-in-the-life-of-an-automotive-technician",
+      "category": "on-the-job",
+      "title": "Day in the life of an Automotive Technician",
+      "previous_description": "Step into Automobile Technology with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-129",
+      "slug": "outdoor-power-and-recreation-equipment",
+      "category": "on-the-job",
+      "title": "Outdoor Power and Recreation Equipment",
+      "previous_description": "Step into Outdoor Power and Recreation Equipment with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-131",
+      "slug": "occupational-video-outdoor-power-equipment-technician-recreation",
+      "category": "on-the-job",
+      "title": "Occupational Video - Outdoor Power Equipment Technician-Recreation",
+      "previous_description": "Step into Outdoor Power and Recreation Equipment with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-132",
+      "slug": "job-skill-demonstration-1-baking-demonstration-des-competences-professionnelles",
+      "category": "on-the-job",
+      "title": "Job Skill Demonstration 1 - Baking / Démonstration des compétences professionnelles 1 - Patîsserie",
+      "previous_description": "Step into Job Skill Demonstration with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-133",
+      "slug": "plumbing-101-for-apprentices-2",
+      "category": "on-the-job",
+      "title": "Plumbing 101 for apprentices",
+      "previous_description": "Step into Job Skill Demonstration with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-134",
+      "slug": "jobs-skill-demonstration-how-to-sew",
+      "category": "on-the-job",
+      "title": "Jobs Skill Demonstration - How to Sew",
+      "previous_description": "Step into Job Skill Demonstration with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-138",
+      "slug": "a-day-as-a-graphic-designer",
+      "category": "on-the-job",
+      "title": "A Day as a Graphic Designer",
+      "previous_description": "Step into Graphic Design Technology with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-140",
+      "slug": "day-in-the-life-of-a-freelance-graphic-designer-in-montreal-canada-summer-2022",
+      "category": "on-the-job",
+      "title": "Day in the Life of a Freelance Graphic Designer in Montreal, Canada (Summer 2022)",
+      "previous_description": "Step into Graphic Design Technology with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-143",
+      "slug": "day-in-the-life-of-a-3d-animator",
+      "category": "on-the-job",
+      "title": "Day in the life of a 3D Animator",
+      "previous_description": "Step into 3D/2D Character Computer Animation with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-146",
+      "slug": "a-day-in-the-life-of-an-electronic-control-technician",
+      "category": "on-the-job",
+      "title": "A Day in The Life of  an Electronic Control Technician",
+      "previous_description": "Step into Electronics with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-148",
+      "slug": "day-in-the-life-of-a-software-engineer-at-amazon-toronto",
+      "category": "on-the-job",
+      "title": "Day in the Life of a Software Engineer at Amazon Toronto",
+      "previous_description": "Step into Web Technologies with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-151",
+      "slug": "co-op-students-drive-manufacturing-innovation-at-toyota",
+      "category": "on-the-job",
+      "title": "Co-op students drive manufacturing innovation at Toyota",
+      "previous_description": "Step into Mechanical Engineering CAD with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-153",
+      "slug": "how-volkswagen-cars-are-painted-in-factory",
+      "category": "on-the-job",
+      "title": "How Volkswagen Cars are Painted in Factory",
+      "previous_description": "Step into How Volkswagen Cars are Painted in Factory with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-157",
+      "slug": "heavy-vehicle-technology-salzburg-austria-worldskills-competition-2022-special-e",
+      "category": "on-the-job",
+      "title": "Heavy Vehicle Technology - Salzburg, Austria - WorldSkills Competition 2022 Special Edition",
+      "previous_description": "Step into Heavy Vehicle Technology - Salzburg, Austria - WorldSkills Competition 2022 Special Edition with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-158",
+      "slug": "day-in-the-life-electrician-apprentice",
+      "category": "on-the-job",
+      "title": "Day in the Life | Electrician Apprentice",
+      "previous_description": "Step into Day in the Life | Electrician Apprentice with a quick look at how the work gets done, what the day feels like, and why the skills matter.",
+      "previous_takeaway": null
+    }
+  ]
+}
