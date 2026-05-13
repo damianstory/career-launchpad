@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "batch": "job-board",
+    "expected_count": 13,
+    "expected_histogram": {"job-board": 13}
+  },
+  "rows": [
+    {
+      "id": "skills-canada-094",
+      "slug": "build-your-future-in-skilled-trades",
+      "category": "job-board",
+      "title": "Build your future in skilled trades",
+      "old_description": "See how Skilled Trades connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Skilled trades reward people who like seeing the end product of their day — if you'd rather walk past something you built than scroll past something you posted, this path fits."
+    },
+    {
+      "id": "skills-canada-095",
+      "slug": "booming-skilled-trades-in-canada-can-pay-up-to-c-100-000-a-year",
+      "category": "job-board",
+      "title": "BOOMING Skilled Trades in Canada Can Pay Up to C$100,000 a Year?",
+      "old_description": "See how Skilled Trades connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Trades pay scales with certification, overtime, and location — the $100k headlines are real, but they belong to people who chase the right ticket, not just the right job."
+    },
+    {
+      "id": "skills-canada-110",
+      "slug": "industrial-mechanic-78-900-to-repair-and-maintain-machines-in-factories-and-ware",
+      "category": "job-board",
+      "title": "Industrial Mechanic | $78,900 to repair and maintain machines in factories and warehouses 👨‍🏭",
+      "old_description": "See how Industrial Mechanic connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Industrial mechanic work happens where everything else stops working — if you like the puzzle of an unfamiliar broken machine more than a tidy office routine, this fits."
+    },
+    {
+      "id": "skills-canada-112",
+      "slug": "mechatronics-technician-104-690-to-test-repair-and-maintain-electromechanical-ma",
+      "category": "job-board",
+      "title": "Mechatronics Technician | $104,690 to test, repair, and maintain electromechanical machines 👷‍♂️ 🦾 🤖",
+      "old_description": "See how Mechatronics connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Mechatronics sits at the intersection of mechanical, electrical, and software — pick it if you want to work on machines that move, sense, and decide, not just one of the three."
+    },
+    {
+      "id": "skills-canada-123",
+      "slug": "what-does-an-aerospace-engineer-do-salaries-and-opportunities",
+      "category": "job-board",
+      "title": "What does an Aerospace Engineer do (Salaries and Opportunities)",
+      "old_description": "See how Aerospace Engineering connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Aerospace engineering rewards exactness over speed — the careers go to people who care about being right, not first, and don't mind that the work takes years to ship."
+    },
+    {
+      "id": "skills-canada-126",
+      "slug": "what-is-automotive-technology",
+      "category": "job-board",
+      "title": "What is Automotive Technology?",
+      "old_description": "See how Automobile Technology connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Automotive tech is shifting from mechanical work to software and high-voltage systems — the careers belong to people who'll keep learning new platforms every few years."
+    },
+    {
+      "id": "skills-canada-135",
+      "slug": "the-best-careers-in-canada-right-now",
+      "category": "job-board",
+      "title": "The BEST Careers in Canada right now",
+      "old_description": "See how Job Search connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "\"Best careers\" lists rotate every year — the durable signal underneath them is which trades and tech roles are short on workers, so chase shortages, not buzz."
+    },
+    {
+      "id": "skills-canada-139",
+      "slug": "what-is-graphic-design-a-simple-motion-graphic-for-beginner-graphic-designer",
+      "category": "job-board",
+      "title": "What Is Graphic Design? | A Simple Motion Graphic For Beginner Graphic Designer",
+      "old_description": "See how Graphic Design Technology connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Graphic design jobs aren't just artists — they're problem-solvers with a visual vocabulary, working with marketing, product, and clients on a brief most days."
+    },
+    {
+      "id": "skills-canada-141",
+      "slug": "how-does-animation-work",
+      "category": "job-board",
+      "title": "How Does Animation Work?",
+      "old_description": "See how 3D/2D Character Computer Animation connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Animation is a long pipeline of small decisions — most of the job is iterating on someone else's idea, not invention; pick it if you find satisfaction in the iteration itself."
+    },
+    {
+      "id": "skills-canada-145",
+      "slug": "electrical-and-electronic-engineering-technologists-and-technician-career-video",
+      "category": "job-board",
+      "title": "Electrical and Electronic Engineering Technologists and Technician Career Video",
+      "old_description": "See how Electronics connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Engineering technologists do the practical translation between designs and what actually gets built — the role suits people who like both math and a multimeter."
+    },
+    {
+      "id": "skills-canada-147",
+      "slug": "web-development-explained-in-60-seconds",
+      "category": "job-board",
+      "title": "Web Development Explained in 60 Seconds",
+      "old_description": "See how Web Technologies connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Web development is one of the lowest-friction careers to start — a laptop and a few months of self-teaching can make you productive before any degree."
+    },
+    {
+      "id": "skills-canada-152",
+      "slug": "what-is-a-mechanical-engineer",
+      "category": "job-board",
+      "title": "What is a Mechanical Engineer?",
+      "old_description": "See how Mechanical Engineering CAD connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Mechanical engineering is broad enough that no two roles look alike — pick it for the optionality, not because you've already decided on one specific kind of work."
+    },
+    {
+      "id": "skills-canada-155",
+      "slug": "job-talks-cabinetmaker-lynn-describes-what-it-takes-to-be-a-cabinetmaker",
+      "category": "job-board",
+      "title": "Job Talks - Cabinetmaker - Lynn Describes What it Takes to be a Cabinetmaker",
+      "old_description": "See how Job Talks - Cabinetmaker - Lynn Describes What it Takes to be a Cabinetmaker connects to real hiring signals, workplace expectations, and the kinds of roles students can start researching now.",
+      "new_takeaway": "Cabinetmaking pays the people who can read a customer's vague brief and turn it into a buildable plan — half the craft is the conversation before the cut."
+    }
+  ]
+}
