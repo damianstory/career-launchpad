@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "batch": "how-i-got-here",
+    "expected_count": 25,
+    "expected_histogram": {
+      "how-i-got-here": 25
+    }
+  },
+  "rows": [
+    {
+      "id": "skills-canada-001",
+      "slug": "how-much-does-a-carpenter-make-per-year-working-in-vancouver",
+      "category": "how-i-got-here",
+      "title": "How much does a carpenter make per year working in Vancouver?",
+      "previous_description": "Follow the path behind How much does a carpenter make per year working in Vancouver? and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-013",
+      "slug": "hands-on-learning-real-backyard-projects",
+      "category": "how-i-got-here",
+      "title": "Hands-On Learning, Real Backyard Projects",
+      "previous_description": "Follow the path behind Hands-On Learning, Real Backyard Projects and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-014",
+      "slug": "interviewing-a-video-game-art-director",
+      "category": "how-i-got-here",
+      "title": "Interviewing a Video Game Art Director",
+      "previous_description": "Follow the path behind Interviewing a Video Game Art Director and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-016",
+      "slug": "from-indie-n00b-to-creator-my-journey-making-a-game-with-just-art-skills",
+      "category": "how-i-got-here",
+      "title": "From Indie N00B to Creator: My Journey Making a Game with Just Art Skills!",
+      "previous_description": "Follow the path behind From Indie N00B to Creator: My Journey Making a Game with Just Art Skills! and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-020",
+      "slug": "what-it-s-like-to-be-a-pastry-chef",
+      "category": "how-i-got-here",
+      "title": "What it's like to be a Pastry Chef",
+      "previous_description": "Follow the path behind What it's like to be a Pastry Chef and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-023",
+      "slug": "key-things-to-starting-a-successful-photography-business",
+      "category": "how-i-got-here",
+      "title": "Key things to starting a successful photography business 📸",
+      "previous_description": "Follow the path behind Key things to starting a successful photography business 📸 and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-025",
+      "slug": "how-much-a-photographer-makes-and-her-dream-job",
+      "category": "how-i-got-here",
+      "title": "How much 💰 a Photographer makes and her Dream Job?",
+      "previous_description": "Follow the path behind How much 💰 a Photographer makes and her Dream Job? and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-027",
+      "slug": "want-to-start-a-video-production-company-start-with-why",
+      "category": "how-i-got-here",
+      "title": "Want to start a Video Production Company? START WITH WHY",
+      "previous_description": "Follow the path behind Want to start a Video Production Company? START WITH WHY and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-036",
+      "slug": "should-you-go-to-university-to-become-a-chef",
+      "category": "how-i-got-here",
+      "title": "Should you go to university to become a chef? 👨‍🍳",
+      "previous_description": "Follow the path behind Should you go to university to become a chef? 👨‍🍳 and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-042",
+      "slug": "how-this-cabinet-maker-built-a-6-figure-career-with-hard-work",
+      "category": "how-i-got-here",
+      "title": "How This Cabinet Maker Built a 6-Figure Career with Hard Work",
+      "previous_description": "Follow the path behind How This Cabinet Maker Built a 6-Figure Career with Hard Work and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-055",
+      "slug": "job-talks-instrumentation-and-control-technician-melissa-explains-what-it-is",
+      "category": "how-i-got-here",
+      "title": "Job Talks - Instrumentation and Control Technician - Melissa Explains What it is",
+      "previous_description": "Follow the path behind Job Talks - Instrumentation and Control Technician - Melissa Explains What it is and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-061",
+      "slug": "become-a-refrigeration-mechanic",
+      "category": "how-i-got-here",
+      "title": "Become a refrigeration mechanic",
+      "previous_description": "Follow the path behind Become a refrigeration mechanic and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-062",
+      "slug": "job-talks-refrigeration-and-ac-mechanic-brandi-is-a-super-hero-find-out-why",
+      "category": "how-i-got-here",
+      "title": "Job Talks - Refrigeration and AC Mechanic - Brandi is a Super Hero, Find Out Why!",
+      "previous_description": "Follow the path behind Job Talks - Refrigeration and AC Mechanic - Brandi is a Super Hero, Find Out Why! and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-072",
+      "slug": "how-much-does-a-carpenter-make-per-year-working-in-vancouver-2",
+      "category": "how-i-got-here",
+      "title": "How much does a carpenter make per year working in Vancouver?",
+      "previous_description": "Follow the path behind Carpenter and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-076",
+      "slug": "do-this-to-make-2-000-day-with-a-woodworking-business",
+      "category": "how-i-got-here",
+      "title": "Do This to Make $2,000/Day with a Woodworking Business!",
+      "previous_description": "Follow the path behind Cabinet Maker and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-091",
+      "slug": "how-a-successful-serial-entrepreneur-got-started",
+      "category": "how-i-got-here",
+      "title": "How a Successful Serial Entrepreneur Got Started! 🤯",
+      "previous_description": "Follow the path behind Entrepreneurship and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-097",
+      "slug": "trying-different-things-at-a-young-age-helps-discover-our-passion-honour-the-wor",
+      "category": "how-i-got-here",
+      "title": "Trying Different Things At A Young Age Helps Discover Our Passion | Honour The Work | Skilled",
+      "previous_description": "Follow the path behind Skilled Trades and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-098",
+      "slug": "everyone-has-a-different-path-honour-the-work-skilled-trades",
+      "category": "how-i-got-here",
+      "title": "Everyone Has A Different Path | Honour The Work | Skilled Trades",
+      "previous_description": "Follow the path behind Misc and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-105",
+      "slug": "how-after-an-it-job-i-ended-up-as-a-car-painter",
+      "category": "how-i-got-here",
+      "title": "How after an IT job I ended up as a car painter",
+      "previous_description": "Follow the path behind Car Painting and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-106",
+      "slug": "job-talks-oyap-auto-body-assistant",
+      "category": "how-i-got-here",
+      "title": "Job Talks OYAP - Auto Body Assistant",
+      "previous_description": "Follow the path behind Autobody Repair and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-116",
+      "slug": "from-grit-to-precision-wills-journey-into-cnc-machining",
+      "category": "how-i-got-here",
+      "title": "From Grit to Precision: Will's Journey into CNC Machining",
+      "previous_description": "Follow the path behind CNC Machining and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-121",
+      "slug": "want-an-it-job-start-a-home-lab",
+      "category": "how-i-got-here",
+      "title": "Want an IT Job? Start a Home Lab",
+      "previous_description": "Follow the path behind IT – Network Systems Administration and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-122",
+      "slug": "how-much-does-a-systemsadministrator-make",
+      "category": "how-i-got-here",
+      "title": "How much does a #SystemsAdministrator make?",
+      "previous_description": "Follow the path behind IT – Network Systems Administration and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-142",
+      "slug": "how-to-get-into-the-animation-industry",
+      "category": "how-i-got-here",
+      "title": "How To Get Into The Animation Industry",
+      "previous_description": "Follow the path behind 3D/2D Character Computer Animation and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-149",
+      "slug": "it-took-me-6-months-to-become-a-software-developer",
+      "category": "how-i-got-here",
+      "title": "It took me 6 months to become a software developer 👩🏻‍💻",
+      "previous_description": "Follow the path behind Web Technologies and see how real choices, training, and early experience can turn interest into direction.",
+      "previous_takeaway": null
+    }
+  ]
+}
