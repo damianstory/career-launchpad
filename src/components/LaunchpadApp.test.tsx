@@ -164,6 +164,15 @@ async function flushAsyncWork() {
   });
 }
 
+async function dismissFeedOnboarding() {
+  await flushAsyncWork();
+  const dialog = screen.queryByRole('dialog', { name: /hey, you can scroll/i });
+  if (!dialog) return;
+
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Got it' }));
+  await flushAsyncWork();
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   reducedMotion = false;
@@ -228,6 +237,29 @@ describe('LaunchpadApp feed navigation', () => {
     expectHeading('The Career Path Was Not a Straight Line');
   });
 
+  it('commits a slow vertical mobile swipe on touchend after axis lock', async () => {
+    mobileViewport = true;
+    installMatchMedia();
+    renderLaunchpad();
+    await dismissFeedOnboarding();
+    const surface = navigationSurface();
+
+    act(() => {
+      dispatchTouch(surface, 'touchstart', 100, 300);
+      vi.advanceTimersByTime(220);
+    });
+    const verticalMove = dispatchTouch(surface, 'touchmove', 104, 256);
+    expect(verticalMove.defaultPrevented).toBe(true);
+    expect(screen.queryByRole('button', { name: /play the career path/i })).not.toBeInTheDocument();
+
+    act(() => {
+      dispatchTouch(surface, 'touchend', 104, 256);
+    });
+    await finishTransition();
+
+    expect(screen.getByRole('button', { name: /play the career path/i })).toBeInTheDocument();
+  });
+
   it('keeps edge navigation as a no-op with no transition animation', async () => {
     renderLaunchpad();
 
@@ -254,7 +286,7 @@ describe('LaunchpadApp feed navigation', () => {
     expectHeading('The Career Path Was Not a Straight Line');
   });
 
-  it('skips slide transitions and the first-session nudge for reduced-motion users', async () => {
+  it('skips slide transitions for reduced-motion users', async () => {
     reducedMotion = true;
     installMatchMedia();
     renderLaunchpad();
@@ -266,30 +298,61 @@ describe('LaunchpadApp feed navigation', () => {
 
     expectHeading('The Career Path Was Not a Straight Line');
     expect(feedDeck()).toHaveAttribute('data-transitioning', 'false');
-    expect(feedDeck()).toHaveAttribute('data-nudging', 'false');
   });
 
-  it('runs the first-session card nudge once and stores suppression in sessionStorage', () => {
+  it('shows desktop feed onboarding on each page load and dismisses only the current mount', async () => {
     const { unmount } = renderLaunchpad();
+    await flushAsyncWork();
 
-    expect(feedDeck()).toHaveAttribute('data-nudging', 'false');
-    act(() => {
-      vi.advanceTimersByTime(420);
-    });
-    expect(feedDeck()).toHaveAttribute('data-nudging', 'true');
-    act(() => {
-      vi.advanceTimersByTime(520);
-    });
-    expect(feedDeck()).toHaveAttribute('data-nudging', 'false');
-    expect(window.sessionStorage.getItem('career-launchpad-feed-nudge-seen')).toBe('true');
+    const dialog = screen.getByRole('dialog', { name: /hey, you can scroll/i });
+    expect(within(dialog).getByTestId('feed-onboarding-keycap-up')).toHaveTextContent('↑');
+    expect(within(dialog).getByTestId('feed-onboarding-keycap-down')).toHaveTextContent('↓');
+    expect(within(dialog).getByText(/↑ and ↓ arrow keys/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/touchpad/i)).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Got it' })).toHaveFocus();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Got it' }));
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem('career-launchpad-feed-onboarding-seen')).toBeNull();
 
     unmount();
     renderLaunchpad();
-    act(() => {
-      vi.advanceTimersByTime(420);
-    });
+    await flushAsyncWork();
 
-    expect(feedDeck()).toHaveAttribute('data-nudging', 'false');
+    expect(screen.getByRole('dialog', { name: /hey, you can scroll/i })).toBeInTheDocument();
+  });
+
+  it('shows mobile feed onboarding copy and dismisses with Escape', async () => {
+    mobileViewport = true;
+    installMatchMedia();
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    const dialog = screen.getByRole('dialog', { name: /hey, you can scroll/i });
+    expect(within(dialog).queryByTestId('feed-onboarding-keycap-up')).not.toBeInTheDocument();
+    expect(within(dialog).queryByTestId('feed-onboarding-keycap-down')).not.toBeInTheDocument();
+    expect(within(dialog).getByTestId('feed-onboarding-swipe-cue')).toBeInTheDocument();
+    expect(within(dialog).getByText(/swipe up or down/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/up and down arrows beside the social icons/i)).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem('career-launchpad-feed-onboarding-seen')).toBeNull();
+  });
+
+  it('waits to show feed onboarding until an existing Learn More overlay closes', async () => {
+    renderLaunchpad(fixtureContent[0].slug);
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('learn-more-overlay'));
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /hey, you can scroll/i })).toBeInTheDocument();
   });
 
   it('moves the format label beside the category and keeps it off the desktop media frame', async () => {
@@ -353,13 +416,15 @@ describe('LaunchpadApp feed navigation', () => {
     });
   });
 
-  it('uses the desktop immersive rail without the old Heart view-count action', () => {
+  it('uses the desktop immersive rail without fallback navigation controls or the old Heart view-count action', () => {
     renderLaunchpad();
     const rail = within(desktopRail());
 
     expect(rail.getByRole('button', { name: 'Like' })).toBeInTheDocument();
     expect(rail.getByRole('button', { name: 'Share' })).toBeInTheDocument();
     expect(rail.getByRole('button', { name: 'Info' })).toBeInTheDocument();
+    expect(rail.queryByRole('button', { name: 'Previous item' })).not.toBeInTheDocument();
+    expect(rail.queryByRole('button', { name: 'Next item' })).not.toBeInTheDocument();
     expect(rail.queryByRole('button', { name: /^[\d.]+K?$/ })).not.toBeInTheDocument();
   });
 
@@ -407,10 +472,10 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
   });
 
-  it('uses charcoal for the desktop scroll hint', () => {
+  it('removes the passive desktop scroll hint', () => {
     renderLaunchpad();
 
-    expect(screen.getByTestId('desktop-scroll-hint')).toHaveStyle({ color: 'var(--neutral-6)' });
+    expect(screen.queryByTestId('desktop-scroll-hint')).not.toBeInTheDocument();
   });
 
   it('renders the desktop primary Learn More CTA in the editorial column and opens the panel from it', async () => {
@@ -447,6 +512,7 @@ describe('LaunchpadApp feed navigation', () => {
 
   it('uses Read it as the primary CTA on article cards and opens the panel from it', async () => {
     renderLaunchpad();
+    await dismissFeedOnboarding();
 
     act(() => {
       dispatchWheel(navigationSurface(), 90);
@@ -489,16 +555,60 @@ describe('LaunchpadApp feed navigation', () => {
     expect(primaryCta).toHaveAttribute('data-variant', 'mobile');
     expect(primaryCta).toHaveAccessibleName('Learn More');
     expect(screen.getByRole('button', { name: 'Info' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Previous item' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Next item' })).not.toBeDisabled();
     expect(primaryCta).toHaveStyle({
       width: '100%',
       height: '56px',
     });
-    expect(screen.getByTestId('mobile-scroll-hint')).toHaveStyle({ color: 'var(--neutral-6)' });
+    expect(screen.queryByTestId('mobile-scroll-hint')).not.toBeInTheDocument();
 
     fireEvent.click(primaryCta);
     await flushAsyncWork();
 
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+  });
+
+  it('navigates from the mobile rail controls and disables boundaries', async () => {
+    mobileViewport = true;
+    installMatchMedia();
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    const rail = within(screen.getByTestId('mobile-overlay-rail'));
+    expect(rail.getByRole('button', { name: 'Previous item' })).toBeDisabled();
+    expect(rail.getByRole('button', { name: 'Previous item' })).toHaveAttribute('aria-disabled', 'true');
+
+    fireEvent.click(rail.getByRole('button', { name: 'Next item' }));
+    await finishTransition();
+
+    const nextRail = within(screen.getByTestId('mobile-overlay-rail'));
+    expect(screen.getByRole('button', { name: /play the career path/i })).toBeInTheDocument();
+    expect(nextRail.getByRole('button', { name: 'Previous item' })).not.toBeDisabled();
+
+    fireEvent.click(nextRail.getByRole('button', { name: 'Previous item' }));
+    await finishTransition();
+
+    expect(screen.getByRole('button', { name: /play ai tools/i })).toBeInTheDocument();
+    expect(within(screen.getByTestId('mobile-overlay-rail')).getByRole('button', { name: 'Previous item' })).toBeDisabled();
+  });
+
+  it('keeps mobile rail taps isolated from touch navigation', async () => {
+    mobileViewport = true;
+    installMatchMedia();
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    const like = within(screen.getByTestId('mobile-overlay-rail')).getByRole('button', { name: 'Like' });
+    fireEvent.touchStart(like);
+    fireEvent.click(like);
+    await finishTransition();
+
+    expect(screen.getByRole('button', { name: /play ai tools/i })).toBeInTheDocument();
+    expect(within(screen.getByTestId('mobile-overlay-rail')).getByRole('button', { name: 'Liked' })).toHaveAttribute(
+      'data-active',
+      'true'
+    );
   });
 
   it('keeps focus order from left Learn More to play, Like, Share, and Info', () => {
@@ -574,6 +684,7 @@ describe('LaunchpadApp feed navigation', () => {
 
   it('jumps from a search result to the feed card without opening Learn More', async () => {
     renderLaunchpad();
+    await dismissFeedOnboarding();
     // Set a category filter via the paths drawer before opening search
     fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Life Skills/i }));
@@ -657,6 +768,7 @@ describe('LaunchpadApp playback', () => {
 
   it('captures scroll over the playing iframe overlay and stops playback on non-video content', async () => {
     renderLaunchpad();
+    await dismissFeedOnboarding();
 
     fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
     act(() => {
@@ -700,6 +812,7 @@ describe('LaunchpadApp playback', () => {
 
   it('carries user-started autoplay between videos and recreates the player when scrolling back', async () => {
     renderLaunchpad();
+    await dismissFeedOnboarding();
 
     // Open formats drawer and pick Videos
     fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));

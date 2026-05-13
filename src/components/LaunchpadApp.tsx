@@ -3,7 +3,8 @@
 import {
   ArrowUpRight,
   BookOpen,
-  ChevronsDown,
+  ChevronDown,
+  ChevronUp,
   ChevronRight,
   Clock,
   Heart,
@@ -20,6 +21,7 @@ import {
   type CSSProperties,
   type ComponentType,
   type RefObject,
+  type SyntheticEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -49,7 +51,6 @@ const LIKED_KEY = 'career-launchpad-liked-content';
 const LEGACY_SAVED_KEY = 'career-launchpad-saved-content';
 const NAVY = '#22224C';
 const BLUE = '#0092FF';
-const FEED_NUDGE_KEY = 'career-launchpad-feed-nudge-seen';
 const FEED_TRANSITION_MS = 280;
 const FEED_NAV_LOCK_MS = 320;
 const RAIL_FEEDBACK_MS = 1800;
@@ -215,6 +216,10 @@ function writeSavedIds(ids: string[]) {
   window.localStorage.setItem(LIKED_KEY, JSON.stringify(ids));
 }
 
+function stopRailEvent(event: SyntheticEvent) {
+  event.stopPropagation();
+}
+
 function categoryLabel(categories: LaunchpadCategory[], slug: CategorySlug): string {
   return categories.find((c) => c.slug === slug)?.name ?? slug;
 }
@@ -279,7 +284,7 @@ function loadYouTubeIframeAPI(): Promise<YouTubeNamespace> {
 }
 
 function useFeedNavigation(
-  feedRef: RefObject<HTMLElement | null>,
+  element: HTMLElement | null,
   options: { disabled: boolean; onNavigate: (direction: FeedDirection) => boolean }
 ) {
   const { disabled, onNavigate } = options;
@@ -298,7 +303,6 @@ function useFeedNavigation(
   } | null>(null);
 
   useEffect(() => {
-    const element = feedRef.current;
     if (!element) return;
 
     const navigate = (direction: FeedDirection) => {
@@ -381,7 +385,26 @@ function useFeedNavigation(
       }
     };
 
-    const onTouchEnd = () => {
+    const onTouchEnd = (event: TouchEvent) => {
+      const state = touchRef.current;
+      if (!state || disabled || state.triggered) {
+        touchRef.current = null;
+        return;
+      }
+
+      const touch = event.changedTouches[0];
+      const fallbackY = state.samples[state.samples.length - 1]?.y ?? state.startY;
+      const endX = touch?.clientX ?? state.startX;
+      const endY = touch?.clientY ?? fallbackY;
+      const dx = endX - state.startX;
+      const dy = state.startY - endY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      const lockedAxis = state.lockedAxis ?? (Math.max(absX, absY) >= 12 && absY > absX * 1.25 ? 'vertical' : null);
+
+      if (lockedAxis === 'vertical' && absY >= 40) {
+        navigate(dy > 0 ? 'next' : 'prev');
+      }
       touchRef.current = null;
     };
 
@@ -389,6 +412,7 @@ function useFeedNavigation(
     element.addEventListener('touchstart', onTouchStart, { passive: true });
     element.addEventListener('touchmove', onTouchMove, { passive: false });
     element.addEventListener('touchend', onTouchEnd, { passive: true });
+    element.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
     return () => {
       if (wheelRef.current.resetTimer) window.clearTimeout(wheelRef.current.resetTimer);
@@ -396,8 +420,9 @@ function useFeedNavigation(
       element.removeEventListener('touchstart', onTouchStart);
       element.removeEventListener('touchmove', onTouchMove);
       element.removeEventListener('touchend', onTouchEnd);
+      element.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [disabled, feedRef, onNavigate]);
+  }, [disabled, element, onNavigate]);
 }
 
 type LaunchpadAppProps = {
@@ -427,11 +452,14 @@ export function LaunchpadApp({
   const [playingContentId, setPlayingContentId] = useState<string | null>(null);
   const [autoplayMode, setAutoplayMode] = useState<AutoplayMode>('audible');
   const [activeRailFeedback, setActiveRailFeedback] = useState<RailFeedback | null>(null);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [feedOnboardingOpen, setFeedOnboardingOpen] = useState(false);
   const toastTimer = useRef<number | null>(null);
   const railFeedbackTimer = useRef<number | null>(null);
-  const navSurfaceRef = useRef<HTMLDivElement | null>(null);
+  const [navSurfaceElement, setNavSurfaceElement] = useState<HTMLDivElement | null>(null);
   const feedDeckRef = useRef<HTMLDivElement | null>(null);
   const navLockedUntilRef = useRef(0);
+  const processedInitialSlugRef = useRef<string | null>(null);
   const activePlayerRef = useRef<YouTubePlayerInstance | null>(null);
   const isMobile = useIsMobile();
   const reducedMotion = usePrefersReducedMotion();
@@ -488,6 +516,13 @@ export function LaunchpadApp({
   }, [previewContent.length]);
 
   useEffect(() => {
+    queueMicrotask(() => {
+      setOnboardingChecked(true);
+      setFeedOnboardingOpen(true);
+    });
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (toastTimer.current) window.clearTimeout(toastTimer.current);
       if (railFeedbackTimer.current) window.clearTimeout(railFeedbackTimer.current);
@@ -497,10 +532,15 @@ export function LaunchpadApp({
   // Deep link
   useEffect(() => {
     const linked = getContentBySlug(previewContent, initialContentSlug ?? null);
+    if (initialContentSlug && processedInitialSlugRef.current === initialContentSlug) {
+      return;
+    }
     if (linked) {
+      processedInitialSlugRef.current = initialContentSlug;
       queueMicrotask(() => setSelected(linked));
       trackEvent('learn_more_open', { contentId: linked.id, metadata: { source: 'direct_link' } });
     } else if (initialContentSlug) {
+      processedInitialSlugRef.current = initialContentSlug;
       const params = new URLSearchParams(searchParams.toString());
       params.delete('content');
       const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
@@ -632,8 +672,15 @@ export function LaunchpadApp({
     navigateFeed('prev');
   }, [navigateFeed]);
 
-  useFeedNavigation(navSurfaceRef, {
-    disabled: Boolean(selected || searchOpen),
+  const dismissFeedOnboarding = useCallback(() => {
+    setFeedOnboardingOpen(false);
+  }, []);
+
+  const shouldShowFeedOnboarding =
+    onboardingChecked && feedOnboardingOpen && !selected && !searchOpen && !pathsDrawerOpen && !formatsDrawerOpen;
+
+  useFeedNavigation(navSurfaceElement, {
+    disabled: Boolean(selected || searchOpen || shouldShowFeedOnboarding),
     onNavigate: navigateFeed,
   });
 
@@ -667,7 +714,7 @@ export function LaunchpadApp({
         setSearchOpen(true);
         return;
       }
-      if (selected || searchOpen) return;
+      if (selected || searchOpen || shouldShowFeedOnboarding) return;
       if (isInteractiveShortcutTarget(e.target) || isInteractiveShortcutTarget(document.activeElement)) return;
       if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'j') {
         e.preventDefault();
@@ -684,7 +731,17 @@ export function LaunchpadApp({
     };
     window.addEventListener('keydown', onKey as unknown as EventListener);
     return () => window.removeEventListener('keydown', onKey as unknown as EventListener);
-  }, [effectivePlayingContentId, item, playItem, searchOpen, selected, stepNext, stepPrev, stopPlayback]);
+  }, [
+    effectivePlayingContentId,
+    item,
+    playItem,
+    searchOpen,
+    selected,
+    shouldShowFeedOnboarding,
+    stepNext,
+    stepPrev,
+    stopPlayback,
+  ]);
 
   // Track impression when item changes
   const lastImpressionId = useRef<string | null>(null);
@@ -751,7 +808,7 @@ export function LaunchpadApp({
     onVideoEnd: handleVideoEnd,
     onAutoplayModeChange: setAutoplayMode,
     onPlayerReady: handlePlayerReady,
-    navSurfaceRef,
+    navSurfaceRef: setNavSurfaceElement,
   };
 
   return (
@@ -827,6 +884,14 @@ export function LaunchpadApp({
         />
       )}
 
+      {shouldShowFeedOnboarding && (
+        <FeedOnboardingDialog
+          mobile={isMobile}
+          reducedMotion={reducedMotion}
+          onDismiss={dismissFeedOnboarding}
+        />
+      )}
+
       <Toast message={toast} show={!!toast} />
     </main>
   );
@@ -860,7 +925,7 @@ type StageProps = {
   feedTotal: number;
   onNext: () => void;
   onPrev: () => void;
-  navSurfaceRef: RefObject<HTMLDivElement | null>;
+  navSurfaceRef: (node: HTMLDivElement | null) => void;
   feedDeckRef: RefObject<HTMLDivElement | null>;
   navDirection: FeedDirection;
   reducedMotion: boolean;
@@ -1205,6 +1270,10 @@ function MobileStage({
   setPathsDrawerOpen,
   formatsDrawerOpen,
   setFormatsDrawerOpen,
+  feedIdx,
+  feedTotal,
+  onPrev,
+  onNext,
   navSurfaceRef,
   feedDeckRef,
   navDirection,
@@ -1331,6 +1400,7 @@ function MobileStage({
 
         {/* floating action rail */}
         <div
+          data-testid="mobile-overlay-rail"
           style={{
             position: 'absolute',
             right: 12,
@@ -1343,6 +1413,14 @@ function MobileStage({
           }}
         >
           <MobileRailBtn
+            icon={ChevronUp}
+            label="Up"
+            ariaLabel="Previous item"
+            disabled={feedIdx === 0}
+            onClick={onPrev}
+            title="↑ Up arrow"
+          />
+          <MobileRailBtn
             icon={Heart}
             label={isSaved ? 'Liked' : 'Like'}
             active={isSaved}
@@ -1350,39 +1428,14 @@ function MobileStage({
           />
           <MobileRailBtn icon={Share2} label="Share" active={activeRailFeedback === 'share'} onClick={onShare} />
           <MobileRailBtn icon={Info} label="Info" active={activeRailFeedback === 'info'} onClick={onInfo} />
-
-          <div
-            data-testid="mobile-scroll-hint"
-            style={{
-              marginTop: 6,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
-              color: 'var(--neutral-6)',
-              opacity: 0.85,
-            }}
-          >
-            <span
-              style={{
-                display: 'grid',
-                placeItems: 'center',
-              }}
-            >
-              <ChevronsDown size={18} />
-            </span>
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 800,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                lineHeight: 1.2,
-              }}
-            >
-              Scroll
-            </span>
-          </div>
+          <MobileRailBtn
+            icon={ChevronDown}
+            label="Down"
+            ariaLabel="Next item"
+            disabled={feedIdx >= feedTotal - 1}
+            onClick={onNext}
+            title="↓ Down arrow"
+          />
         </div>
 
         <LearnMoreCta format={item.format} variant="mobile" onClick={onLearnMore} />
@@ -1444,7 +1497,6 @@ function FeedMediaDeck({
   const [previous, setPrevious] = useState<MediaDeckCard | null>(null);
   const [transitionDirection, setTransitionDirection] = useState<FeedDirection>(direction);
   const [transitionPhase, setTransitionPhase] = useState<'idle' | 'prepare' | 'animating'>('idle');
-  const [nudging, setNudging] = useState(false);
   const incomingKey = `${item.id}|${blockColor}|${reducedMotion ? 'reduced' : 'motion'}`;
   const [renderedKey, setRenderedKey] = useState(incomingKey);
 
@@ -1478,23 +1530,6 @@ function FeedMediaDeck({
     };
   }, [current.item.id, transitionPhase]);
 
-  useEffect(() => {
-    if (reducedMotion) return;
-    if (window.sessionStorage.getItem(FEED_NUDGE_KEY) === 'true') return;
-
-    let stopTimer: number | null = null;
-    const startTimer = window.setTimeout(() => {
-      window.sessionStorage.setItem(FEED_NUDGE_KEY, 'true');
-      setNudging(true);
-      stopTimer = window.setTimeout(() => setNudging(false), 520);
-    }, 420);
-
-    return () => {
-      window.clearTimeout(startTimer);
-      if (stopTimer) window.clearTimeout(stopTimer);
-    };
-  }, [reducedMotion]);
-
   const transitioning = transitionPhase !== 'idle';
   const isMobileVariant = variant === 'mobile';
   const deckStyle: CSSProperties = isMobileVariant
@@ -1504,8 +1539,6 @@ function FeedMediaDeck({
         overflow: 'hidden',
         zIndex: 1,
         touchAction: 'none',
-        transform: nudging ? 'translate3d(0, -18px, 0)' : 'translate3d(0, 0, 0)',
-        transition: nudging ? 'transform 520ms var(--ease-out)' : undefined,
       }
     : {
         position: 'relative',
@@ -1516,8 +1549,6 @@ function FeedMediaDeck({
         overflow: 'hidden',
         zIndex: 1,
         touchAction: 'none',
-        transform: nudging ? 'translate3d(0, -18px, 0)' : 'translate3d(0, 0, 0)',
-        transition: nudging ? 'transform 520ms var(--ease-out)' : undefined,
       };
 
   const cardStyle = (role: 'current' | 'previous'): CSSProperties => {
@@ -1553,7 +1584,6 @@ function FeedMediaDeck({
       ref={deckRef}
       data-testid="feed-media-deck"
       data-transitioning={transitioning ? 'true' : 'false'}
-      data-nudging={nudging ? 'true' : 'false'}
       style={deckStyle}
     >
       {previous && (
@@ -1637,33 +1667,6 @@ function DesktopOverlayRail({
       {onLearnMore && (
         <DesktopRailBtn icon={Info} label="Info" active={activeRailFeedback === 'info'} onClick={onLearnMore} />
       )}
-      <div
-        data-testid="desktop-scroll-hint"
-        style={{
-          marginTop: 6,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 4,
-          color: 'var(--neutral-6)',
-        }}
-      >
-        <ChevronsDown size={18} />
-        <span
-          style={{
-            fontSize: 9,
-            fontWeight: 800,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            textAlign: 'center',
-            lineHeight: 1.3,
-          }}
-        >
-          Scroll
-          <br />
-          for more
-        </span>
-      </div>
     </div>
   );
 }
@@ -2246,24 +2249,41 @@ function FormatPill({ type }: { type: ContentFormat }) {
 function DesktopRailBtn({
   icon: IconCmp,
   label,
+  ariaLabel,
   active,
+  disabled = false,
   onClick,
+  title,
+  testId,
 }: {
   icon: IconCmp;
   label: string;
+  ariaLabel?: string;
   active?: boolean;
-  onClick: () => void;
+  disabled?: boolean;
+  onClick?: () => void;
+  title?: string;
+  testId?: string;
 }) {
   return (
     <button
       className="lp-overlay-rail-button"
-      onClick={onClick}
-      aria-label={label}
+      onPointerDown={stopRailEvent}
+      onTouchStart={stopRailEvent}
+      onClick={(event) => {
+        stopRailEvent(event);
+        onClick?.();
+      }}
+      aria-label={ariaLabel ?? label}
+      aria-disabled={disabled ? 'true' : 'false'}
+      disabled={disabled}
+      title={title}
+      data-testid={testId}
       data-active={active ? 'true' : 'false'}
       style={{
         background: 'transparent',
         border: 'none',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -2271,6 +2291,7 @@ function DesktopRailBtn({
         padding: 0,
         color: 'var(--white)',
         textShadow: '0 1px 5px rgba(0,0,0,0.75)',
+        opacity: disabled ? 0.42 : 1,
       }}
     >
       <span
@@ -2298,27 +2319,45 @@ function DesktopRailBtn({
 function MobileRailBtn({
   icon: IconCmp,
   label,
+  ariaLabel,
   active,
+  disabled = false,
   onClick,
+  title,
+  testId,
 }: {
   icon: IconCmp;
   label: string;
+  ariaLabel?: string;
   active?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
+  title?: string;
+  testId?: string;
 }) {
   return (
     <button
-      onClick={onClick}
-      aria-label={label}
+      onPointerDown={stopRailEvent}
+      onTouchStart={stopRailEvent}
+      onClick={(event) => {
+        stopRailEvent(event);
+        onClick?.();
+      }}
+      aria-label={ariaLabel ?? label}
+      aria-disabled={disabled ? 'true' : 'false'}
+      disabled={disabled}
+      title={title}
+      data-testid={testId}
       data-active={active ? 'true' : 'false'}
       style={{
         background: 'transparent',
         border: 'none',
-        cursor: onClick ? 'pointer' : 'default',
+        cursor: disabled || !onClick ? 'default' : 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: 2,
+        opacity: disabled ? 0.46 : 1,
       }}
     >
       <div
@@ -2562,6 +2601,192 @@ function Toast({ message, show }: { message: string | null; show: boolean }) {
     >
       {message}
     </div>
+  );
+}
+
+// ============================================================
+// Feed onboarding
+// ============================================================
+function FeedOnboardingDialog({
+  mobile,
+  reducedMotion,
+  onDismiss,
+}: {
+  mobile: boolean;
+  reducedMotion: boolean;
+  onDismiss: () => void;
+}) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    buttonRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      onDismiss();
+    };
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onDismiss]);
+
+  return (
+    <div
+      data-testid="feed-onboarding-overlay"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 2500,
+        display: 'grid',
+        placeItems: 'center',
+        padding: 24,
+        background: 'rgba(8, 8, 26, 0.48)',
+        backdropFilter: 'blur(6px)',
+        animation: reducedMotion ? undefined : 'lp-fade-in 180ms var(--ease-standard)',
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feed-onboarding-title"
+        data-testid="feed-onboarding-dialog"
+        style={{
+          width: 'min(420px, 100%)',
+          borderRadius: 18,
+          border: '1px solid rgba(217, 223, 234, 0.96)',
+          background: 'var(--white)',
+          color: 'var(--navy)',
+          boxShadow: '0 24px 70px rgba(8, 8, 26, 0.28)',
+          padding: mobile ? 24 : 28,
+          textAlign: 'center',
+        }}
+      >
+        <FeedOnboardingVisual mobile={mobile} />
+        <h2 id="feed-onboarding-title" style={{ margin: '0 0 10px', fontSize: 24, lineHeight: 1.15, fontWeight: 900 }}>
+          Hey, you can scroll.
+        </h2>
+        <p style={{ margin: '0 0 22px', color: 'var(--neutral-5)', fontSize: 15, lineHeight: 1.55 }}>
+          {mobile
+            ? 'Swipe up or down to move through the feed. If swiping ever feels stuck, use the up and down arrows beside the social icons.'
+            : 'Use the ↑ and ↓ arrow keys, or swipe with your touchpad, to move through the feed.'}
+        </p>
+        <button
+          ref={buttonRef}
+          type="button"
+          onClick={onDismiss}
+          style={{
+            minWidth: 132,
+            height: 46,
+            border: 0,
+            borderRadius: 14,
+            background: 'var(--primary-blue)',
+            color: 'var(--white)',
+            fontSize: 14,
+            fontWeight: 800,
+            cursor: 'pointer',
+            boxShadow: '0 10px 24px -10px rgba(0, 146, 255, 0.65)',
+          }}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FeedOnboardingVisual({ mobile }: { mobile: boolean }) {
+  if (mobile) {
+    return (
+      <div
+        aria-hidden
+        data-testid="feed-onboarding-swipe-cue"
+        style={{
+          width: 66,
+          height: 78,
+          margin: '0 auto 16px',
+          borderRadius: 24,
+          display: 'grid',
+          placeItems: 'center',
+          background: 'var(--secondary-blue-pale)',
+          color: 'var(--primary-blue)',
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            justifyItems: 'center',
+            gap: 2,
+          }}
+        >
+          <ChevronUp size={18} strokeWidth={3} />
+          <span
+            style={{
+              width: 3,
+              height: 24,
+              borderRadius: 999,
+              background: 'currentColor',
+              opacity: 0.72,
+            }}
+          />
+          <ChevronDown size={18} strokeWidth={3} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      aria-hidden
+      data-testid="feed-onboarding-keycap-visual"
+      style={{
+        width: 118,
+        height: 104,
+        margin: '0 auto 18px',
+        borderRadius: 30,
+        display: 'grid',
+        placeItems: 'center',
+        background: 'var(--secondary-blue-pale)',
+        color: 'var(--primary-blue)',
+      }}
+    >
+      <div
+        style={{
+          display: 'grid',
+          gap: 8,
+        }}
+      >
+        <FeedOnboardingKeycap label="↑" testId="feed-onboarding-keycap-up" />
+        <FeedOnboardingKeycap label="↓" testId="feed-onboarding-keycap-down" />
+      </div>
+    </div>
+  );
+}
+
+function FeedOnboardingKeycap({ label, testId }: { label: string; testId: string }) {
+  return (
+    <span
+      data-testid={testId}
+      style={{
+        width: 54,
+        height: 38,
+        borderRadius: 11,
+        display: 'grid',
+        placeItems: 'center',
+        background: 'var(--white)',
+        border: '1px solid rgba(0, 146, 255, 0.2)',
+        boxShadow:
+          '0 8px 18px rgba(0, 146, 255, 0.18), inset 0 -4px 0 rgba(34, 34, 76, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.96)',
+        color: 'var(--primary-blue)',
+        fontSize: 24,
+        fontWeight: 900,
+        lineHeight: 1,
+      }}
+    >
+      {label}
+    </span>
   );
 }
 
