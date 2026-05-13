@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "batch": "emerging-careers",
+    "expected_count": 27,
+    "expected_histogram": {
+      "emerging-careers": 27
+    }
+  },
+  "rows": [
+    {
+      "id": "skills-canada-002",
+      "slug": "alex-and-danielle-carpenter-apprentice",
+      "category": "emerging-careers",
+      "title": "Alex & Danielle - Carpenter, Apprentice",
+      "old_description": "Meet Alex & Danielle - Carpenter, Apprentice through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Apprenticeship works best when you can shadow people one or two stages ahead of you. Mentorship inside a trade is what turns a four-year program into a career."
+    },
+    {
+      "id": "skills-canada-006",
+      "slug": "apprenticeship-payshairstylist",
+      "category": "emerging-careers",
+      "title": "Apprenticeship Pays—Hairstylist",
+      "old_description": "Meet Apprenticeship Pays—Hairstylist through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Hairstyling apprenticeships pay while you learn the technical side of the trade in real salons. The model means you can be earning by 19 and running your own chair by 23 if you take it seriously."
+    },
+    {
+      "id": "skills-canada-007",
+      "slug": "ontario-skilled-trades-raising-the-bar-in-2026",
+      "category": "emerging-careers",
+      "title": "Ontario Skilled Trades: Raising the Bar in 2026",
+      "old_description": "Meet Ontario Skilled Trades: Raising the Bar in 2026 through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Trades training in Canada is being modernized to match what shops actually need now: more apprentices, faster certification, more pathways from high school. The policy backdrop is moving in favour of the people entering."
+    },
+    {
+      "id": "skills-canada-008",
+      "slug": "stephs-journey-to-become-a-red-seal-electrician-construction-and-maintenance-in",
+      "category": "emerging-careers",
+      "title": "Steph’s journey to become a Red Seal #Electrician – #Construction and Maintenance in",
+      "old_description": "Meet Steph’s journey to become a Red Seal #Electrician – #Construction and Maintenance in through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "The Red Seal certification makes a Canadian electrician's qualifications portable across every province. Finishing it usually takes about four years and opens up the higher-paying industrial work."
+    },
+    {
+      "id": "skills-canada-009",
+      "slug": "meet-rosie-a-proud-hairstylist-who-discovered-her-passion-at-a-young-age",
+      "category": "emerging-careers",
+      "title": "Meet Rosie, a proud hairstylist who discovered her passion at a young age!",
+      "old_description": "Meet Meet Rosie, a proud hairstylist who discovered her passion at a young age! through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Some careers click early because the work is visible: you can see whether you like it before you commit. Hairstyling is one of the trades where a few hours observing in a salon tells you most of what the next decade will feel like."
+    },
+    {
+      "id": "skills-canada-028",
+      "slug": "cnc-machining-what-is-it-and-how-does-it-work-must-know-basics",
+      "category": "emerging-careers",
+      "title": "CNC machining - What is it and How Does it Work? (Must Know Basics)",
+      "old_description": "Meet CNC machining - What is it and How Does it Work? (Must Know Basics) through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "CNC machining is one of the cleanest tech-meets-trade jobs around. The work is half programming, half setup, with the satisfaction of producing parts that other manufacturers depend on."
+    },
+    {
+      "id": "skills-canada-033",
+      "slug": "jobs-you-can-pivot-to-as-a-software-engineer-cloud-engineer",
+      "category": "emerging-careers",
+      "title": "Jobs You Can Pivot to as a Software Engineer ☁️ Cloud Engineer",
+      "old_description": "Meet Jobs You Can Pivot to as a Software Engineer ☁️ Cloud Engineer through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Software careers branch sideways more than they climb. The pivots that pay well usually involve specializing in infrastructure that other engineers depend on, like cloud or data systems."
+    },
+    {
+      "id": "skills-canada-039",
+      "slug": "what-is-a-medical-esthetician",
+      "category": "emerging-careers",
+      "title": "WHAT IS A MEDICAL ESTHETICIAN ?👀‼️",
+      "old_description": "Meet WHAT IS A MEDICAL ESTHETICIAN ?👀‼️ through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Medical esthetics is a fast-growing field that sits between cosmetics and healthcare. It rewards people willing to keep up with new procedures and the regulatory side that comes with working closer to medicine."
+    },
+    {
+      "id": "skills-canada-041",
+      "slug": "career-profile-jonathan-sinke-cabinetmaker",
+      "category": "emerging-careers",
+      "title": "Career Profile: Jonathan Sinke, Cabinetmaker",
+      "old_description": "Meet Career Profile: Jonathan Sinke, Cabinetmaker through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Cabinetmaker careers compound when you start specializing. Generalists make a living; specialists in commercial casework, furniture, or restoration make several times that."
+    },
+    {
+      "id": "skills-canada-046",
+      "slug": "sheet-metal-work-in-15-seconds",
+      "category": "emerging-careers",
+      "title": "Sheet Metal Work In 15 Seconds",
+      "old_description": "Meet Sheet Metal Work In 15 Seconds through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Sheet metal work spans HVAC, roofing, custom architectural pieces, and aerospace. The trade ages well because every category needs the same fabrication skills but pays in very different bands."
+    },
+    {
+      "id": "skills-canada-050",
+      "slug": "being-a-steamfitter",
+      "category": "emerging-careers",
+      "title": "Being A Steamfitter",
+      "old_description": "Meet Being A Steamfitter through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Steamfitters work where pressure systems matter, which includes hospitals, refineries, and ships. The certification is harder to get than most plumbing trades and the work pays accordingly."
+    },
+    {
+      "id": "skills-canada-056",
+      "slug": "apprenticeship-paysbrick-and-stone-mason",
+      "category": "emerging-careers",
+      "title": "Apprenticeship Pays—Brick and Stone Mason",
+      "old_description": "Meet Apprenticeship Pays—Brick and Stone Mason through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Masonry pays apprentices on real job sites from day one, and finished work lasts a century. It's one of the few trades where the longevity of what you build matches the length of the career it gives you."
+    },
+    {
+      "id": "skills-canada-065",
+      "slug": "10-things-you-need-to-start-a-one-man-video-production-company-pt-1",
+      "category": "emerging-careers",
+      "title": "10 Things you NEED to start a one man video production company PT 1 ☝🏾",
+      "old_description": "Meet Videographer through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "One-person video production businesses succeed when they pick one client type and serve it well, not when they try to do everything. The trap is buying gear faster than you build a niche."
+    },
+    {
+      "id": "skills-canada-066",
+      "slug": "job-salary-graphic-designer-in",
+      "category": "emerging-careers",
+      "title": "Job salary - Graphic Designer in",
+      "old_description": "Meet Graphic Designer through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Graphic design pay is shifting toward people who can also write copy, motion-design, or strategize, not just produce visuals. Pure designers still work, but the highest earners layer skills."
+    },
+    {
+      "id": "skills-canada-069",
+      "slug": "how-much-do-stick-welders-make",
+      "category": "emerging-careers",
+      "title": "How much do Stick Welders make?",
+      "old_description": "Meet Welder through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Stick welding pays a premium because the conditions are usually hard: outdoors, structural, often at heights. Welders who can run a stick rod cleanly stay in demand even as automation grows elsewhere."
+    },
+    {
+      "id": "skills-canada-073",
+      "slug": "20k-m-landscaping-business-2025",
+      "category": "emerging-careers",
+      "title": "$20K/M Landscaping Business (2025)",
+      "old_description": "Meet Landscape Gardener through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Landscaping businesses scale by stacking simple, repeatable services for the same clients season after season. The path to $20K months runs through retention, not novelty."
+    },
+    {
+      "id": "skills-canada-081",
+      "slug": "how-to-start-learning-about-fashion",
+      "category": "emerging-careers",
+      "title": "How to start learning about Fashion",
+      "old_description": "Meet Fashion Technologies through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Fashion as an industry rewards people who can both design and explain why something works for a target customer. Learning the business side early is what separates working designers from hobbyists."
+    },
+    {
+      "id": "skills-canada-082",
+      "slug": "bodymen-make-more-then-engineers",
+      "category": "emerging-careers",
+      "title": "Bodymen Make More $ Then Engineers!",
+      "old_description": "Meet AutoBody Repair through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Auto body specialists at the top of the trade earn what mid-career engineers do, because their work is harder to outsource and easier to charge by the job. The route is owning your shop or specializing in collision insurance work."
+    },
+    {
+      "id": "skills-canada-083",
+      "slug": "highest-paying-trades-jobs",
+      "category": "emerging-careers",
+      "title": "Highest Paying Trades Jobs! 💵🛠️👷‍♂️",
+      "old_description": "Meet Skilled Trades through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "The highest-paying trades cluster around heavy industry, mining, and oil and gas. The pay reflects location, hazard, and shift work, not just skill — pick based on the trade-offs you'll actually live with."
+    },
+    {
+      "id": "skills-canada-084",
+      "slug": "trade-jobs-salary-the-answers-might-surprise-you",
+      "category": "emerging-careers",
+      "title": "Trade jobs + salary! The answers might surprise you 😳?",
+      "old_description": "Meet Skilled Trades through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Trade salaries surprise people in both directions: some quiet trades pay much more than expected, and some glamorous ones less. Hourly wage is only part of the picture; benefits, overtime, and seasonal patterns matter at least as much."
+    },
+    {
+      "id": "skills-canada-087",
+      "slug": "what-does-the-career-of-an-electrician-look-like",
+      "category": "emerging-careers",
+      "title": "What Does The Career Of An Electrician Look Like?",
+      "old_description": "Meet Electrician through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "An electrician's career has three obvious stages: apprentice, journeyman, master. The less-obvious one is the optional fourth: starting your own shop, where the pay scales differently than it does on the tools."
+    },
+    {
+      "id": "skills-canada-088",
+      "slug": "you-can-earn-how-much-plumbing",
+      "category": "emerging-careers",
+      "title": "You can earn HOW MUCH Plumbing?",
+      "old_description": "Meet Plumbing through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Plumber pay scales especially fast for people willing to work on industrial systems or own their own service business. Residential service work is the entry point, not the destination."
+    },
+    {
+      "id": "skills-canada-089",
+      "slug": "day-in-the-life-hairstylist",
+      "category": "emerging-careers",
+      "title": "Day in the Life Hairstylist",
+      "old_description": "Meet Hairstylist through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Hairstyling days look short on paper but include early prep, slow client weeks, and a lot of standing. The career suits people who can stay energetic with strangers for hours and treat each chair as a small project."
+    },
+    {
+      "id": "skills-canada-107",
+      "slug": "how-ai-will-affect-auto-body-and-other-repair-shops",
+      "category": "emerging-careers",
+      "title": "How Ai will affect Auto Body and other repair shops..",
+      "old_description": "Meet Autobody Repair through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Auto body shops are integrating AI for damage estimation and parts ordering, but the hands-on repair work is still hard to automate. Technicians who can use these tools well are likely to come out ahead, not be replaced by them."
+    },
+    {
+      "id": "skills-canada-113",
+      "slug": "top-mechatronics-jobs-you-need-to-know",
+      "category": "emerging-careers",
+      "title": "Top Mechatronics Jobs You Need to Know!",
+      "old_description": "Meet Mechatronics through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Mechatronics roles span manufacturing automation, robotics, and renewable energy installation. The common thread is systems that combine mechanical motion with sensors and code, and these systems are showing up in more industries every year."
+    },
+    {
+      "id": "skills-canada-114",
+      "slug": "what-is-mechatronics-engineering",
+      "category": "emerging-careers",
+      "title": "What is Mechatronics Engineering?",
+      "old_description": "Meet Mechatronics through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Mechatronics engineering blends mechanical, electrical, and software engineering into one discipline. Picking it is a bet that the next generation of products will keep crossing those boundaries, which most of them already do."
+    },
+    {
+      "id": "skills-canada-117",
+      "slug": "what-is-a-machinist",
+      "category": "emerging-careers",
+      "title": "What is a machinist?",
+      "old_description": "Meet CNC Machining through a quick career snapshot that connects hands-on skill, opportunity, and the changing world of work.",
+      "new_takeaway": "Machinists make the parts other industries depend on, often working from blueprints to tolerances measured in thousandths. The career ages well because the underlying skills transfer across aerospace, medical devices, and custom industrial work."
+    }
+  ]
+}
