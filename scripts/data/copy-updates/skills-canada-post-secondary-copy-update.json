@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "batch": "post-secondary",
+    "expected_count": 14,
+    "expected_histogram": {"post-secondary": 14}
+  },
+  "rows": [
+    {
+      "id": "skills-canada-003",
+      "slug": "carpentry-certificate",
+      "category": "post-secondary",
+      "title": "Carpentry certificate",
+      "old_description": "Explore the training path behind Carpentry certificate, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Carpentry certificates open the door to apprenticeship-eligible work — the credential isn't the finish line, it's the ticket to the much longer paid-learning path that follows."
+    },
+    {
+      "id": "skills-canada-010",
+      "slug": "carney-pitches-new-apprenticeship-grant-for-skilled-trades",
+      "category": "post-secondary",
+      "title": "Carney pitches new apprenticeship grant for skilled trades",
+      "old_description": "Explore the training path behind Carney pitches new apprenticeship grant for skilled trades, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Apprenticeship grants quietly remove the biggest barrier to trades training — the cost of unpaid first months — and the policies around them change fast enough to be worth checking before you commit."
+    },
+    {
+      "id": "skills-canada-017",
+      "slug": "applying-to-fashion-tmu-for-fall-2026-make-your-portfolio-stand-out",
+      "category": "post-secondary",
+      "title": "Applying to Fashion TMU for Fall 2026? Make your portfolio stand out.",
+      "old_description": "Explore the training path behind Applying to Fashion TMU for Fall 2026? Make your portfolio stand out., from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Creative-program portfolios are judged on point of view, not polish — admissions committees spot generic work fast, but a small body of consistent personal projects beats a glossy showpiece."
+    },
+    {
+      "id": "skills-canada-045",
+      "slug": "sheridan-college-school-of-skilled-trades-plumbing",
+      "category": "post-secondary",
+      "title": "Sheridan College. School of Skilled Trades - Plumbing",
+      "old_description": "Explore the training path behind Sheridan College. School of Skilled Trades - Plumbing, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Plumbing programs at colleges like Sheridan are usually the first half of a longer apprenticeship — graduating gets you working, not certified, and the rest happens on real job sites."
+    },
+    {
+      "id": "skills-canada-051",
+      "slug": "welding-skilled-trades",
+      "category": "post-secondary",
+      "title": "Welding - Skilled Trades",
+      "old_description": "Explore the training path behind Welding - Skilled Trades, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Welding training is short enough to fit between jobs and credentialed in tiers — you can start working as a fitter or general welder and stack certifications as your skill grows."
+    },
+    {
+      "id": "skills-canada-053",
+      "slug": "architectural-technology-at-humber-polytechnic",
+      "category": "post-secondary",
+      "title": "Architectural Technology at Humber Polytechnic",
+      "old_description": "Explore the training path behind Architectural Technology at Humber Polytechnic, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Architectural technology programs prepare you for the production side of design — making the drawings builders actually use — which is a faster path into the industry than an architecture degree."
+    },
+    {
+      "id": "skills-canada-074",
+      "slug": "everything-i-learned-in-cosmetology-schooll",
+      "category": "post-secondary",
+      "title": "Everything I learned in cosmetology schooll",
+      "old_description": "Explore the training path behind Hairstylist, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Cosmetology school is more clinic than classroom — most of what you take into the chair comes from real client hours, not lectures, so pick a program by its practical setup."
+    },
+    {
+      "id": "skills-canada-124",
+      "slug": "real-truth-about-aerospace-engineering-is-it-worth-it",
+      "category": "post-secondary",
+      "title": "Real Truth about Aerospace Engineering - is it Worth it?",
+      "old_description": "Explore the training path behind Aerospace Engineering, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Engineering degrees pay back differently depending on the field — aerospace rewards patience and depth, so it's worth it for people who already love the long arc, not the quick cycle."
+    },
+    {
+      "id": "skills-canada-127",
+      "slug": "automotive-engineering-class",
+      "category": "post-secondary",
+      "title": "Automotive Engineering Class",
+      "old_description": "Explore the training path behind Automobile Technology, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Automotive engineering programs now spend as much time on software and electric drivetrains as on combustion — choose a school whose curriculum reflects where the industry is going, not where it's been."
+    },
+    {
+      "id": "skills-canada-130",
+      "slug": "heavy-duty-equipment-program-at-conestoga",
+      "category": "post-secondary",
+      "title": "Heavy Duty Equipment Program at Conestoga",
+      "old_description": "Explore the training path behind Outdoor Power and Recreation Equipment, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Heavy-duty mechanic training pays off because the machines don't move to where the workers are — graduates with the right tickets travel to wherever industry needs them, and the pay reflects it."
+    },
+    {
+      "id": "skills-canada-137",
+      "slug": "the-key-to-choosing-a-fulfilling-career",
+      "category": "post-secondary",
+      "title": "The Key to Choosing a Fulfilling Career",
+      "old_description": "Explore the training path behind Job Search, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Fulfilling careers usually aren't picked from a list — they show up at the intersection of what you'll do for free and what someone will pay for, and noticing that overlap takes time."
+    },
+    {
+      "id": "skills-canada-144",
+      "slug": "learn-more-about-electronics-technician",
+      "category": "post-secondary",
+      "title": "Learn More about Electronics Technician",
+      "old_description": "Explore the training path behind Electronics, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Electronics technician training is mostly hands-on with real components — pick a program with a strong lab so you graduate able to diagnose, not just describe."
+    },
+    {
+      "id": "skills-canada-150",
+      "slug": "typical-day-in-the-life-of-a-canadian-engineering-student-western-university",
+      "category": "post-secondary",
+      "title": "Typical Day in the Life of a Canadian Engineering Student👷🏻‍♂️🇨🇦 | Western University",
+      "old_description": "Explore the training path behind Mechanical Engineering CAD, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Engineering school is closer to a job than a university experience for most — the volume of work is real, and the people who thrive treat it like training for a profession, not picking a major."
+    },
+    {
+      "id": "skills-canada-156",
+      "slug": "woodworking-furniture-and-cabinetmaking-at-humber-polytechnic",
+      "category": "post-secondary",
+      "title": "Woodworking, Furniture & Cabinetmaking at Humber Polytechnic",
+      "old_description": "Explore the training path behind Woodworking, Furniture & Cabinetmaking at Humber Polytechnic, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "new_takeaway": "Furniture-making programs train you for both production work and starting your own shop — the path forks early between volume cabinetry and one-off pieces, and the program choice should match the path."
+    }
+  ]
+}

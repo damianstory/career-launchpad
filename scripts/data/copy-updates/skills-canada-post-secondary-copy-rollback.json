@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "batch": "post-secondary",
+    "expected_count": 14,
+    "expected_histogram": {
+      "post-secondary": 14
+    }
+  },
+  "rows": [
+    {
+      "id": "skills-canada-003",
+      "slug": "carpentry-certificate",
+      "category": "post-secondary",
+      "title": "Carpentry certificate",
+      "previous_description": "Explore the training path behind Carpentry certificate, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-010",
+      "slug": "carney-pitches-new-apprenticeship-grant-for-skilled-trades",
+      "category": "post-secondary",
+      "title": "Carney pitches new apprenticeship grant for skilled trades",
+      "previous_description": "Explore the training path behind Carney pitches new apprenticeship grant for skilled trades, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-017",
+      "slug": "applying-to-fashion-tmu-for-fall-2026-make-your-portfolio-stand-out",
+      "category": "post-secondary",
+      "title": "Applying to Fashion TMU for Fall 2026? Make your portfolio stand out.",
+      "previous_description": "Explore the training path behind Applying to Fashion TMU for Fall 2026? Make your portfolio stand out., from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-045",
+      "slug": "sheridan-college-school-of-skilled-trades-plumbing",
+      "category": "post-secondary",
+      "title": "Sheridan College. School of Skilled Trades - Plumbing",
+      "previous_description": "Explore the training path behind Sheridan College. School of Skilled Trades - Plumbing, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-051",
+      "slug": "welding-skilled-trades",
+      "category": "post-secondary",
+      "title": "Welding - Skilled Trades",
+      "previous_description": "Explore the training path behind Welding - Skilled Trades, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-053",
+      "slug": "architectural-technology-at-humber-polytechnic",
+      "category": "post-secondary",
+      "title": "Architectural Technology at Humber Polytechnic",
+      "previous_description": "Explore the training path behind Architectural Technology at Humber Polytechnic, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-074",
+      "slug": "everything-i-learned-in-cosmetology-schooll",
+      "category": "post-secondary",
+      "title": "Everything I learned in cosmetology schooll",
+      "previous_description": "Explore the training path behind Hairstylist, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-124",
+      "slug": "real-truth-about-aerospace-engineering-is-it-worth-it",
+      "category": "post-secondary",
+      "title": "Real Truth about Aerospace Engineering - is it Worth it?",
+      "previous_description": "Explore the training path behind Aerospace Engineering, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-127",
+      "slug": "automotive-engineering-class",
+      "category": "post-secondary",
+      "title": "Automotive Engineering Class",
+      "previous_description": "Explore the training path behind Automobile Technology, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-130",
+      "slug": "heavy-duty-equipment-program-at-conestoga",
+      "category": "post-secondary",
+      "title": "Heavy Duty Equipment Program at Conestoga",
+      "previous_description": "Explore the training path behind Outdoor Power and Recreation Equipment, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-137",
+      "slug": "the-key-to-choosing-a-fulfilling-career",
+      "category": "post-secondary",
+      "title": "The Key to Choosing a Fulfilling Career",
+      "previous_description": "Explore the training path behind Job Search, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-144",
+      "slug": "learn-more-about-electronics-technician",
+      "category": "post-secondary",
+      "title": "Learn More about Electronics Technician",
+      "previous_description": "Explore the training path behind Electronics, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-150",
+      "slug": "typical-day-in-the-life-of-a-canadian-engineering-student-western-university",
+      "category": "post-secondary",
+      "title": "Typical Day in the Life of a Canadian Engineering Student👷🏻‍♂️🇨🇦 | Western University",
+      "previous_description": "Explore the training path behind Mechanical Engineering CAD, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-156",
+      "slug": "woodworking-furniture-and-cabinetmaking-at-humber-polytechnic",
+      "category": "post-secondary",
+      "title": "Woodworking, Furniture & Cabinetmaking at Humber Polytechnic",
+      "previous_description": "Explore the training path behind Woodworking, Furniture & Cabinetmaking at Humber Polytechnic, from apprenticeships and certificates to the next steps that build career-ready skill.",
+      "previous_takeaway": null
+    }
+  ]
+}
