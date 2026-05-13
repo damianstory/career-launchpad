@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "batch": "problems-to-solve",
+    "expected_count": 4,
+    "expected_histogram": {"problems-to-solve": 4}
+  },
+  "rows": [
+    {
+      "id": "skills-canada-031",
+      "slug": "what-is-cloud-computing-and-how-does-it-work-aws-explained",
+      "category": "problems-to-solve",
+      "title": "What Is Cloud Computing And How Does It Work? AWS Explained",
+      "old_description": "Look at the problem behind What Is Cloud Computing And How Does It Work? AWS Explained and the practical skills people use to solve it in the real world.",
+      "new_takeaway": "Cloud platforms are how modern companies skip owning physical servers — the engineers behind them solve scale and reliability at a level no single business could match."
+    },
+    {
+      "id": "skills-canada-092",
+      "slug": "what-it-s-like-to-be-a-pastry-chef-2",
+      "category": "problems-to-solve",
+      "title": "What it's like to be a Pastry Chef",
+      "old_description": "Look at the problem behind Baker and the practical skills people use to solve it in the real world.",
+      "new_takeaway": "Pastry's hard problem isn't creativity, it's repeatability — the people who thrive treat precision and measurement as the actual craft."
+    },
+    {
+      "id": "skills-canada-136",
+      "slug": "3-unethical-job-search-hacks",
+      "category": "problems-to-solve",
+      "title": "3 Unethical Job Search Hacks",
+      "old_description": "Look at the problem behind Job Search and the practical skills people use to solve it in the real world.",
+      "new_takeaway": "Standing out in a stack of resumes is a real problem — but the tactics that get you through usually aren't the ones that hold up once you're inside the company."
+    },
+    {
+      "id": "skills-canada-154",
+      "slug": "toyota-developed-an-all-new-painting-process-for-cars",
+      "category": "problems-to-solve",
+      "title": "Toyota Developed An All New Painting Process For Cars",
+      "old_description": "Look at the problem behind Toyota Developed An All New Painting Process For Cars and the practical skills people use to solve it in the real world.",
+      "new_takeaway": "Industrial process problems like better paint application don't make headlines, but the engineers solving them cut cost, waste, and emissions at scales individual decisions can't touch."
+    }
+  ]
+}

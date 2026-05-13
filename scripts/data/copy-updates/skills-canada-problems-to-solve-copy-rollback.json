@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "batch": "problems-to-solve",
+    "expected_count": 4,
+    "expected_histogram": {
+      "problems-to-solve": 4
+    }
+  },
+  "rows": [
+    {
+      "id": "skills-canada-031",
+      "slug": "what-is-cloud-computing-and-how-does-it-work-aws-explained",
+      "category": "problems-to-solve",
+      "title": "What Is Cloud Computing And How Does It Work? AWS Explained",
+      "previous_description": "Look at the problem behind What Is Cloud Computing And How Does It Work? AWS Explained and the practical skills people use to solve it in the real world.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-092",
+      "slug": "what-it-s-like-to-be-a-pastry-chef-2",
+      "category": "problems-to-solve",
+      "title": "What it's like to be a Pastry Chef",
+      "previous_description": "Look at the problem behind Baker and the practical skills people use to solve it in the real world.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-136",
+      "slug": "3-unethical-job-search-hacks",
+      "category": "problems-to-solve",
+      "title": "3 Unethical Job Search Hacks",
+      "previous_description": "Look at the problem behind Job Search and the practical skills people use to solve it in the real world.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-154",
+      "slug": "toyota-developed-an-all-new-painting-process-for-cars",
+      "category": "problems-to-solve",
+      "title": "Toyota Developed An All New Painting Process For Cars",
+      "previous_description": "Look at the problem behind Toyota Developed An All New Painting Process For Cars and the practical skills people use to solve it in the real world.",
+      "previous_takeaway": null
+    }
+  ]
+}
