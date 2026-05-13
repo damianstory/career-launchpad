@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "batch": "mindsets",
+    "expected_count": 8,
+    "expected_histogram": {
+      "mindsets": 8
+    }
+  },
+  "rows": [
+    {
+      "id": "skills-canada-035",
+      "slug": "how-much-does-a-chef-make",
+      "category": "mindsets",
+      "title": "How much does a chef make?",
+      "previous_description": "Use How much does a chef make? as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-067",
+      "slug": "jeff-bezos-s-advice-to-entrepreneurs-and-small-businesses",
+      "category": "mindsets",
+      "title": "Jeff Bezos's Advice to Entrepreneurs and Small Businesses",
+      "previous_description": "Use Entrepreneurship as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-078",
+      "slug": "how-to-crush-your-next-presentation",
+      "category": "mindsets",
+      "title": "How to crush your next presentation 👊?",
+      "previous_description": "Use Public Speaking as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-079",
+      "slug": "so-you-want-to-be-a-industrial-mechanic-millwright",
+      "category": "mindsets",
+      "title": "So you want to be a industrial mechanic millwright?",
+      "previous_description": "Use Industrial Mechanics as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-096",
+      "slug": "woman-in-trades",
+      "category": "mindsets",
+      "title": "Woman In Trades",
+      "previous_description": "Use Skilled Trades as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-099",
+      "slug": "gen-z-electricians",
+      "category": "mindsets",
+      "title": "Gen Z Electricians",
+      "previous_description": "Use Electrician as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-100",
+      "slug": "what-does-it-take-to-become-a-great-electrician",
+      "category": "mindsets",
+      "title": "What does it take to become a great electrician",
+      "previous_description": "Use Electrician as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    },
+    {
+      "id": "skills-canada-109",
+      "slug": "so-you-want-to-be-a-industrial-mechanic-millwright-2",
+      "category": "mindsets",
+      "title": "So you want to be a industrial mechanic millwright?",
+      "previous_description": "Use Industrial Mechanic as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "previous_takeaway": null
+    }
+  ]
+}

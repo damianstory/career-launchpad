@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "batch": "mindsets",
+    "expected_count": 8,
+    "expected_histogram": {"mindsets": 8}
+  },
+  "rows": [
+    {
+      "id": "skills-canada-035",
+      "slug": "how-much-does-a-chef-make",
+      "category": "mindsets",
+      "title": "How much does a chef make?",
+      "old_description": "Use How much does a chef make? as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "What a career pays in year one and what it pays in year five are different worlds — especially in trades, the starting wage hides the actual trajectory."
+    },
+    {
+      "id": "skills-canada-067",
+      "slug": "jeff-bezos-s-advice-to-entrepreneurs-and-small-businesses",
+      "category": "mindsets",
+      "title": "Jeff Bezos's Advice to Entrepreneurs and Small Businesses",
+      "old_description": "Use Entrepreneurship as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "The founder advice that compounds is the kind that names what won't change about your customers in 10 years — tactics rotate, underlying needs don't."
+    },
+    {
+      "id": "skills-canada-078",
+      "slug": "how-to-crush-your-next-presentation",
+      "category": "mindsets",
+      "title": "How to crush your next presentation 👊?",
+      "old_description": "Use Public Speaking as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "The shift that turns a presentation around is moving from \"don't mess up\" to \"make one idea land\" — most polished talks fail because they aim at the wrong target."
+    },
+    {
+      "id": "skills-canada-079",
+      "slug": "so-you-want-to-be-a-industrial-mechanic-millwright",
+      "category": "mindsets",
+      "title": "So you want to be a industrial mechanic millwright?",
+      "old_description": "Use Industrial Mechanics as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "Industrial mechanics rewards people who like systems thinking and physical work in equal parts — the trait to look for is curiosity about how things break."
+    },
+    {
+      "id": "skills-canada-096",
+      "slug": "woman-in-trades",
+      "category": "mindsets",
+      "title": "Woman In Trades",
+      "old_description": "Use Skilled Trades as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "Trades careers don't change to fit you — but they're more open than reputations suggest, and finding one person inside who'll answer questions changes the path entirely."
+    },
+    {
+      "id": "skills-canada-099",
+      "slug": "gen-z-electricians",
+      "category": "mindsets",
+      "title": "Gen Z Electricians",
+      "old_description": "Use Electrician as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "What's drawing Gen Z into electrical work isn't pay alone — it's the rare combination of debt-free training, certified skill, and work that can't move overseas."
+    },
+    {
+      "id": "skills-canada-100",
+      "slug": "what-does-it-take-to-become-a-great-electrician",
+      "category": "mindsets",
+      "title": "What does it take to become a great electrician",
+      "old_description": "Use Electrician as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "Great electricians don't just know code — they read the room, anticipate the next problem, and treat speed and safety as the same skill, not opposites."
+    },
+    {
+      "id": "skills-canada-109",
+      "slug": "so-you-want-to-be-a-industrial-mechanic-millwright-2",
+      "category": "mindsets",
+      "title": "So you want to be a industrial mechanic millwright?",
+      "old_description": "Use Industrial Mechanic as a quick prompt for the habits, decisions, and mindset shifts that help people keep moving in work and learning.",
+      "new_takeaway": "Industrial mechanics rewards people who like systems thinking and physical work in equal parts — the trait to look for is curiosity about how things break."
+    }
+  ]
+}
