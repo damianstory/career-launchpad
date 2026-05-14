@@ -290,11 +290,13 @@
           gap: 8px;
         }
         .cl-dot {
-          width: 8px;
-          height: 8px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
-          background: #aab7cb;             /* slate-echo */
-          transition: background-color 120ms ease, width 120ms ease;
+          background: #ffffff;
+          border: 2px solid #0092ff;       /* signal-blue ring on white = "empty" state */
+          box-sizing: border-box;
+          transition: background-color 120ms ease, width 120ms ease, border-color 120ms ease;
         }
       }
 
@@ -386,11 +388,13 @@
           gap: 8px;
         }
         .cl-dot {
-          width: 8px;
-          height: 8px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
-          background: #aab7cb;             /* slate-echo */
-          transition: background-color 120ms ease, width 120ms ease;
+          background: #ffffff;
+          border: 2px solid #0092ff;       /* signal-blue ring on white = "empty" state */
+          box-sizing: border-box;
+          transition: background-color 120ms ease, width 120ms ease, border-color 120ms ease;
         }
       }
 
@@ -433,7 +437,8 @@
 
     .cl-dot[aria-pressed="true"] {
       background: #0092ff;               /* signal-blue */
-      width: 20px;
+      border-color: #0092ff;             /* ring vanishes into fill */
+      width: 22px;
       border-radius: 4px;
     }
 
