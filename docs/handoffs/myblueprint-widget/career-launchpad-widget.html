@@ -40,7 +40,50 @@
   </style>
 </head>
 <body>
-  <!-- Widget markup goes here in Task 3 -->
+  <section class="cl-widget" aria-labelledby="cl-widget-heading">
+    <div class="cl-widget__header">
+      <h2 id="cl-widget-heading">Career LaunchPAD</h2>
+      <p>Watch real Canadians, real careers, real next steps.</p>
+    </div>
+
+    <ul class="cl-widget__track" role="list">
+      <li class="cl-card">
+        <a href="https://launchpad.myblueprint.ca/?content=stub-card-1&amp;utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-1" target="_blank" rel="noopener noreferrer">
+          <img src="assets/thumb-1.jpg" alt="Watch: Stub Career LaunchPAD video — card 1">
+          <span class="cl-card__label">Day in the Life: Stub</span>
+        </a>
+      </li>
+      <li class="cl-card">
+        <a href="https://launchpad.myblueprint.ca/?content=stub-card-2&amp;utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-2" target="_blank" rel="noopener noreferrer">
+          <img src="assets/thumb-2.jpg" alt="Watch: Stub Career LaunchPAD video — card 2">
+          <span class="cl-card__label">On the Job: Stub</span>
+        </a>
+      </li>
+      <li class="cl-card cl-card--qr">
+        <a href="https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff" target="_blank" rel="noopener noreferrer">
+          <img src="[QR_BASE64_FROM_TASK_8]"
+               alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.">
+          <span class="cl-card__label">Ticket to Your Phone</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="cl-widget__controls" role="group" aria-label="Card navigation">
+      <button type="button" class="cl-arrow cl-arrow--prev" aria-label="Previous card" disabled>
+        <span aria-hidden="true">&lsaquo;</span>
+      </button>
+      <div class="cl-dots">
+        <button type="button" class="cl-dot" aria-label="Go to card 1" aria-pressed="true"></button>
+        <button type="button" class="cl-dot" aria-label="Go to card 2" aria-pressed="false"></button>
+        <button type="button" class="cl-dot" aria-label="Go to card 3" aria-pressed="false"></button>
+      </div>
+      <button type="button" class="cl-arrow cl-arrow--next" aria-label="Next card">
+        <span aria-hidden="true">&rsaquo;</span>
+      </button>
+    </div>
+
+    <span class="cl-sr-announce" aria-live="polite"></span>
+  </section>
 
   <script>
     /* IIFE goes here in Task 7 */
