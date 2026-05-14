@@ -1,4 +1,4 @@
-# Career LaunchPAD Content Hub Widget — v1 Design
+# Career LaunchPAD Widget — v1 Design
 
 **Date:** 2026-05-14
 **Status:** Design approved, pending implementation plan
@@ -31,7 +31,8 @@ From a call with the myBlueprint engineer wrapping this in React (Wilston):
 | 5 | Carousel mechanism: CSS scroll-snap + ~25 lines of vanilla JS |
 | 6 | Image hosting: hybrid — QR baked in as base64, thumbnails referenced by URL |
 | 7 | States: myBlueprint-native (subtle hover lift, 2px focus outline in MB primary blue, brief active opacity dip) |
-| 8 | A11y floor: WCAG 2.1 AA — alt text per image, `aria-label` on every button, `aria-live` announcer on scroll, `prefers-reduced-motion` respected |
+| 8 | A11y floor: WCAG 2.1 AA — alt text per image, `aria-label` on every button, `aria-live` announcer on scroll, `prefers-reduced-motion` respected in both CSS *and* JS |
+| 9 | All 3 card URLs (including the QR's encoded destination) carry UTM parameters for GA4 attribution. The widget's purpose is traffic attribution; this is contract, not optional. Standard pattern: `?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=<slot>` where `<slot>` is `card-1`, `card-2`, or `qr-handoff`. |
 
 ## Architecture
 
@@ -62,36 +63,36 @@ career-launchpad-widget.html
 
   <ul class="cl-widget__track" role="list">
     <li class="cl-card">
-      <a href="[VIDEO_URL]" target="_blank" rel="noopener noreferrer">
+      <a href="[VIDEO_URL_1]?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-1" target="_blank" rel="noopener noreferrer">
         <img src="[THUMB_1_URL]" alt="Watch: [video title]">
         <span class="cl-card__label">[Card 1 label]</span>
       </a>
     </li>
     <li class="cl-card">
-      <a href="[CONTENT_URL]" target="_blank" rel="noopener noreferrer">
+      <a href="[VIDEO_URL_2]?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-2" target="_blank" rel="noopener noreferrer">
         <img src="[THUMB_2_URL]" alt="Watch: [video title]">
         <span class="cl-card__label">[Card 2 label]</span>
       </a>
     </li>
     <li class="cl-card cl-card--qr">
-      <a href="https://launchpad.myblueprint.ca/" target="_blank" rel="noopener noreferrer">
+      <a href="https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff" target="_blank" rel="noopener noreferrer">
         <img src="data:image/png;base64,…"
-             alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/ — scan or open on your phone to continue.">
+             alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff — scan or open on your phone to continue.">
         <span class="cl-card__label">Ticket to Your Phone</span>
       </a>
     </li>
   </ul>
 
   <div class="cl-widget__controls" role="group" aria-label="Card navigation">
-    <button class="cl-arrow cl-arrow--prev" aria-label="Previous card" disabled>
+    <button type="button" class="cl-arrow cl-arrow--prev" aria-label="Previous card" disabled>
       <span aria-hidden="true">‹</span>
     </button>
     <div class="cl-dots">
-      <button class="cl-dot" aria-label="Go to card 1" aria-pressed="true"></button>
-      <button class="cl-dot" aria-label="Go to card 2" aria-pressed="false"></button>
-      <button class="cl-dot" aria-label="Go to card 3" aria-pressed="false"></button>
+      <button type="button" class="cl-dot" aria-label="Go to card 1" aria-pressed="true"></button>
+      <button type="button" class="cl-dot" aria-label="Go to card 2" aria-pressed="false"></button>
+      <button type="button" class="cl-dot" aria-label="Go to card 3" aria-pressed="false"></button>
     </div>
-    <button class="cl-arrow cl-arrow--next" aria-label="Next card">
+    <button type="button" class="cl-arrow cl-arrow--next" aria-label="Next card">
       <span aria-hidden="true">›</span>
     </button>
   </div>
@@ -102,9 +103,11 @@ career-launchpad-widget.html
 
 Notes:
 - `rel="noopener noreferrer"` on all three card links — `noopener` prevents `window.opener` access; `noreferrer` prevents leaking the myBlueprint dashboard URL (which may contain session state in query strings) via the Referer header.
+- `type="button"` on every `<button>` — harmless in static HTML, but once Wilston React-wraps the widget inside the unknown dashboard markup, this prevents any ancestor `<form>` from accidentally submitting on click.
 - Dots use `aria-pressed` (toggle-style), not `aria-current` (which is for navigation landmarks). Dots are not tabs — `role="tablist"` would mislead screen readers.
 - Arrow glyphs `‹` `›` get `aria-hidden="true"` so the button's `aria-label` is the sole accessible name.
 - `<span class="cl-sr-announce">` is visually hidden with the standard `clip: rect(0 0 0 0)` pattern.
+- All three `href` values include UTM parameters baked into the URL string (see Decisions row 9). The QR's encoded URL must include the same UTMs so phone-handoff traffic is attributed.
 
 ## Layout
 
@@ -145,35 +148,61 @@ Single IIFE scoped to the widget root, no global pollution. Approximate shape:
   const prev      = widget.querySelector('.cl-arrow--prev');
   const next      = widget.querySelector('.cl-arrow--next');
   const announcer = widget.querySelector('.cl-sr-announce');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let activeIndex = 0;
+
+  function scrollBehavior() {
+    return reduceMotion.matches ? 'auto' : 'smooth';
+  }
+
+  function cardOffset(i) {
+    // Use rect math so horizontal padding / negative margin on the track
+    // don't poison the math the way activeIndex * track.clientWidth would.
+    const trackRect = track.getBoundingClientRect();
+    const cardRect  = cards[i].getBoundingClientRect();
+    return track.scrollLeft + (cardRect.left - trackRect.left);
+  }
 
   function goTo(i) {
     activeIndex = Math.max(0, Math.min(cards.length - 1, i));
-    track.scrollTo({ left: activeIndex * track.clientWidth, behavior: 'smooth' });
-    dots.forEach((d, n) => {
-      d.classList.toggle('is-active', n === activeIndex);
+    track.scrollTo({ left: cardOffset(activeIndex), behavior: scrollBehavior() });
+    dots.forEach(function (d, n) {
       d.setAttribute('aria-pressed', n === activeIndex ? 'true' : 'false');
     });
     prev.disabled = activeIndex === 0;
     next.disabled = activeIndex === cards.length - 1;
-    announcer.textContent = `Card ${activeIndex + 1} of ${cards.length}`;
+    announcer.textContent = 'Card ' + (activeIndex + 1) + ' of ' + cards.length;
   }
 
-  prev.addEventListener('click', () => goTo(activeIndex - 1));
-  next.addEventListener('click', () => goTo(activeIndex + 1));
-  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+  prev.addEventListener('click', function () { goTo(activeIndex - 1); });
+  next.addEventListener('click', function () { goTo(activeIndex + 1); });
+  dots.forEach(function (d, i) { d.addEventListener('click', function () { goTo(i); }); });
 
+  // Sync state when the user drives the scroll via touch/swipe.
   let scrollTimer;
-  track.addEventListener('scroll', () => {
+  track.addEventListener('scroll', function () {
     clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(() => {
-      const i = Math.round(track.scrollLeft / track.clientWidth);
-      if (i !== activeIndex) goTo(i);
+    scrollTimer = setTimeout(function () {
+      // Find nearest card by comparing each card's offset to current scrollLeft.
+      let nearest = 0;
+      let nearestDist = Infinity;
+      for (let n = 0; n < cards.length; n++) {
+        const d = Math.abs(cardOffset(n) - track.scrollLeft);
+        if (d < nearestDist) { nearestDist = d; nearest = n; }
+      }
+      if (nearest !== activeIndex) goTo(nearest);
     }, 80);
   });
 
-  window.addEventListener('resize', () => {
-    if (window.matchMedia('(min-width: 768px)').matches) goTo(0);
+  // Viewport flip mobile → desktop: reset carousel state without animation.
+  window.addEventListener('resize', function () {
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      track.scrollLeft = 0;
+      activeIndex = 0;
+      dots.forEach(function (d, n) { d.setAttribute('aria-pressed', n === 0 ? 'true' : 'false'); });
+      prev.disabled = true;
+      next.disabled = false;
+    }
   });
 
   goTo(0);
@@ -181,20 +210,24 @@ Single IIFE scoped to the widget root, no global pollution. Approximate shape:
 ```
 
 Important details:
-- Uses **absolute** `scrollTo({ left: activeIndex * track.clientWidth })`, not relative `scrollBy`. Fixes an iOS Safari pre-15 bug where scroll-snap can ignore subsequent programmatic offsets after the first.
-- Swipe-driven scrolling is debounced (80ms) and synced back to `activeIndex`, so dot/arrow state stays correct when the student swipes manually.
-- Resize listener resets scroll position to 0 on viewport flip to desktop, preventing an invisible left offset on the grid.
+- Uses **absolute** `scrollTo({ left: cardOffset(i) })`. The offset is computed from `getBoundingClientRect`, not `activeIndex * track.clientWidth`. Required because the mobile track has 16px horizontal padding and a -16px negative margin to bleed into the white-section gutter — fixed-width math would land between cards.
+- `scrollBehavior()` returns `'auto'` when `prefers-reduced-motion: reduce` is set. CSS handles the snap-behavior fallback; JS handles the `scrollTo` behavior. Both are required because `scrollTo`'s `behavior` option overrides the CSS `scroll-behavior` property.
+- Swipe-driven scrolling is debounced (80ms) and synced back to `activeIndex` via nearest-card math. The dot/arrow state stays correct when the student swipes manually.
+- Resize listener resets scroll position to 0 on viewport flip mobile → desktop, preventing an invisible left offset on the grid.
 - Arrows are clamped (`disabled` at ends), not looping.
+- Off-screen cards on mobile remain in the tab order (no `tabindex="-1"`). When focus moves to a non-visible card, the browser scrolls it into view; scroll-snap then aligns it, and the JS scroll listener syncs `activeIndex`. Keyboard users can reach all 3 cards in DOM order.
 
 ## Accessibility
 
-- Focus order (free from DOM order): heading → card 1 → card 2 → card 3 → prev arrow → dot 1 → dot 2 → dot 3 → next arrow.
+- **Focus order on mobile** (controls visible): heading → card 1 → card 2 → card 3 → prev arrow → dot 1 → dot 2 → dot 3 → next arrow.
+- **Focus order on desktop** (controls hidden via `display: none`, therefore not focusable): heading → card 1 → card 2 → card 3. The buttons are not in the tab order on desktop and the verification checklist must not claim they are.
+- Off-screen mobile cards stay in the tab order. When focus moves to a non-visible card, the browser scrolls it into view; scroll-snap aligns it; the JS scroll listener syncs the active state.
 - `:focus-visible` only — mouse clicks don't draw the ring, keyboard tabs do.
 - 2px solid focus outline in myBlueprint primary blue, `outline-offset: 2px`. Exact hex confirmed from `~/.claude/design-systems/myblueprint/` during build (placeholder reference: `#0092ff` from launchpad PRODUCT.md, to be verified against MB brand guide).
 - Alt text:
   - Thumbnails: descriptive of the content the click goes to. Both card 1 and card 2 use the `Watch: [title]` prefix since v1 content is video for both.
   - QR: descriptive **and** spells out the URL in plain text — screen-reader users can't scan a QR.
-- `prefers-reduced-motion: reduce`: `scroll-behavior` falls back to `auto`, transitions disabled. Carousel jumps cleanly between cards instead of animating.
+- `prefers-reduced-motion: reduce`: handled in **both layers**. CSS sets `scroll-behavior: auto` and removes transitions; JS checks the same media query and passes `behavior: 'auto'` to `scrollTo`. The JS check is required because `scrollTo`'s `behavior` argument overrides the CSS property.
 - `aria-live="polite"` visually hidden announcer fires "Card N of 3" on every scroll-position change.
 
 ## States
@@ -237,8 +270,10 @@ career-launchpad-widget/
      duplicates on every re-render and the scroll handler will fire on phantom nodes.
   3. All classes are namespaced .cl-* — safe to drop into the host app's global LESS
      without collision.
-  4. Three URLs are placeholders ([VIDEO_URL], [CONTENT_URL]) — replace before ship.
-     QR image is base64-baked; regenerate from CL_ROOT_URL if that URL changes.
+  4. All three href values include UTM parameters
+     (utm_source=myblueprint, utm_medium=widget, utm_campaign=career-launchpad-v1,
+     utm_content=<slot>). The QR's encoded URL must include the same UTMs so
+     phone-handoff sessions attribute to GA4.
   5. Thumbnails are referenced by URL — host these at a stable myBlueprint asset
      path before integration. See README for the file naming convention.
 -->
@@ -259,29 +294,33 @@ The widget's HTML structure stays identical across all these rotations — only 
 
 ## Open follow-ups
 
-| # | Item | Owner | Blocks |
+All items below are **gating** for implementation. The plan's Task 1 collects them; nothing else starts until they are answered. This prevents the implementation from "finishing" with placeholders still in the file.
+
+| # | Item | Owner | Required by |
 |---|---|---|---|
-| 1 | Thumbnail hosting location (URL pattern) | Wilston | Implementation start |
-| 2 | Final URL for card 1 (specific video deep link) | Damian | Implementation start |
-| 3 | Final URL for card 2 (specific content piece) | Damian | Implementation start |
-| 4 | Final card label copy (text under each thumbnail) | Damian | Implementation start |
-| 5 | Final section heading copy (proposed: "Career LaunchPAD" + tagline) | Damian + Brian/product | Implementation start |
-| 6 | Confirm myBlueprint primary focus-ring color against brand guide | Damian, during build | Implementation polish |
-| 7 | UTM tags on the 3 URLs for GA4 attribution | Damian | Recommended, not blocking |
+| 1 | Thumbnail hosting location (final URL pattern myBlueprint will serve from) | Wilston | Implementation start |
+| 2 | Final URL for card 1 (specific video deep link on launchpad) | Damian | Implementation start |
+| 3 | Final URL for card 2 (specific video deep link on launchpad) | Damian | Implementation start |
+| 4 | Final card label copy (text under cards 1 and 2) | Damian | Implementation start |
+| 5 | Final video alt-text titles (used in `alt="Watch: [title]"`) | Damian | Implementation start |
+| 6 | Final thumbnail image files (actual JPG/PNG content for cards 1 and 2) | Damian | Implementation start |
+| 7 | Final section heading + tagline copy (proposed: "Career LaunchPAD" + "Watch real Canadians, real careers, real next steps.") | Damian + Brian/product | Implementation start |
+| 8 | UTM campaign string confirmation — proposed `?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=<slot>` (slots: `card-1`, `card-2`, `qr-handoff`) | Damian | Implementation start |
+| 9 | Confirm myBlueprint primary focus-ring color against brand guide | Damian, during build | Implementation polish |
 
 ## Verification
 
 Before sending the artifact to Wilston:
 
 - Open `career-launchpad-widget.html` directly in Chrome at 1440px and 375px viewport widths.
-- Desktop view: 3 cards in white section, no controls visible.
-- Mobile view: 1 card visible, working left/right arrows, 3 dots, clamped at ends.
-- Click each of 3 cards: opens correct URL in a new tab.
-- Tab through with keyboard: visible 2px focus ring on each card, both arrows, all 3 dots; tab order is logical.
-- VoiceOver / NVDA announces card content, dot position ("Card 2 of 3"), and arrow labels.
-- `prefers-reduced-motion: reduce` set: carousel still works, no smooth animation.
+- **Desktop view (1440px):** 3 cards in white section, no controls visible. Tab order: card 1 → card 2 → card 3. The arrow and dot buttons are `display: none` so they are not focusable — the keyboard pass must confirm Tab skips them entirely.
+- **Mobile view (375px):** 1 card visible, working left/right arrows, 3 dots, clamped at ends. Tab order: card 1 → card 2 → card 3 → prev arrow → dot 1 → dot 2 → dot 3 → next arrow. Tabbing to an off-screen card scrolls it into view via scroll-snap; the JS scroll listener syncs the dot/arrow state.
+- Click each of 3 cards: opens correct URL with intact UTM parameters in a new tab.
+- VoiceOver / NVDA announces card content, dot pressed state ("pressed" for active, "not pressed" for others), and `aria-live` updates ("Card 2 of 3").
+- `prefers-reduced-motion: reduce` set: carousel still navigates between cards, but with no smooth animation. Confirm by clicking the next arrow — page should jump, not glide.
 - Validate markup with `npx html-validate career-launchpad-widget.html` — zero errors.
 - File contains zero external `<script src>` or `<link rel="stylesheet">` references.
+- All bracketed placeholders (`[VIDEO_URL_1]`, etc.) have been replaced with real content. `grep '\[' career-launchpad-widget.html` should return zero matches outside legitimate uses (CSS bracket selectors).
 - Browser-test fallback path on iOS Safari 15.4+ (modern), confirm graceful behavior on older Safari (acceptable degradation: snap jumps without animation).
 
 ## Browser support
