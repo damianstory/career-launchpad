@@ -337,7 +337,81 @@
   </section>
 
   <script>
-    /* IIFE goes here in Task 7 */
+    (function initClWidget() {
+      const widget = document.querySelector('.cl-widget');
+      if (!widget) return;
+      const track     = widget.querySelector('.cl-widget__track');
+      const cards     = widget.querySelectorAll('.cl-card');
+      const dots      = widget.querySelectorAll('.cl-dot');
+      const prev      = widget.querySelector('.cl-arrow--prev');
+      const next      = widget.querySelector('.cl-arrow--next');
+      const announcer = widget.querySelector('.cl-sr-announce');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let activeIndex = 0;
+
+      function scrollBehavior() {
+        return reduceMotion.matches ? 'auto' : 'smooth';
+      }
+
+      function cardCenterScroll(i) {
+        // Center-align the card in the track so the result agrees with
+        // CSS `scroll-snap-align: center`. Left-edge math would cause a
+        // visible one-frame jitter as smooth-scroll lands at the left and
+        // then snap re-centers.
+        const trackRect  = track.getBoundingClientRect();
+        const cardRect   = cards[i].getBoundingClientRect();
+        const cardCenter  = cardRect.left + cardRect.width / 2;
+        const trackCenter = trackRect.left + trackRect.width / 2;
+        return track.scrollLeft + (cardCenter - trackCenter);
+      }
+
+      function goTo(i) {
+        activeIndex = Math.max(0, Math.min(cards.length - 1, i));
+        track.scrollTo({ left: cardCenterScroll(activeIndex), behavior: scrollBehavior() });
+        dots.forEach(function (d, n) {
+          d.setAttribute('aria-pressed', n === activeIndex ? 'true' : 'false');
+        });
+        prev.disabled = activeIndex === 0;
+        next.disabled = activeIndex === cards.length - 1;
+        announcer.textContent = 'Card ' + (activeIndex + 1) + ' of ' + cards.length;
+      }
+
+      prev.addEventListener('click', function () { goTo(activeIndex - 1); });
+      next.addEventListener('click', function () { goTo(activeIndex + 1); });
+      dots.forEach(function (d, i) {
+        d.addEventListener('click', function () { goTo(i); });
+      });
+
+      // Sync state when the user drives the scroll via touch/swipe.
+      let scrollTimer;
+      track.addEventListener('scroll', function () {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(function () {
+          let nearest = 0;
+          let nearestDist = Infinity;
+          for (let n = 0; n < cards.length; n++) {
+            const d = Math.abs(cardCenterScroll(n) - track.scrollLeft);
+            if (d < nearestDist) { nearestDist = d; nearest = n; }
+          }
+          if (nearest !== activeIndex) goTo(nearest);
+        }, 80);
+      });
+
+      // Viewport flip mobile → desktop: reset state without animation.
+      window.addEventListener('resize', function () {
+        if (window.matchMedia('(min-width: 768px)').matches) {
+          track.scrollLeft = 0;
+          activeIndex = 0;
+          dots.forEach(function (d, n) {
+            d.setAttribute('aria-pressed', n === 0 ? 'true' : 'false');
+          });
+          prev.disabled = true;
+          next.disabled = false;
+        }
+      });
+
+      goTo(0);
+    })();
   </script>
 </body>
 </html>
