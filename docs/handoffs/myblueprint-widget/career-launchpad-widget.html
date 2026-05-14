@@ -242,6 +242,52 @@
         transition: background-color 120ms ease, width 120ms ease;
       }
     }
+
+    /* === States === */
+    @media (hover: hover) {
+      .cl-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+      }
+    }
+
+    .cl-card a:focus-visible,
+    .cl-arrow:focus-visible,
+    .cl-dot:focus-visible {
+      outline: 2px solid #0092ff;        /* signal-blue */
+      outline-offset: 2px;
+    }
+
+    .cl-card a:active {
+      opacity: 0.85;
+      transition: opacity 80ms ease;
+    }
+
+    .cl-arrow[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .cl-dot[aria-pressed="true"] {
+      background: #0092ff;               /* signal-blue */
+      width: 20px;
+      border-radius: 4px;
+    }
+
+    /* === Reduced motion (CSS layer) === */
+    @media (prefers-reduced-motion: reduce) {
+      .cl-widget__track {
+        scroll-behavior: auto;
+      }
+      .cl-card,
+      .cl-arrow,
+      .cl-dot {
+        transition: none !important;
+      }
+      .cl-card:hover {
+        transform: none;
+      }
+    }
   </style>
 </head>
 <body>
