@@ -24,7 +24,7 @@ From a call with the myBlueprint engineer wrapping this in React (Wilston):
 
 | # | Decision |
 |---|---|
-| 1 | 3 cards: 2 thumbnail images + 1 QR code |
+| 1 | 3 image-slot cards. Default v1 content: 2 thumbnails + 1 QR. Card 3 is a swappable slot — either a QR (via `.cl-card--qr` modifier, 1:1 aspect-ratio, base64 inline) or a regular thumbnail (drop the modifier, 16:9, hosted URL). Swap is a content change, not a markup rewrite. |
 | 2 | 3 distinct URLs, all open in a new tab |
 | 3 | Desktop (≥768px): 3 cards in a row, no controls |
 | 4 | Mobile (<768px): own white section, 1 card visible, left/right arrows, 3 dots, clamped at ends |
@@ -112,7 +112,7 @@ Notes:
 
 - Section is its own white container with rounded corners and matching padding to the existing "Explore Emerging Careers" section in the host app.
 - `.cl-widget__track` is `display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;`.
-- Thumbnail cards force `aspect-ratio: 16 / 9`; QR card forces `aspect-ratio: 1 / 1` and centers the QR with padding.
+- Thumbnail cards force `aspect-ratio: 16 / 9`. The QR variant of card 3 (`.cl-card--qr`) overrides to `aspect-ratio: 1 / 1` and pads around the QR image. Dropping the `--qr` modifier reverts card 3 to a standard 16:9 thumbnail.
 - Card label sits below the image.
 - `.cl-widget__controls` is `display: none`.
 
@@ -243,6 +243,19 @@ career-launchpad-widget/
      path before integration. See README for the file naming convention.
 -->
 ```
+
+## Content rotation playbook
+
+After the widget ships, content can be rotated without a React redeploy:
+
+- **Swap a thumbnail image** (card 1 or 2, or card 3 when it's a thumbnail): replace the file at the hosted asset URL with a new image at the same filename. Browser cache may need a hard refresh.
+- **Swap a thumbnail's link target**: edit the `href` on the `<a>` in the React component. Small change, one-line PR.
+- **Swap card 3 between QR and thumbnail modes**:
+  - *Going from QR → thumbnail:* remove the `cl-card--qr` class from the third `<li>`, swap the base64 `<img src>` for a hosted URL, update the `alt` text and link `href`, replace the `cl-card__label` text. One-block edit in the React component.
+  - *Going from thumbnail → QR:* add the `cl-card--qr` class to the third `<li>`, replace the hosted `<img src>` with the new base64-encoded QR data URI, update the `alt` text to spell out the encoded URL, set the `href` to the same URL.
+- **Swap the QR's encoded URL**: regenerate the QR PNG from the new URL, base64-encode it, and replace the data URI string. Update the `alt` text to match.
+
+The widget's HTML structure stays identical across all these rotations — only the content of three `<li>` elements changes.
 
 ## Open follow-ups
 
