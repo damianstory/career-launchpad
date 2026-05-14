@@ -36,7 +36,130 @@
        Signal Blue #0092ff). Update tokens here when DESIGN.md updates.
   -->
   <style>
-    /* CSS goes here in subsequent tasks */
+    /* === Reset within widget scope === */
+    .cl-widget,
+    .cl-widget *,
+    .cl-widget *::before,
+    .cl-widget *::after {
+      box-sizing: border-box;
+    }
+    .cl-widget ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .cl-widget a {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .cl-widget button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    /* === Section container ===
+       Color tokens map to DESIGN.md:
+         #ffffff   = pure-white
+         #22224c   = anchor-navy
+         #485163   = slate-ink
+         #65738b   = slate-body
+         #aab7cb   = slate-echo
+         #e5e9f1   = slate-frame-light
+         #f6f6ff   = studio-off-white
+         #0092ff   = signal-blue
+         #0082e5   = signal-blue-deep                                          */
+    .cl-widget {
+      position: relative;                /* anchors absolutely-positioned mobile arrows */
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      font-family: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #22224c;                    /* anchor-navy */
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* === Header === */
+    .cl-widget__header h2 {
+      margin: 0 0 4px 0;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #22224c;                    /* anchor-navy */
+    }
+    .cl-widget__header p {
+      margin: 0 0 16px 0;
+      font-size: 14px;
+      color: #485163;                    /* slate-ink */
+      line-height: 1.4;
+    }
+
+    /* === Track (desktop: 3-col grid) === */
+    .cl-widget__track {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    /* === Card === */
+    .cl-card {
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f6f6ff;               /* studio-off-white */
+      border: 1px solid #e5e9f1;         /* slate-frame-light */
+      transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+    .cl-card a {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .cl-card img {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+      background: #e5e9f1;               /* slate-frame-light placeholder while loading */
+    }
+    .cl-card--qr img {
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+      padding: 16px;
+      background: #ffffff;               /* pure-white for QR contrast */
+    }
+    .cl-card__label {
+      display: block;
+      padding: 12px 14px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* === Mobile-only controls hidden on desktop === */
+    .cl-widget__controls {
+      display: none;
+    }
+
+    /* === Visually hidden announcer === */
+    .cl-sr-announce {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
