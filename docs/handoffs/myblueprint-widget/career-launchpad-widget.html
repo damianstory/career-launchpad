@@ -256,7 +256,7 @@
           text-align: center;
         }
 
-        .cl-arrow {
+        .cl-widget__controls .cl-arrow {
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
@@ -289,12 +289,15 @@
           justify-content: center;
           gap: 8px;
         }
-        .cl-dot {
+        .cl-widget__controls .cl-dot {
           width: 10px;
           height: 10px;
           border-radius: 50%;
           background: #ffffff;
-          border: 2px solid #0092ff;       /* signal-blue ring on white = "empty" state */
+          border: 2px solid #0092ff;       /* signal-blue ring on white = "empty" state.
+                                              Scoped under .cl-widget__controls so the
+                                              specificity (0,2,0) beats the .cl-widget button
+                                              reset at (0,1,1). */
           box-sizing: border-box;
           transition: background-color 120ms ease, width 120ms ease, border-color 120ms ease;
         }
@@ -354,7 +357,7 @@
           text-align: center;
         }
 
-        .cl-arrow {
+        .cl-widget__controls .cl-arrow {
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
@@ -387,12 +390,15 @@
           justify-content: center;
           gap: 8px;
         }
-        .cl-dot {
+        .cl-widget__controls .cl-dot {
           width: 10px;
           height: 10px;
           border-radius: 50%;
           background: #ffffff;
-          border: 2px solid #0092ff;       /* signal-blue ring on white = "empty" state */
+          border: 2px solid #0092ff;       /* signal-blue ring on white = "empty" state.
+                                              Scoped under .cl-widget__controls so the
+                                              specificity (0,2,0) beats the .cl-widget button
+                                              reset at (0,1,1). */
           box-sizing: border-box;
           transition: background-color 120ms ease, width 120ms ease, border-color 120ms ease;
         }
