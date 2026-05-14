@@ -40,7 +40,7 @@ On the myBlueprint student dashboard:
    CDN URLs. The actual image files for swapping are committed in this directory
    under `assets/`.
 
-## The 3 URLs
+## The 4 URLs
 
 All three carry UTM parameters for GA4 attribution. The QR code encodes the
 **UTM-tagged** URL — phone-handoff sessions attribute correctly.
@@ -50,6 +50,7 @@ All three carry UTM parameters for GA4 attribution. The QR code encodes the
 | 1 | Specific launchpad video with `?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-1` |
 | 2 | Specific launchpad video with `utm_content=card-2` |
 | 3 (QR) | `https://career-launchpad-woad.vercel.app/` with `utm_content=qr-handoff` |
+| View more | `https://career-launchpad-woad.vercel.app/` with `utm_content=view-more` — secondary CTA in the header for students not drawn to the two seeded videos |
 
 ## Card 3 swappability
 

@@ -27,13 +27,14 @@
 
 ### UTM parameters
 
-`utm_source=myblueprint`, `utm_medium=widget`, `utm_campaign=career-launchpad-v1`, `utm_content=<slot>` where `<slot>` is `card-1`, `card-2`, or `qr-handoff`.
+`utm_source=myblueprint`, `utm_medium=widget`, `utm_campaign=career-launchpad-v1`, `utm_content=<slot>` where `<slot>` is `card-1`, `card-2`, `qr-handoff`, or `view-more`.
 
 ### Final hrefs (computed via URLSearchParams in Step 2a, with `&` → `&amp;` for HTML)
 
 - Card 1 final href: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-1
 - Card 2 final href: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-2
 - QR final encoded URL: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff
+- View-more final href: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=view-more
 - **QR plain URL for encoding** (used by the qrcode CLI in Task 8 — must stay unencoded with literal `&`, the QR encoder does not understand HTML entities): https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff
 
 Both forms are kept. The HTML uses `&amp;` form; the QR PNG encodes the literal `&` form.
@@ -52,5 +53,5 @@ Both forms are kept. The HTML uses `&amp;` form; the QR PNG encodes the literal 
 - Card 1 alt text title (the value Task 3 substitutes into `alt="Watch: <title>"`): Stub Career LaunchPAD video — card 1
 - Card 2 label: On the Job: Stub
 - Card 2 alt text title (the value Task 3 substitutes into `alt="Watch: <title>"`): Stub Career LaunchPAD video — card 2
-- Card 3 label: Ticket to Your Phone
+- Card 3 label: Take it to your phone
 - Card 3 alt text (HTML form, with &amp;): QR code linking to Career LaunchPAD. URL: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.
