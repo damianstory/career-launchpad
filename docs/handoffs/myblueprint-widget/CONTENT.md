@@ -9,7 +9,7 @@
 >
 > 1. Replace the two BASE URLs with the real Career LaunchPAD video deep-links.
 > 2. Replace the labels and alt-text titles with the real copy.
-> 3. Re-run the Node URLSearchParams script (Step 2a in the plan) to recompute the three final hrefs with the real bases.
+> 3. Re-run the Node URLSearchParams script (Step 2a in `docs/superpowers/plans/2026-05-14-career-launchpad-widget.md`) to recompute the three final hrefs with the real bases.
 > 4. Re-run the HTML escape step.
 > 5. Replace `assets/thumb-1.jpg` and `assets/thumb-2.jpg` with the real 1280×720 JPGs.
 > 6. Re-generate the QR PNG in Task 8 if any of the URL values change (the QR base is `https://launchpad.myblueprint.ca/` with the qr-handoff UTMs, so it only needs regen if the UTM scheme changes).
@@ -49,8 +49,8 @@ Both forms are kept. The HTML uses `&amp;` form; the QR PNG encodes the literal 
 - Section heading: Career LaunchPAD
 - Tagline: Watch real Canadians, real careers, real next steps.
 - Card 1 label: Day in the Life: Stub
-- Card 1 alt text: Watch: Stub Career LaunchPAD video — card 1
+- Card 1 alt text title (the value Task 3 substitutes into `alt="Watch: <title>"`): Stub Career LaunchPAD video — card 1
 - Card 2 label: On the Job: Stub
-- Card 2 alt text: Watch: Stub Career LaunchPAD video — card 2
+- Card 2 alt text title (the value Task 3 substitutes into `alt="Watch: <title>"`): Stub Career LaunchPAD video — card 2
 - Card 3 label: Ticket to Your Phone
 - Card 3 alt text (HTML form, with &amp;): QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.
