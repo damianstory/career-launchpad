@@ -12,7 +12,7 @@
 > 3. Re-run the Node URLSearchParams script (Step 2a in `docs/superpowers/plans/2026-05-14-career-launchpad-widget.md`) to recompute the three final hrefs with the real bases.
 > 4. Re-run the HTML escape step.
 > 5. Replace `assets/thumb-1.jpg` and `assets/thumb-2.jpg` with the real 1280×720 JPGs.
-> 6. Re-generate the QR PNG in Task 8 if any of the URL values change (the QR base is `https://launchpad.myblueprint.ca/` with the qr-handoff UTMs, so it only needs regen if the UTM scheme changes).
+> 6. Re-generate the QR PNG in Task 8 if any of the URL values change (the QR base is `https://career-launchpad-woad.vercel.app/` with the qr-handoff UTMs, so it only needs regen if the UTM scheme changes).
 > 7. Update `Captured:` to the swap date and `Source:` to `direct from Damian`.
 >
 > The screenshots in `preview/` will need to be re-captured after the swap.
@@ -21,9 +21,9 @@
 
 ### Base URLs (as Damian provided)
 
-- Card 1 base: https://launchpad.myblueprint.ca/?content=stub-card-1
-- Card 2 base: https://launchpad.myblueprint.ca/?content=stub-card-2
-- QR base:   https://launchpad.myblueprint.ca/
+- Card 1 base: https://career-launchpad-woad.vercel.app/
+- Card 2 base: https://career-launchpad-woad.vercel.app/
+- QR base:   https://career-launchpad-woad.vercel.app/
 
 ### UTM parameters
 
@@ -31,10 +31,10 @@
 
 ### Final hrefs (computed via URLSearchParams in Step 2a, with `&` → `&amp;` for HTML)
 
-- Card 1 final href: https://launchpad.myblueprint.ca/?content=stub-card-1&amp;utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-1
-- Card 2 final href: https://launchpad.myblueprint.ca/?content=stub-card-2&amp;utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-2
-- QR final encoded URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff
-- **QR plain URL for encoding** (used by the qrcode CLI in Task 8 — must stay unencoded with literal `&`, the QR encoder does not understand HTML entities): https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff
+- Card 1 final href: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-1
+- Card 2 final href: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=card-2
+- QR final encoded URL: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff
+- **QR plain URL for encoding** (used by the qrcode CLI in Task 8 — must stay unencoded with literal `&`, the QR encoder does not understand HTML entities): https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff
 
 Both forms are kept. The HTML uses `&amp;` form; the QR PNG encodes the literal `&` form.
 
@@ -53,4 +53,4 @@ Both forms are kept. The HTML uses `&amp;` form; the QR PNG encodes the literal 
 - Card 2 label: On the Job: Stub
 - Card 2 alt text title (the value Task 3 substitutes into `alt="Watch: <title>"`): Stub Career LaunchPAD video — card 2
 - Card 3 label: Ticket to Your Phone
-- Card 3 alt text (HTML form, with &amp;): QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.
+- Card 3 alt text (HTML form, with &amp;): QR code linking to Career LaunchPAD. URL: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.

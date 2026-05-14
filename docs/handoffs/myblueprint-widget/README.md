@@ -1,7 +1,7 @@
 # Career LaunchPAD Widget — Handoff to myBlueprint
 
 Self-contained HTML/CSS/JS widget for the myBlueprint student dashboard.
-Drives traffic to the public Career LaunchPAD site at https://launchpad.myblueprint.ca/.
+Drives traffic to the public Career LaunchPAD site at https://career-launchpad-woad.vercel.app/.
 
 **Contact:** Damian Matheson (damian.matheson@myblueprint.ca)
 **Companion spec:** [../../superpowers/specs/2026-05-14-career-launchpad-widget-design.md](../../superpowers/specs/2026-05-14-career-launchpad-widget-design.md)
@@ -49,7 +49,7 @@ All three carry UTM parameters for GA4 attribution. The QR code encodes the
 |---|---|
 | 1 | Specific launchpad video with `?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-1` |
 | 2 | Specific launchpad video with `utm_content=card-2` |
-| 3 (QR) | `https://launchpad.myblueprint.ca/` with `utm_content=qr-handoff` |
+| 3 (QR) | `https://career-launchpad-woad.vercel.app/` with `utm_content=qr-handoff` |
 
 ## Card 3 swappability
 
