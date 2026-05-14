@@ -40,6 +40,29 @@ On the myBlueprint student dashboard:
    CDN URLs. The actual image files for swapping are committed in this directory
    under `assets/`.
 
+## Integration knobs (CSS custom properties)
+
+The widget exposes three CSS custom properties on `.cl-widget` so you can tune it to your host slot without editing widget internals:
+
+| Property | Default | Purpose |
+|---|---|---|
+| `--cl-card-aspect` | `16 / 9` | Image aspect ratio for image cards; the QR card letterboxes to match. Set to `1 / 1` for square cards, `4 / 3` for taller, etc. |
+| `--cl-max-height` | `none` | Hard cap on the widget's height. If your slot pins a height, set this and the widget clips cleanly via `overflow: hidden`. |
+| `--cl-min-card-width` | `220px` | Documentation of the intended minimum card width before carousel mode kicks in. The actual breakpoint (`<600px` container width) is set in CSS. |
+
+Example override at the host level:
+
+```css
+.activitiesWidget .cl-widget {
+  --cl-card-aspect: 4 / 3;
+  --cl-max-height: 360px;
+}
+```
+
+The widget is a **CSS container** (`container-type: inline-size; container-name: clw`), so its layout responds to whatever width its parent gives it — not the viewport. Putting the widget in a 600px-wide column on a 1920px desktop will trigger carousel mode, just like a 600px viewport would.
+
+**Browser support:** container queries are Chrome 105+, Safari 16+, Firefox 110+. Older Safari falls back to viewport `@media` queries automatically.
+
 ## The 4 URLs
 
 All three carry UTM parameters for GA4 attribution. The QR code encodes the

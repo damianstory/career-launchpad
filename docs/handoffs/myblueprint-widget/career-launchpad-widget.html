@@ -84,6 +84,13 @@
       color: #22224c;                    /* anchor-navy */
       max-width: 1200px;
       margin: 0 auto;
+      container-type: inline-size;
+      container-name: clw;
+      --cl-card-aspect: 16 / 9;
+      --cl-max-height: none;
+      --cl-min-card-width: 220px;
+      max-height: var(--cl-max-height);
+      overflow: hidden;
     }
 
     /* === Header === */
@@ -100,7 +107,7 @@
     }
     .cl-widget__header h2 {
       margin: 0 0 4px 0;
-      font-size: 24px;
+      font-size: clamp(18px, 1.5cqi + 12px, 24px);
       font-weight: 900;
       letter-spacing: -0.005em;
       line-height: 1.3;
@@ -108,7 +115,7 @@
     }
     .cl-widget__header p {
       margin: 0;
-      font-size: 16px;
+      font-size: clamp(14px, 1cqi + 10px, 16px);
       color: #485163;                    /* slate-ink */
       line-height: 1.45;
     }
@@ -158,16 +165,26 @@
     }
     .cl-card img {
       width: 100%;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: var(--cl-card-aspect);
       object-fit: cover;
       display: block;
       background: #e5e9f1;               /* slate-frame-light placeholder while loading */
     }
-    .cl-card--qr img {
+    .cl-card--qr .cl-card__media {
+      aspect-ratio: var(--cl-card-aspect);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;               /* pure-white for QR contrast */
+      overflow: hidden;
+    }
+    .cl-card--qr .cl-card__media img {
+      height: 100%;
+      width: auto;
       aspect-ratio: 1 / 1;
       object-fit: contain;
-      padding: 16px;
-      background: #ffffff;               /* pure-white for QR contrast */
+      padding: 8px;
+      background: #ffffff;
     }
     .cl-card__label {
       display: block;
@@ -198,96 +215,194 @@
       border: 0;
     }
 
-    /* === Mobile (<768px) === */
-    @media (max-width: 767.98px) {
-      .cl-widget {
-        padding: 20px 16px;
-        border-radius: 14px;
+    /* === Layout switch: container-query path (Chrome 105+, Safari 16+, Firefox 110+) === */
+    @supports (container-type: inline-size) {
+      @container clw (max-width: 600px) {
+        .cl-widget {
+          padding: 20px 16px;
+          border-radius: 14px;
+        }
+
+        .cl-widget__track {
+          display: flex;
+          grid-template-columns: none;
+          gap: 0;
+          overflow-x: auto;
+          overflow-y: hidden;
+          scroll-snap-type: x mandatory;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          margin: 0 -16px;
+          padding: 0 16px;
+        }
+        .cl-widget__track::-webkit-scrollbar {
+          display: none;
+        }
+
+        .cl-card {
+          flex: 0 0 100%;
+          scroll-snap-align: center;
+          scroll-snap-stop: always;
+        }
+
+        /* Show controls on narrow container.
+           The arrows overhang the card edges (matching the design mock); they are
+           absolutely positioned and vertically centered against the card image
+           area. The dots row sits below the card on its own line. */
+        .cl-widget__controls {
+          display: block;
+          margin-top: 16px;
+          text-align: center;
+        }
+
+        .cl-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #0092ff;             /* signal-blue */
+          color: #ffffff;
+          font-size: 20px;
+          line-height: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(34, 34, 76, 0.18);
+          z-index: 2;
+          transition: opacity 120ms ease, background-color 120ms ease;
+        }
+        .cl-arrow--prev {
+          left: -4px;                      /* overhangs the section's left edge */
+        }
+        .cl-arrow--next {
+          right: -4px;                     /* overhangs the section's right edge */
+        }
+        .cl-arrow:hover:not([disabled]) {
+          background: #0082e5;             /* signal-blue-deep */
+        }
+
+        .cl-dots {
+          display: inline-flex;
+          justify-content: center;
+          gap: 8px;
+        }
+        .cl-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #aab7cb;             /* slate-echo */
+          transition: background-color 120ms ease, width 120ms ease;
+        }
       }
 
-      .cl-widget__track {
-        display: flex;
-        grid-template-columns: none;
-        gap: 0;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-snap-type: x mandatory;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        margin: 0 -16px;
-        padding: 0 16px;
-      }
-      .cl-widget__track::-webkit-scrollbar {
-        display: none;
-      }
-
-      .cl-card {
-        flex: 0 0 100%;
-        scroll-snap-align: center;
-        scroll-snap-stop: always;
-      }
-
-      /* Show controls on mobile.
-         The arrows overhang the card edges (matching the design mock); they are
-         absolutely positioned and vertically centered against the card image
-         area. The dots row sits below the card on its own line. */
-      .cl-widget__controls {
-        display: block;
-        margin-top: 16px;
-        text-align: center;
-      }
-
-      .cl-arrow {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: #0092ff;             /* signal-blue */
-        color: #ffffff;
-        font-size: 20px;
-        line-height: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(34, 34, 76, 0.18);
-        z-index: 2;
-        transition: opacity 120ms ease, background-color 120ms ease;
-      }
-      .cl-arrow--prev {
-        left: -4px;                      /* overhangs the section's left edge */
-      }
-      .cl-arrow--next {
-        right: -4px;                     /* overhangs the section's right edge */
-      }
-      .cl-arrow:hover:not([disabled]) {
-        background: #0082e5;             /* signal-blue-deep */
-      }
-
-      .cl-dots {
-        display: inline-flex;
-        justify-content: center;
-        gap: 8px;
-      }
-      .cl-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #aab7cb;             /* slate-echo */
-        transition: background-color 120ms ease, width 120ms ease;
+      /* === Narrow container (<380px) — stack the header View-more button below the text === */
+      @container clw (max-width: 380px) {
+        .cl-widget__header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .cl-widget__more {
+          align-self: flex-start;
+        }
       }
     }
 
-    /* === Narrow mobile (<480px) — stack the header View-more button below the text === */
-    @media (max-width: 479.98px) {
-      .cl-widget__header {
-        flex-direction: column;
-        align-items: stretch;
+    /* === Layout switch: viewport-query fallback (older Safari without container query support) === */
+    @supports not (container-type: inline-size) {
+      /* === Mobile (<768px) === */
+      @media (max-width: 767.98px) {
+        .cl-widget {
+          padding: 20px 16px;
+          border-radius: 14px;
+        }
+
+        .cl-widget__track {
+          display: flex;
+          grid-template-columns: none;
+          gap: 0;
+          overflow-x: auto;
+          overflow-y: hidden;
+          scroll-snap-type: x mandatory;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          margin: 0 -16px;
+          padding: 0 16px;
+        }
+        .cl-widget__track::-webkit-scrollbar {
+          display: none;
+        }
+
+        .cl-card {
+          flex: 0 0 100%;
+          scroll-snap-align: center;
+          scroll-snap-stop: always;
+        }
+
+        /* Show controls on mobile.
+           The arrows overhang the card edges (matching the design mock); they are
+           absolutely positioned and vertically centered against the card image
+           area. The dots row sits below the card on its own line. */
+        .cl-widget__controls {
+          display: block;
+          margin-top: 16px;
+          text-align: center;
+        }
+
+        .cl-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #0092ff;             /* signal-blue */
+          color: #ffffff;
+          font-size: 20px;
+          line-height: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(34, 34, 76, 0.18);
+          z-index: 2;
+          transition: opacity 120ms ease, background-color 120ms ease;
+        }
+        .cl-arrow--prev {
+          left: -4px;                      /* overhangs the section's left edge */
+        }
+        .cl-arrow--next {
+          right: -4px;                     /* overhangs the section's right edge */
+        }
+        .cl-arrow:hover:not([disabled]) {
+          background: #0082e5;             /* signal-blue-deep */
+        }
+
+        .cl-dots {
+          display: inline-flex;
+          justify-content: center;
+          gap: 8px;
+        }
+        .cl-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #aab7cb;             /* slate-echo */
+          transition: background-color 120ms ease, width 120ms ease;
+        }
       }
-      .cl-widget__more {
-        align-self: flex-start;
+
+      /* === Narrow mobile (<480px) — stack the header View-more button below the text === */
+      @media (max-width: 479.98px) {
+        .cl-widget__header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .cl-widget__more {
+          align-self: flex-start;
+        }
       }
     }
 
@@ -368,8 +483,10 @@
       </li>
       <li class="cl-card cl-card--qr">
         <a href="https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff" target="_blank" rel="noopener noreferrer">
-          <img src="data:image/png;base64,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"
+          <div class="cl-card__media">
+            <img src="data:image/png;base64,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"
                alt="QR code linking to Career LaunchPAD. URL: https://career-launchpad-woad.vercel.app/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.">
+          </div>
           <span class="cl-card__label">Take it to your phone</span>
         </a>
       </li>
