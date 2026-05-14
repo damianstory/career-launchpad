@@ -44,31 +44,68 @@ Run: `mkdir -p docs/handoffs/myblueprint-widget/preview`
 
 - [ ] **Step 2: Ask Damian for the 9 content inputs**
 
-The executing agent (or whoever is running this plan) writes a single message to Damian listing the following questions. **Do not proceed past this task until every answer is in hand.** If even one answer is "I don't have that yet," stop and surface the blocker.
+The executing agent writes a single message to Damian listing the questions below. **Do not proceed past this task until every answer is in hand.**
 
 ```
 Career LaunchPAD widget — content inputs needed before implementation starts:
 
-1. Card 1 destination URL (the specific launchpad video, before UTM tags):
-2. Card 2 destination URL (the specific launchpad video, before UTM tags):
-3. Card 1 thumbnail image file (attach a JPG/PNG, recommended 1280×720):
-4. Card 2 thumbnail image file (attach a JPG/PNG, recommended 1280×720):
-5. Card 1 visible label (text below the image, ~3–6 words):
-6. Card 2 visible label (text below the image, ~3–6 words):
-7. Card 1 alt-text title (used inside "Watch: [title]"):
-8. Card 2 alt-text title (used inside "Watch: [title]"):
-9. Confirm UTM string format. Proposed:
-   ?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=<slot>
-   where <slot> = "card-1", "card-2", "qr-handoff" per card.
-   Approve, or provide alternative campaign string?
+1. Card 1 BASE destination URL (the launchpad URL exactly as you'd paste it
+   in a browser, including any existing query parameters like ?content=slug).
+   I will add UTMs to this safely using URLSearchParams — do not append them
+   yourself.
+2. Card 2 BASE destination URL (same format as #1).
+3. Card 1 thumbnail image file (JPG/PNG, recommended 1280×720).
+4. Card 2 thumbnail image file (JPG/PNG, recommended 1280×720).
+5. Card 1 visible label (3–6 words, plain text — & and " characters are fine
+   and will be HTML-escaped).
+6. Card 2 visible label (same rules as #5).
+7. Card 1 alt-text title (used inside "Watch: <title>").
+8. Card 2 alt-text title (used inside "Watch: <title>").
+9. Confirm UTM string. Proposed:
+   utm_source=myblueprint, utm_medium=widget, utm_campaign=career-launchpad-v1,
+   utm_content=<slot> where slot = card-1 / card-2 / qr-handoff.
+   Approve or amend.
 
 Section heading is "Career LaunchPAD"; tagline is "Watch real Canadians, real
 careers, real next steps." Push back if either needs to change.
 
-Also: confirm Wilston's CDN URL pattern so the thumbnail src attributes can be
-written correctly. If not yet known, I'll use a relative placeholder path that
-matches an agreed convention.
+CDN URL pattern (optional): if Wilston has confirmed where thumbnails will be
+hosted, share the pattern. If not, the widget ships with relative `assets/`
+paths and the asset files are included in the handoff bundle for Wilston to
+re-host.
 ```
+
+- [ ] **Step 2a: Compute final hrefs using URL/URLSearchParams (NOT raw string concatenation)**
+
+The base URLs for cards 1 and 2 likely already carry a `?content=<slug>` query string (see `src/components/LaunchpadApp.tsx` line 582–583). Blindly appending `?utm_source=...` would produce `?content=slug?utm_source=...` — broken. Use proper URL construction. Run this Node one-liner for each base URL to produce the final href:
+
+```bash
+node -e '
+  const u = new URL(process.argv[1]);
+  for (const [k, v] of Object.entries({
+    utm_source: "myblueprint",
+    utm_medium: "widget",
+    utm_campaign: "career-launchpad-v1",
+    utm_content: process.argv[2],
+  })) u.searchParams.set(k, v);
+  console.log(u.toString());
+' "<BASE_URL>" "<SLOT>"
+```
+
+Run this three times: once for card 1 (slot `card-1`), once for card 2 (slot `card-2`), once for the QR's encoded URL (base `https://launchpad.myblueprint.ca/`, slot `qr-handoff`). Capture the three resulting URLs.
+
+- [ ] **Step 2b: HTML-escape every value before it touches the markup**
+
+For each string going into the HTML — labels, alt-text titles, and the computed hrefs — apply the following replacements in order:
+
+| Character | Replacement |
+|---|---|
+| `&` | `&amp;` |
+| `<` | `&lt;` |
+| `>` | `&gt;` |
+| `"` | `&quot;` (inside attribute values) |
+
+The most common case is `&` in URLs: each `&` between query params becomes `&amp;`. A bare `&` will fail `html-validate` and may break naively-parsed React JSX wrappers downstream.
 
 - [ ] **Step 3: Save the answers into CONTENT.md**
 
@@ -80,19 +117,26 @@ Create `docs/handoffs/myblueprint-widget/CONTENT.md` with all 9 answers, plus th
 **Captured:** YYYY-MM-DD
 **Source:** direct from Damian
 
-## URLs (before UTMs are appended)
+## URLs
 
-- Card 1 destination: <answer>
-- Card 2 destination: <answer>
-- QR card destination: https://launchpad.myblueprint.ca/
+### Base URLs (as Damian provided)
 
-## UTM string
+- Card 1 base: <answer — may already include ?content=slug or other query params>
+- Card 2 base: <answer>
+- QR base:   https://launchpad.myblueprint.ca/
 
-`?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=<slot>`
+### UTM parameters
 
-- Card 1 final href: <Card 1 destination>?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-1
-- Card 2 final href: <Card 2 destination>?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-2
-- QR final encoded URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff
+`utm_source=myblueprint`, `utm_medium=widget`, `utm_campaign=career-launchpad-v1`, `utm_content=<slot>` where `<slot>` is `card-1`, `card-2`, or `qr-handoff`.
+
+### Final hrefs (computed via URLSearchParams in Step 2a, with `&` → `&amp;` for HTML)
+
+- Card 1 final href: <output of node URLSearchParams script for card 1, then & → &amp;>
+- Card 2 final href: <same, card 2>
+- QR final encoded URL: <same, qr-handoff>
+- **QR plain URL for encoding** (used by the qrcode CLI in Task 8 — must stay unencoded with literal `&`, the QR encoder does not understand HTML entities): <output of node URLSearchParams script for qr-handoff, no HTML escaping>
+
+Both forms are kept. The HTML uses `&amp;` form; the QR PNG encodes the literal `&` form.
 
 ## Thumbnails
 
@@ -109,7 +153,7 @@ Create `docs/handoffs/myblueprint-widget/CONTENT.md` with all 9 answers, plus th
 - Card 2 label: <answer>
 - Card 2 alt text: Watch: <answer>
 - Card 3 label: Ticket to Your Phone
-- Card 3 alt text: QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff — scan or open on your phone to continue.
+- Card 3 alt text (HTML form, with &amp;): QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.
 ```
 
 - [ ] **Step 4: Commit the thumbnail files alongside the brief**
@@ -155,14 +199,22 @@ Create `docs/handoffs/myblueprint-widget/career-launchpad-widget.html` with:
        without collision.
     4. All three href values include UTM parameters
        (utm_source=myblueprint, utm_medium=widget, utm_campaign=career-launchpad-v1,
-       utm_content=<slot>). The QR's encoded URL must include the same UTMs so
-       phone-handoff sessions attribute to GA4.
-    5. Thumbnails are referenced by URL — when integrating, replace the relative
-       assets/* paths with the final myBlueprint CDN URLs Wilston provides. The
-       images committed at docs/handoffs/myblueprint-widget/assets/ are the
-       source-of-truth files.
+       utm_content=<slot>). Ampersands between query params are encoded as
+       &amp; in attribute values for HTML validity. The QR's encoded URL also
+       includes the UTMs so phone-handoff sessions attribute to GA4.
+    5. Thumbnails ship as files in this directory's assets/ folder. The handoff
+       bundle includes assets/thumb-1.jpg and assets/thumb-2.jpg. On integration,
+       upload both to the myBlueprint CDN and replace the two <img src> values
+       (and only those two) with the CDN URLs.
     6. Every <button> has type="button" — keeps the widget safe inside any
        ancestor <form> in the host dashboard.
+    7. URL construction uses URLSearchParams, not raw concatenation. See
+       CONTENT.md for the computed final hrefs. The launchpad's deep links use
+       ?content=slug today, so blind ?utm_source=... appending would produce
+       broken URLs.
+    8. Color values are pulled from DESIGN.md tokens (Anchor Navy #22224c,
+       Slate Ink #485163, Studio Off-White #f6f6ff, Slate-Frame-Light #e5e9f1,
+       Signal Blue #0092ff). Update tokens here when DESIGN.md updates.
   -->
   <style>
     /* CSS goes here in subsequent tasks */
@@ -212,21 +264,21 @@ Read `CONTENT.md` to get the final values for each placeholder. Then replace the
 
   <ul class="cl-widget__track" role="list">
     <li class="cl-card">
-      <a href="<CARD_1_FINAL_HREF_FROM_CONTENT_MD>" target="_blank" rel="noopener noreferrer">
-        <img src="assets/thumb-1.jpg" alt="Watch: <CARD_1_ALT_TITLE>">
-        <span class="cl-card__label"><CARD_1_LABEL></span>
+      <a href="<CARD_1_FINAL_HREF_FROM_CONTENT_MD_HTML_ESCAPED>" target="_blank" rel="noopener noreferrer">
+        <img src="assets/thumb-1.jpg" alt="Watch: <CARD_1_ALT_TITLE_HTML_ESCAPED>">
+        <span class="cl-card__label"><CARD_1_LABEL_HTML_ESCAPED></span>
       </a>
     </li>
     <li class="cl-card">
-      <a href="<CARD_2_FINAL_HREF_FROM_CONTENT_MD>" target="_blank" rel="noopener noreferrer">
-        <img src="assets/thumb-2.jpg" alt="Watch: <CARD_2_ALT_TITLE>">
-        <span class="cl-card__label"><CARD_2_LABEL></span>
+      <a href="<CARD_2_FINAL_HREF_FROM_CONTENT_MD_HTML_ESCAPED>" target="_blank" rel="noopener noreferrer">
+        <img src="assets/thumb-2.jpg" alt="Watch: <CARD_2_ALT_TITLE_HTML_ESCAPED>">
+        <span class="cl-card__label"><CARD_2_LABEL_HTML_ESCAPED></span>
       </a>
     </li>
     <li class="cl-card cl-card--qr">
-      <a href="https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff" target="_blank" rel="noopener noreferrer">
+      <a href="https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff" target="_blank" rel="noopener noreferrer">
         <img src="[QR_BASE64_FROM_TASK_8]"
-             alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff — scan or open on your phone to continue.">
+             alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.">
         <span class="cl-card__label">Ticket to Your Phone</span>
       </a>
     </li>
@@ -257,10 +309,10 @@ Read `CONTENT.md` to get the final values for each placeholder. Then replace the
 Run:
 
 ```bash
-grep -nE '<CARD_|<.*FROM_CONTENT_MD>|<.*_ALT_TITLE>|<.*_LABEL>' docs/handoffs/myblueprint-widget/career-launchpad-widget.html
+grep -nE '<CARD_|<.*FROM_CONTENT_MD|<.*_ALT_TITLE|<.*_LABEL|<.*_HTML_ESCAPED>' docs/handoffs/myblueprint-widget/career-launchpad-widget.html
 ```
 
-Expected: no output. If any of those tokens show up, Step 1 was incomplete.
+Expected: no output. Every `<..._HTML_ESCAPED>` token must have been replaced with a value drawn from CONTENT.md and passed through the escape table in Task 1 Step 2b.
 
 - [ ] **Step 3: Open in browser and verify markup renders**
 
@@ -311,13 +363,24 @@ git commit -m "feat: add widget markup with real content, UTM-tagged hrefs, type
   cursor: pointer;
 }
 
-/* === Section container === */
+/* === Section container ===
+   Color tokens map to DESIGN.md:
+     #ffffff   = pure-white
+     #22224c   = anchor-navy
+     #485163   = slate-ink
+     #65738b   = slate-body
+     #aab7cb   = slate-echo
+     #e5e9f1   = slate-frame-light
+     #f6f6ff   = studio-off-white
+     #0092ff   = signal-blue
+     #0082e5   = signal-blue-deep                                          */
 .cl-widget {
+  position: relative;                /* anchors absolutely-positioned mobile arrows */
   background: #ffffff;
   border-radius: 12px;
   padding: 24px;
   font-family: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #1d1f24;
+  color: #22224c;                    /* anchor-navy */
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -328,11 +391,12 @@ git commit -m "feat: add widget markup with real content, UTM-tagged hrefs, type
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
+  color: #22224c;                    /* anchor-navy */
 }
 .cl-widget__header p {
   margin: 0 0 16px 0;
   font-size: 14px;
-  color: #555a64;
+  color: #485163;                    /* slate-ink */
   line-height: 1.4;
 }
 
@@ -347,8 +411,8 @@ git commit -m "feat: add widget markup with real content, UTM-tagged hrefs, type
 .cl-card {
   border-radius: 10px;
   overflow: hidden;
-  background: #f6f7f9;
-  border: 1px solid #e3e6eb;
+  background: #f6f6ff;               /* studio-off-white */
+  border: 1px solid #e5e9f1;         /* slate-frame-light */
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 .cl-card a {
@@ -361,13 +425,13 @@ git commit -m "feat: add widget markup with real content, UTM-tagged hrefs, type
   aspect-ratio: 16 / 9;
   object-fit: cover;
   display: block;
-  background: #d8dce3;
+  background: #e5e9f1;               /* slate-frame-light placeholder while loading */
 }
 .cl-card--qr img {
   aspect-ratio: 1 / 1;
   object-fit: contain;
   padding: 16px;
-  background: #ffffff;
+  background: #ffffff;               /* pure-white for QR contrast */
 }
 .cl-card__label {
   display: block;
@@ -452,27 +516,42 @@ git commit -m "feat: add base styles and desktop 3-column grid layout"
     scroll-snap-stop: always;
   }
 
-  /* Show controls on mobile */
+  /* Show controls on mobile.
+     The arrows overhang the card edges (matching the design mock); they are
+     absolutely positioned and vertically centered against the card image
+     area. The dots row sits below the card on its own line. */
   .cl-widget__controls {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 12px;
+    display: block;
     margin-top: 16px;
+    text-align: center;
   }
 
   .cl-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #0092ff;
+    background: #0092ff;             /* signal-blue */
     color: #ffffff;
     font-size: 20px;
     line-height: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 8px rgba(34, 34, 76, 0.18);
+    z-index: 2;
     transition: opacity 120ms ease, background-color 120ms ease;
+  }
+  .cl-arrow--prev {
+    left: -4px;                      /* overhangs the section's left edge */
+  }
+  .cl-arrow--next {
+    right: -4px;                     /* overhangs the section's right edge */
+  }
+  .cl-arrow:hover:not([disabled]) {
+    background: #0082e5;             /* signal-blue-deep */
   }
 
   .cl-dots {
@@ -484,7 +563,7 @@ git commit -m "feat: add base styles and desktop 3-column grid layout"
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #c8ccd4;
+    background: #aab7cb;             /* slate-echo */
     transition: background-color 120ms ease, width 120ms ease;
   }
 }
@@ -524,7 +603,7 @@ git commit -m "feat: add mobile scroll-snap carousel with arrow and dot controls
 .cl-card a:focus-visible,
 .cl-arrow:focus-visible,
 .cl-dot:focus-visible {
-  outline: 2px solid #0092ff;
+  outline: 2px solid #0092ff;        /* signal-blue */
   outline-offset: 2px;
 }
 
@@ -539,7 +618,7 @@ git commit -m "feat: add mobile scroll-snap carousel with arrow and dot controls
 }
 
 .cl-dot[aria-pressed="true"] {
-  background: #0092ff;
+  background: #0092ff;               /* signal-blue */
   width: 20px;
   border-radius: 4px;
 }
@@ -603,17 +682,21 @@ git commit -m "feat: add hover, focus-visible, active, disabled, and reduced-mot
     return reduceMotion.matches ? 'auto' : 'smooth';
   }
 
-  function cardOffset(i) {
-    // Use rect math so the track's horizontal padding and negative margin
-    // don't poison the math the way (i * track.clientWidth) would.
-    const trackRect = track.getBoundingClientRect();
-    const cardRect  = cards[i].getBoundingClientRect();
-    return track.scrollLeft + (cardRect.left - trackRect.left);
+  function cardCenterScroll(i) {
+    // Center-align the card in the track so the result agrees with
+    // CSS `scroll-snap-align: center`. Left-edge math would cause a
+    // visible one-frame jitter as smooth-scroll lands at the left and
+    // then snap re-centers.
+    const trackRect  = track.getBoundingClientRect();
+    const cardRect   = cards[i].getBoundingClientRect();
+    const cardCenter  = cardRect.left + cardRect.width / 2;
+    const trackCenter = trackRect.left + trackRect.width / 2;
+    return track.scrollLeft + (cardCenter - trackCenter);
   }
 
   function goTo(i) {
     activeIndex = Math.max(0, Math.min(cards.length - 1, i));
-    track.scrollTo({ left: cardOffset(activeIndex), behavior: scrollBehavior() });
+    track.scrollTo({ left: cardCenterScroll(activeIndex), behavior: scrollBehavior() });
     dots.forEach(function (d, n) {
       d.setAttribute('aria-pressed', n === activeIndex ? 'true' : 'false');
     });
@@ -636,7 +719,7 @@ git commit -m "feat: add hover, focus-visible, active, disabled, and reduced-mot
       let nearest = 0;
       let nearestDist = Infinity;
       for (let n = 0; n < cards.length; n++) {
-        const d = Math.abs(cardOffset(n) - track.scrollLeft);
+        const d = Math.abs(cardCenterScroll(n) - track.scrollLeft);
         if (d < nearestDist) { nearestDist = d; nearest = n; }
       }
       if (nearest !== activeIndex) goTo(nearest);
@@ -784,8 +867,10 @@ DevTools device emulation, viewport 375 × 667 (iPhone SE). Reload.
 
 - White rounded container with 16px horizontal padding.
 - Only card 1 visible. Card 1 fills width with the bleed margin matching the container padding (the rect-math test from Task 7).
-- Arrow + dots row below: left arrow disabled, dot 1 active (blue, wider), right arrow enabled.
-- Tap right arrow: smooth scroll to card 2, **fully snapped to center**, dot 2 active, left arrow enabled.
+- **Arrows overhang the card edges** (left arrow on the left edge, right arrow on the right edge — matching the design mock). They are vertically centered on the card image area, NOT in a row below the card.
+- **Dots sit in their own row below the card**, horizontally centered. They do NOT share a row with the arrows.
+- Left arrow disabled at start (greyed out), dot 1 active (blue, wider), right arrow enabled.
+- Tap right arrow: smooth scroll to card 2, **fully snapped to center** (not landing left-aligned and then snapping — visual test of the cardCenterScroll math), dot 2 active, left arrow enabled.
 - Tap right again: card 3 (QR) visible, right arrow disabled.
 - Tap dot 1: scroll back to card 1.
 - Drag horizontally: snaps to nearest card; dot/arrow state updates after ~80ms.
@@ -1068,13 +1153,33 @@ npx --yes html-validate docs/handoffs/myblueprint-widget/career-launchpad-widget
 
 Expected: zero errors.
 
-- [ ] **Step 4: Confirm UTMs in every href**
+- [ ] **Step 4: Confirm correct UTM `utm_content` slot in each `<a href>`**
+
+A simple `grep -c utm_source` would pass even if a href is wrong (the string appears in alt text and the file header comment too). Instead, extract the three `<a>` href values and assert each contains the expected `utm_content` value:
 
 ```bash
-grep -c 'utm_source=myblueprint' docs/handoffs/myblueprint-widget/career-launchpad-widget.html
+HREFS=$(grep -oE '<a [^>]*href="[^"]+"' docs/handoffs/myblueprint-widget/career-launchpad-widget.html \
+        | sed -E 's/.*href="([^"]+)".*/\1/')
+echo "Hrefs found:"
+echo "$HREFS"
+
+echo "$HREFS" | grep -q 'utm_content=card-1'   || { echo "FAIL: no href contains utm_content=card-1"; exit 1; }
+echo "$HREFS" | grep -q 'utm_content=card-2'   || { echo "FAIL: no href contains utm_content=card-2"; exit 1; }
+echo "$HREFS" | grep -q 'utm_content=qr-handoff' || { echo "FAIL: no href contains utm_content=qr-handoff"; exit 1; }
+echo "All three utm_content slots present in <a> hrefs."
 ```
 
-Expected: at least **4** matches (card 1 href, card 2 href, QR href, QR alt-text containing the URL).
+Expected output ends with `All three utm_content slots present in <a> hrefs.`. Any FAIL means a href is wrong — fix and re-run.
+
+- [ ] **Step 4b: Confirm `&amp;` (not bare `&`) in href attribute values**
+
+```bash
+grep -E '<a [^>]*href="[^"]*&[^a]' docs/handoffs/myblueprint-widget/career-launchpad-widget.html \
+  && { echo "FAIL: at least one href contains a bare & not encoded as &amp;"; exit 1; } \
+  || echo "OK - all hrefs use &amp; correctly."
+```
+
+Expected: `OK - all hrefs use &amp; correctly.`
 
 - [ ] **Step 5: Verify the deliverable bundle**
 
@@ -1082,14 +1187,15 @@ Expected: at least **4** matches (card 1 href, card 2 href, QR href, QR alt-text
 ls -la docs/handoffs/myblueprint-widget/
 ```
 
-Expected files:
+Expected files (all part of the handoff bundle):
 - `career-launchpad-widget.html` — final, real content, no placeholders
-- `README.md`
-- `CONTENT.md`
-- `assets/thumb-1.jpg`
-- `assets/thumb-2.jpg`
-- `preview/desktop.png`
-- `preview/mobile.png`
+- `README.md` — handoff contract
+- `assets/thumb-1.jpg` — card 1 thumbnail (Wilston re-hosts to CDN on integration)
+- `assets/thumb-2.jpg` — card 2 thumbnail (same)
+- `preview/desktop.png` — reference screenshot
+- `preview/mobile.png` — reference screenshot
+
+`CONTENT.md` is an internal source-of-truth file that stays in this repo; it is **not** part of the handoff bundle sent to Wilston.
 
 - [ ] **Step 6: Final commit**
 
@@ -1097,7 +1203,7 @@ Expected files:
 git commit --allow-empty -m "chore: career-launchpad-widget v1 ready for handoff to Wilston"
 ```
 
-The bundle is ready to send. Forward `career-launchpad-widget.html`, `README.md`, and the `preview/` PNGs to Wilston. Keep `CONTENT.md` and `assets/` as internal source-of-truth in this repo.
+The bundle is ready to send. Forward `career-launchpad-widget.html`, `README.md`, the `assets/` folder, and the `preview/` PNGs to Wilston. Keep `CONTENT.md` as internal source-of-truth in this repo only.
 
 ---
 

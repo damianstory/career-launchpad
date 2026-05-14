@@ -63,21 +63,21 @@ career-launchpad-widget.html
 
   <ul class="cl-widget__track" role="list">
     <li class="cl-card">
-      <a href="[VIDEO_URL_1]?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-1" target="_blank" rel="noopener noreferrer">
+      <a href="[CARD_1_FINAL_HREF]" target="_blank" rel="noopener noreferrer">
         <img src="[THUMB_1_URL]" alt="Watch: [video title]">
         <span class="cl-card__label">[Card 1 label]</span>
       </a>
     </li>
     <li class="cl-card">
-      <a href="[VIDEO_URL_2]?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-2" target="_blank" rel="noopener noreferrer">
+      <a href="[CARD_2_FINAL_HREF]" target="_blank" rel="noopener noreferrer">
         <img src="[THUMB_2_URL]" alt="Watch: [video title]">
         <span class="cl-card__label">[Card 2 label]</span>
       </a>
     </li>
     <li class="cl-card cl-card--qr">
-      <a href="https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff" target="_blank" rel="noopener noreferrer">
+      <a href="https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff" target="_blank" rel="noopener noreferrer">
         <img src="data:image/png;base64,…"
-             alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=qr-handoff — scan or open on your phone to continue.">
+             alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/?utm_source=myblueprint&amp;utm_medium=widget&amp;utm_campaign=career-launchpad-v1&amp;utm_content=qr-handoff — scan or open on your phone to continue.">
         <span class="cl-card__label">Ticket to Your Phone</span>
       </a>
     </li>
@@ -108,6 +108,8 @@ Notes:
 - Arrow glyphs `‹` `›` get `aria-hidden="true"` so the button's `aria-label` is the sole accessible name.
 - `<span class="cl-sr-announce">` is visually hidden with the standard `clip: rect(0 0 0 0)` pattern.
 - All three `href` values include UTM parameters baked into the URL string (see Decisions row 9). The QR's encoded URL must include the same UTMs so phone-handoff traffic is attributed.
+- **URL construction is not raw concatenation.** The Career LaunchPAD app uses `?content=<slug>` deep links (see `src/components/LaunchpadApp.tsx` line 582–583). A blind `+ "?utm_source=..."` produces `?content=slug?utm_source=...`, which is broken. The plan's Task 1 requires the executing agent to use `URL`/`URLSearchParams` to merge UTMs with any existing query string, then HTML-escape the result before insertion. The final hrefs are captured verbatim in `CONTENT.md` and pasted into the markup. Each `&` between query parameters MUST be encoded as `&amp;` in attribute values for HTML validity (`html-validate` will flag bare `&` as a parse error).
+- **All user-supplied strings are HTML-escaped before insertion.** Labels, alt-text titles, and href values from `CONTENT.md` may contain `&`, `<`, `>`, `"`. Each must be escaped (`&amp;`, `&lt;`, `&gt;`, `&quot;`) before being baked into the markup. This is mandatory, not nice-to-have — a stray `&` in a video title silently produces invalid HTML that may render but won't React-wrap cleanly.
 
 ## Layout
 
@@ -122,12 +124,14 @@ Notes:
 ### Mobile (< 768px)
 
 - Section sits in its own white container, **below the dark gray myBlueprint task-card carousel** (most important Wilston requirement — must not be nested inside the dark gray).
+- `.cl-widget` is `position: relative` to anchor the absolutely-positioned arrow overlay.
 - `.cl-widget__track`:
   - `display: flex; overflow-x: auto;`
   - `scroll-snap-type: x mandatory; scroll-behavior: smooth;`
-  - `scrollbar-width: none;` and `&::-webkit-scrollbar { display: none; }`
+  - `scrollbar-width: none;` and `::-webkit-scrollbar { display: none; }`
 - Each card: `flex: 0 0 100%; scroll-snap-align: center;`
-- `.cl-widget__controls` visible: arrow buttons positioned to overhang the card edges (matching the mock); dots row below the card.
+- **Arrows overhang the card edges** (matching the mock). `.cl-arrow--prev` and `.cl-arrow--next` use `position: absolute`, vertically centered with the card image area via `top: calc(<header-height> + <card-image-half>)` or `transform: translateY(-50%)` against a top anchor, and horizontally hang `-12px` outside the card on each side (clipped only by the section's negative-margin gutter).
+- **Dots sit in their own row below the card**, not in the same row as the arrows. The arrow overhang and the dot row are visually separated.
 
 ### Both breakpoints
 
@@ -155,17 +159,21 @@ Single IIFE scoped to the widget root, no global pollution. Approximate shape:
     return reduceMotion.matches ? 'auto' : 'smooth';
   }
 
-  function cardOffset(i) {
-    // Use rect math so horizontal padding / negative margin on the track
-    // don't poison the math the way activeIndex * track.clientWidth would.
-    const trackRect = track.getBoundingClientRect();
-    const cardRect  = cards[i].getBoundingClientRect();
-    return track.scrollLeft + (cardRect.left - trackRect.left);
+  function cardCenterScroll(i) {
+    // Center-align the card in the track so the result agrees with the CSS
+    // `scroll-snap-align: center` snap target. Using left-edge math would
+    // produce a momentary jitter as smooth-scroll lands at the left edge
+    // and snap then re-centers the card.
+    const trackRect  = track.getBoundingClientRect();
+    const cardRect   = cards[i].getBoundingClientRect();
+    const cardCenter = cardRect.left  + cardRect.width  / 2;
+    const trackCenter = trackRect.left + trackRect.width / 2;
+    return track.scrollLeft + (cardCenter - trackCenter);
   }
 
   function goTo(i) {
     activeIndex = Math.max(0, Math.min(cards.length - 1, i));
-    track.scrollTo({ left: cardOffset(activeIndex), behavior: scrollBehavior() });
+    track.scrollTo({ left: cardCenterScroll(activeIndex), behavior: scrollBehavior() });
     dots.forEach(function (d, n) {
       d.setAttribute('aria-pressed', n === activeIndex ? 'true' : 'false');
     });
@@ -187,7 +195,7 @@ Single IIFE scoped to the widget root, no global pollution. Approximate shape:
       let nearest = 0;
       let nearestDist = Infinity;
       for (let n = 0; n < cards.length; n++) {
-        const d = Math.abs(cardOffset(n) - track.scrollLeft);
+        const d = Math.abs(cardCenterScroll(n) - track.scrollLeft);
         if (d < nearestDist) { nearestDist = d; nearest = n; }
       }
       if (nearest !== activeIndex) goTo(nearest);
@@ -210,7 +218,7 @@ Single IIFE scoped to the widget root, no global pollution. Approximate shape:
 ```
 
 Important details:
-- Uses **absolute** `scrollTo({ left: cardOffset(i) })`. The offset is computed from `getBoundingClientRect`, not `activeIndex * track.clientWidth`. Required because the mobile track has 16px horizontal padding and a -16px negative margin to bleed into the white-section gutter — fixed-width math would land between cards.
+- Uses **absolute** `scrollTo({ left: cardCenterScroll(i) })`. The offset is the center-aligned scroll position computed from `getBoundingClientRect`, not `activeIndex * track.clientWidth`. Required because (a) the mobile track has 16px horizontal padding and a -16px negative margin to bleed into the white-section gutter, so fixed-width math would land between cards, and (b) the CSS uses `scroll-snap-align: center` — left-edge math would cause a one-frame jitter as smooth-scroll lands and then snap re-centers.
 - `scrollBehavior()` returns `'auto'` when `prefers-reduced-motion: reduce` is set. CSS handles the snap-behavior fallback; JS handles the `scrollTo` behavior. Both are required because `scrollTo`'s `behavior` option overrides the CSS `scroll-behavior` property.
 - Swipe-driven scrolling is debounced (80ms) and synced back to `activeIndex` via nearest-card math. The dot/arrow state stays correct when the student swipes manually.
 - Resize listener resets scroll position to 0 on viewport flip mobile → desktop, preventing an invisible left offset on the grid.
@@ -230,6 +238,24 @@ Important details:
 - `prefers-reduced-motion: reduce`: handled in **both layers**. CSS sets `scroll-behavior: auto` and removes transitions; JS checks the same media query and passes `behavior: 'auto'` to `scrollTo`. The JS check is required because `scrollTo`'s `behavior` argument overrides the CSS property.
 - `aria-live="polite"` visually hidden announcer fires "Card N of 3" on every scroll-position change.
 
+## Color tokens
+
+The widget uses the Career LaunchPAD design system, not ad-hoc greys. All hex values below are pulled from `DESIGN.md` in the repo root and must stay in sync with that file. The token name (e.g. `signal-blue`) is the contract; if the design system updates a hex value, the widget tracks it.
+
+| Token (DESIGN.md) | Hex | Used for |
+|---|---|---|
+| `signal-blue` | `#0092ff` | Focus ring, active dot, mobile arrow background |
+| `signal-blue-deep` | `#0082e5` | Mobile arrow hover/active background |
+| `anchor-navy` | `#22224c` | Body text and headline color |
+| `slate-ink` | `#485163` | Tagline body copy |
+| `slate-body` | `#65738b` | Secondary text (if needed) |
+| `slate-echo` | `#aab7cb` | Inactive dot color |
+| `slate-frame-light` | `#e5e9f1` | Card border, section dividers |
+| `studio-off-white` | `#f6f6ff` | Card resting background (replaces the generic `#f6f7f9`) |
+| `pure-white` | `#ffffff` | Widget section background, QR card background |
+
+The myBlueprint-native states decision (Decision row 7) is satisfied by these tokens — Signal Blue is the host-app's brand accent, the navy/slate ramp matches myBlueprint's existing dashboard chrome, and the resulting widget looks coherent inside the host shell while signaling its launchpad identity through Signal Blue.
+
 ## States
 
 | State | Treatment |
@@ -244,16 +270,21 @@ Important details:
 
 ## Handoff
 
-**Deliverable bundle:**
+**Deliverable bundle** (everything in this list ships to Wilston):
 
 ```
 career-launchpad-widget/
 ├── career-launchpad-widget.html   ← the artifact
 ├── README.md                       ← contract + integration notes
+├── assets/                         ← shipped thumbnail files Wilston re-hosts
+│   ├── thumb-1.jpg
+│   └── thumb-2.jpg
 └── preview/
     ├── desktop.png                 ← 1440px screenshot
     └── mobile.png                  ← 375px screenshot
 ```
+
+The HTML file references thumbnails by relative `assets/thumb-N.jpg` paths so the preview opens correctly from any checkout. On integration, Wilston uploads the two files to the myBlueprint CDN and updates the `<img src>` attributes (and only those two attributes) to point at the CDN URLs. This is the right pattern because: (a) the CDN URL pattern is not always known when the widget is built, (b) Wilston needs the actual image files regardless, and (c) including them in the bundle eliminates a back-and-forth round trip.
 
 **File header comment block** (most important part of the handoff — embedded at the top of the HTML):
 
@@ -272,10 +303,15 @@ career-launchpad-widget/
      without collision.
   4. All three href values include UTM parameters
      (utm_source=myblueprint, utm_medium=widget, utm_campaign=career-launchpad-v1,
-     utm_content=<slot>). The QR's encoded URL must include the same UTMs so
-     phone-handoff sessions attribute to GA4.
-  5. Thumbnails are referenced by URL — host these at a stable myBlueprint asset
-     path before integration. See README for the file naming convention.
+     utm_content=<slot>). Ampersands between query params are encoded as &amp;
+     in attribute values for HTML validity. The QR's encoded URL also includes
+     the UTMs so phone-handoff sessions attribute to GA4.
+  5. Thumbnails currently use relative paths `assets/thumb-1.jpg` / `assets/thumb-2.jpg`.
+     The image files ship alongside this HTML inside the handoff bundle's
+     `assets/` folder. Upload both to the myBlueprint CDN, then replace the two
+     `src` attributes with the CDN URLs. No other markup changes required.
+  6. Every <button> has type="button" — keeps the widget safe inside any
+     ancestor <form> in the host dashboard.
 -->
 ```
 
@@ -298,7 +334,7 @@ All items below are **gating** for implementation. The plan's Task 1 collects th
 
 | # | Item | Owner | Required by |
 |---|---|---|---|
-| 1 | Thumbnail hosting location (final URL pattern myBlueprint will serve from) | Wilston | Implementation start |
+| 1 | Thumbnail hosting location (final CDN URL pattern myBlueprint will serve from) | Wilston | Soft gate — if unknown, the widget ships with relative `assets/` paths and the `assets/` folder is included in the handoff bundle for Wilston to re-host. |
 | 2 | Final URL for card 1 (specific video deep link on launchpad) | Damian | Implementation start |
 | 3 | Final URL for card 2 (specific video deep link on launchpad) | Damian | Implementation start |
 | 4 | Final card label copy (text under cards 1 and 2) | Damian | Implementation start |
