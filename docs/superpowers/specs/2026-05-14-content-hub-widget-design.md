@@ -69,7 +69,7 @@ career-launchpad-widget.html
     </li>
     <li class="cl-card">
       <a href="[CONTENT_URL]" target="_blank" rel="noopener noreferrer">
-        <img src="[THUMB_2_URL]" alt="Read: [content title]">
+        <img src="[THUMB_2_URL]" alt="Watch: [video title]">
         <span class="cl-card__label">[Card 2 label]</span>
       </a>
     </li>
@@ -77,7 +77,7 @@ career-launchpad-widget.html
       <a href="https://launchpad.myblueprint.ca/" target="_blank" rel="noopener noreferrer">
         <img src="data:image/png;base64,…"
              alt="QR code linking to Career LaunchPAD. URL: https://launchpad.myblueprint.ca/ — scan or open on your phone to continue.">
-        <span class="cl-card__label">Scan to continue on your phone</span>
+        <span class="cl-card__label">Ticket to Your Phone</span>
       </a>
     </li>
   </ul>
@@ -192,7 +192,7 @@ Important details:
 - `:focus-visible` only — mouse clicks don't draw the ring, keyboard tabs do.
 - 2px solid focus outline in myBlueprint primary blue, `outline-offset: 2px`. Exact hex confirmed from `~/.claude/design-systems/myblueprint/` during build (placeholder reference: `#0092ff` from launchpad PRODUCT.md, to be verified against MB brand guide).
 - Alt text:
-  - Thumbnails: descriptive of the content the click goes to (`Watch: [title]`, `Read: [title]`).
+  - Thumbnails: descriptive of the content the click goes to. Both card 1 and card 2 use the `Watch: [title]` prefix since v1 content is video for both.
   - QR: descriptive **and** spells out the URL in plain text — screen-reader users can't scan a QR.
 - `prefers-reduced-motion: reduce`: `scroll-behavior` falls back to `auto`, transitions disabled. Carousel jumps cleanly between cards instead of animating.
 - `aria-live="polite"` visually hidden announcer fires "Card N of 3" on every scroll-position change.
