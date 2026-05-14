@@ -40,8 +40,8 @@ Both forms are kept. The HTML uses `&amp;` form; the QR PNG encodes the literal 
 
 ## Thumbnails
 
-- Card 1 image: `assets/thumb-1.jpg` (STUB — solid-color placeholder, real image TBD)
-- Card 2 image: `assets/thumb-2.jpg` (STUB — solid-color placeholder, real image TBD)
+- Card 1 image: `assets/thumb-1.jpg` (Unsplash placeholder — career-themed image, real myBlueprint thumbnail TBD)
+- Card 2 image: `assets/thumb-2.jpg` (Unsplash placeholder — career-themed image, real myBlueprint thumbnail TBD)
 - CDN pattern (per Wilston): TBD, using relative path for preview
 
 ## Copy
