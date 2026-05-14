@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career LaunchPAD widget — handoff preview</title>
+  <!--
+    Career LaunchPAD widget — handoff to myBlueprint.
+
+    Integration notes for React-wrapping:
+    1. Extract this <style> block into a real stylesheet (LESS file or imported .css).
+       Leaving it inline will cause stylesheet churn on every React re-render in the
+       host app's older React version.
+    2. Move the JS init into useEffect (or componentDidMount) inside the React
+       component. Do NOT leave it as a top-of-render IIFE — listeners will stack
+       duplicates on every re-render and the scroll handler will fire on phantom nodes.
+    3. All classes are namespaced .cl-* — safe to drop into the host app's global LESS
+       without collision.
+    4. All three href values include UTM parameters
+       (utm_source=myblueprint, utm_medium=widget, utm_campaign=career-launchpad-v1,
+       utm_content=<slot>). Ampersands between query params are encoded as
+       &amp; in attribute values for HTML validity. The QR's encoded URL also
+       includes the UTMs so phone-handoff sessions attribute to GA4.
+    5. Thumbnails ship as files in this directory's assets/ folder. The handoff
+       bundle includes assets/thumb-1.jpg and assets/thumb-2.jpg. On integration,
+       upload both to the myBlueprint CDN and replace the two <img src> values
+       (and only those two) with the CDN URLs.
+    6. Every <button> has type="button" — keeps the widget safe inside any
+       ancestor <form> in the host dashboard.
+    7. URL construction uses URLSearchParams, not raw concatenation. See
+       CONTENT.md for the computed final hrefs. The launchpad's deep links use
+       ?content=slug today, so blind ?utm_source=... appending would produce
+       broken URLs.
+    8. Color values are pulled from DESIGN.md tokens (Anchor Navy #22224c,
+       Slate Ink #485163, Studio Off-White #f6f6ff, Slate-Frame-Light #e5e9f1,
+       Signal Blue #0092ff). Update tokens here when DESIGN.md updates.
+  -->
+  <style>
+    /* CSS goes here in subsequent tasks */
+  </style>
+</head>
+<body>
+  <!-- Widget markup goes here in Task 3 -->
+
+  <script>
+    /* IIFE goes here in Task 7 */
+  </script>
+</body>
+</html>
