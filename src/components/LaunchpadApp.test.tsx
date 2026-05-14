@@ -546,17 +546,37 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.queryByText('How to Write a Cold Email That Gets a Reply')).not.toBeInTheDocument();
   });
 
+  it('uses the full brand on desktop and the shortened brand on mobile', async () => {
+    const { unmount } = renderLaunchpad();
+
+    expect(screen.getByText('Career LaunchPAD')).toBeInTheDocument();
+    expect(screen.queryByText('LaunchPAD')).not.toBeInTheDocument();
+
+    unmount();
+    mobileViewport = true;
+    installMatchMedia();
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    expect(screen.getByText('LaunchPAD')).toBeInTheDocument();
+    expect(screen.queryByText('Career LaunchPAD')).not.toBeInTheDocument();
+  });
+
   it('renders the centered mobile primary Learn More CTA and opens the panel from it', async () => {
     mobileViewport = true;
     installMatchMedia();
     renderLaunchpad();
 
     const primaryCta = screen.getByTestId('learn-more-primary-cta');
+    const rail = within(screen.getByTestId('mobile-overlay-rail'));
     expect(primaryCta).toHaveAttribute('data-variant', 'mobile');
     expect(primaryCta).toHaveAccessibleName('Learn More');
-    expect(screen.getByRole('button', { name: 'Info' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Previous item' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Next item' })).not.toBeDisabled();
+    expect(rail.getAllByRole('button')).toHaveLength(3);
+    expect(rail.getByRole('button', { name: 'Like' })).toBeInTheDocument();
+    expect(rail.getByRole('button', { name: 'Share' })).toBeInTheDocument();
+    expect(rail.getByRole('button', { name: 'Info' })).toBeInTheDocument();
+    expect(rail.queryByRole('button', { name: 'Previous item' })).not.toBeInTheDocument();
+    expect(rail.queryByRole('button', { name: 'Next item' })).not.toBeInTheDocument();
     expect(primaryCta).toHaveStyle({
       width: '100%',
       height: '56px',
@@ -569,28 +589,25 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
   });
 
-  it('navigates from the mobile rail controls and disables boundaries', async () => {
+  it('keeps mobile swipe navigation after removing rail navigation controls', async () => {
     mobileViewport = true;
     installMatchMedia();
     renderLaunchpad();
-    await flushAsyncWork();
+    await dismissFeedOnboarding();
 
-    const rail = within(screen.getByTestId('mobile-overlay-rail'));
-    expect(rail.getByRole('button', { name: 'Previous item' })).toBeDisabled();
-    expect(rail.getByRole('button', { name: 'Previous item' })).toHaveAttribute('aria-disabled', 'true');
-
-    fireEvent.click(rail.getByRole('button', { name: 'Next item' }));
+    const surface = navigationSurface();
+    act(() => {
+      dispatchTouch(surface, 'touchstart', 100, 300);
+    });
+    act(() => {
+      dispatchTouch(surface, 'touchmove', 104, 236);
+    });
     await finishTransition();
 
-    const nextRail = within(screen.getByTestId('mobile-overlay-rail'));
     expect(screen.getByRole('button', { name: /play the career path/i })).toBeInTheDocument();
-    expect(nextRail.getByRole('button', { name: 'Previous item' })).not.toBeDisabled();
-
-    fireEvent.click(nextRail.getByRole('button', { name: 'Previous item' }));
-    await finishTransition();
-
-    expect(screen.getByRole('button', { name: /play ai tools/i })).toBeInTheDocument();
-    expect(within(screen.getByTestId('mobile-overlay-rail')).getByRole('button', { name: 'Previous item' })).toBeDisabled();
+    expect(
+      within(screen.getByTestId('mobile-overlay-rail')).queryByRole('button', { name: 'Next item' })
+    ).not.toBeInTheDocument();
   });
 
   it('keeps mobile rail taps isolated from touch navigation', async () => {

@@ -101,6 +101,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+  overscroll-behavior: none;
   background: #f6f6ff;
   color: var(--navy);
   font-family: var(--font-primary);

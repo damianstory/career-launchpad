@@ -793,11 +793,6 @@ export function LaunchpadApp({
     setPathsDrawerOpen,
     formatsDrawerOpen,
     setFormatsDrawerOpen,
-    content: initialContent,
-    feedIdx: safeIdx,
-    feedTotal: filteredContent.length,
-    onNext: stepNext,
-    onPrev: stepPrev,
     feedDeckRef,
     navDirection,
     reducedMotion,
@@ -812,7 +807,7 @@ export function LaunchpadApp({
   };
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--off-white)', color: 'var(--navy)', fontFamily: 'var(--font-primary)' }}>
+    <main style={{ minHeight: '100dvh', background: 'var(--off-white)', color: 'var(--navy)', fontFamily: 'var(--font-primary)' }}>
       {isMobile ? <MobileStage {...stageProps} /> : <DesktopStage {...stageProps} />}
 
       <BrowseDrawer
@@ -920,11 +915,6 @@ type StageProps = {
   setPathsDrawerOpen: (open: boolean) => void;
   formatsDrawerOpen: boolean;
   setFormatsDrawerOpen: (open: boolean) => void;
-  content: LaunchpadContent[];
-  feedIdx: number;
-  feedTotal: number;
-  onNext: () => void;
-  onPrev: () => void;
   navSurfaceRef: (node: HTMLDivElement | null) => void;
   feedDeckRef: RefObject<HTMLDivElement | null>;
   navDirection: FeedDirection;
@@ -1270,10 +1260,6 @@ function MobileStage({
   setPathsDrawerOpen,
   formatsDrawerOpen,
   setFormatsDrawerOpen,
-  feedIdx,
-  feedTotal,
-  onPrev,
-  onNext,
   navSurfaceRef,
   feedDeckRef,
   navDirection,
@@ -1322,7 +1308,7 @@ function MobileStage({
         }}
       >
         <BrandMark size={28} />
-        <div style={{ fontWeight: 900, fontSize: 15 }}>Career LaunchPAD</div>
+        <div style={{ fontWeight: 900, fontSize: 15 }}>LaunchPAD</div>
         <div style={{ flex: 1 }} />
 
         <button
@@ -1413,14 +1399,6 @@ function MobileStage({
           }}
         >
           <MobileRailBtn
-            icon={ChevronUp}
-            label="Up"
-            ariaLabel="Previous item"
-            disabled={feedIdx === 0}
-            onClick={onPrev}
-            title="↑ Up arrow"
-          />
-          <MobileRailBtn
             icon={Heart}
             label={isSaved ? 'Liked' : 'Like'}
             active={isSaved}
@@ -1428,14 +1406,6 @@ function MobileStage({
           />
           <MobileRailBtn icon={Share2} label="Share" active={activeRailFeedback === 'share'} onClick={onShare} />
           <MobileRailBtn icon={Info} label="Info" active={activeRailFeedback === 'info'} onClick={onInfo} />
-          <MobileRailBtn
-            icon={ChevronDown}
-            label="Down"
-            ariaLabel="Next item"
-            disabled={feedIdx >= feedTotal - 1}
-            onClick={onNext}
-            title="↓ Down arrow"
-          />
         </div>
 
         <LearnMoreCta format={item.format} variant="mobile" onClick={onLearnMore} />
