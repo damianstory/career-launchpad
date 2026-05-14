@@ -160,6 +160,88 @@
       white-space: nowrap;
       border: 0;
     }
+
+    /* === Mobile (<768px) === */
+    @media (max-width: 767.98px) {
+      .cl-widget {
+        padding: 20px 16px;
+        border-radius: 10px;
+      }
+
+      .cl-widget__track {
+        display: flex;
+        grid-template-columns: none;
+        gap: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin: 0 -16px;
+        padding: 0 16px;
+      }
+      .cl-widget__track::-webkit-scrollbar {
+        display: none;
+      }
+
+      .cl-card {
+        flex: 0 0 100%;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+      }
+
+      /* Show controls on mobile.
+         The arrows overhang the card edges (matching the design mock); they are
+         absolutely positioned and vertically centered against the card image
+         area. The dots row sits below the card on its own line. */
+      .cl-widget__controls {
+        display: block;
+        margin-top: 16px;
+        text-align: center;
+      }
+
+      .cl-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #0092ff;             /* signal-blue */
+        color: #ffffff;
+        font-size: 20px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(34, 34, 76, 0.18);
+        z-index: 2;
+        transition: opacity 120ms ease, background-color 120ms ease;
+      }
+      .cl-arrow--prev {
+        left: -4px;                      /* overhangs the section's left edge */
+      }
+      .cl-arrow--next {
+        right: -4px;                     /* overhangs the section's right edge */
+      }
+      .cl-arrow:hover:not([disabled]) {
+        background: #0082e5;             /* signal-blue-deep */
+      }
+
+      .cl-dots {
+        display: inline-flex;
+        justify-content: center;
+        gap: 8px;
+      }
+      .cl-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #aab7cb;             /* slate-echo */
+        transition: background-color 120ms ease, width 120ms ease;
+      }
+    }
   </style>
 </head>
 <body>
