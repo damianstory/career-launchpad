@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fixtureCategories, fixtureContent } from '@/test/fixtures/content';
-import type { LaunchpadContent } from '@/types';
+import type { AnalyticsEvent, LaunchpadContent } from '@/types';
 
 import { LaunchpadApp } from './LaunchpadApp';
 
@@ -97,12 +97,17 @@ function installYouTubeMock() {
   });
 }
 
-function renderLaunchpad(initialContentSlug: string | null = null, content = fixtureContent) {
+function renderLaunchpad(
+  initialContentSlug: string | null = null,
+  content = fixtureContent,
+  initialPanel: 'info' | null = null
+) {
   return render(
     <LaunchpadApp
       initialContent={content}
       initialCategories={fixtureCategories}
       initialContentSlug={initialContentSlug}
+      initialPanel={initialPanel}
     />
   );
 }
@@ -129,6 +134,10 @@ function desktopRail() {
 function expectHeading(title: string) {
   const collapsedTitle = title.replace(/\s+/g, '');
   return expect(screen.getByRole('heading', { name: new RegExp(collapsedTitle, 'i') })).toBeInTheDocument();
+}
+
+function storedEvents(): AnalyticsEvent[] {
+  return JSON.parse(window.localStorage.getItem('career-launchpad-events') ?? '[]') as AnalyticsEvent[];
 }
 
 function dispatchWheel(target: Element, deltaY: number, deltaX = 0) {
@@ -343,7 +352,7 @@ describe('LaunchpadApp feed navigation', () => {
   });
 
   it('waits to show feed onboarding until an existing Learn More overlay closes', async () => {
-    renderLaunchpad(fixtureContent[0].slug);
+    renderLaunchpad(fixtureContent[0].slug, fixtureContent, 'info');
     await flushAsyncWork();
 
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
@@ -353,6 +362,57 @@ describe('LaunchpadApp feed navigation', () => {
     await flushAsyncWork();
 
     expect(screen.getByRole('dialog', { name: /hey, you can scroll/i })).toBeInTheDocument();
+  });
+
+  it('opens a bare content permalink on the shared feed item without any modal first', async () => {
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path');
+
+    renderLaunchpad('nonlinear-career-path');
+    await flushAsyncWork();
+
+    const currentCard = screen.getByTestId('feed-media-card-video-nonlinear-path');
+    expect(currentCard).toHaveAttribute('data-current', 'true');
+    expect(currentCard).toHaveAttribute('aria-current', 'true');
+    expect(currentCard).toHaveStyle({ outline: 'none' });
+    expect(currentCard).toHaveFocus();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /play the career path/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /play ai tools/i })).not.toBeInTheDocument();
+    expect(players).toHaveLength(0);
+    expect(window.location.search).toBe('?content=nonlinear-career-path');
+  });
+
+  it('delays onboarding on a bare content permalink and cancels it when another overlay opens first', async () => {
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path');
+
+    renderLaunchpad('nonlinear-career-path');
+    await flushAsyncWork();
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(2499);
+    });
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/search careers/i)).toBeInTheDocument();
+  });
+
+  it('opens a panel permalink over the matching feed item', async () => {
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path&panel=info');
+
+    renderLaunchpad('nonlinear-career-path', fixtureContent, 'info');
+    await flushAsyncWork();
+
+    expect(screen.getByTestId('feed-media-card-video-nonlinear-path')).toHaveAttribute('data-current', 'true');
+    expect(screen.getByRole('dialog', { name: /the career path was not a straight line/i })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
   });
 
   it('moves the format label beside the category and keeps it off the desktop media frame', async () => {
@@ -470,6 +530,48 @@ describe('LaunchpadApp feed navigation', () => {
       'true'
     );
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+  });
+
+  it('copies a bare content permalink for a non-first feed item', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    renderLaunchpad();
+    await dismissFeedOnboarding();
+
+    act(() => {
+      dispatchWheel(navigationSurface(), 90);
+    });
+    await finishTransition();
+
+    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'Share' }));
+    await flushAsyncWork();
+
+    expect(writeText).toHaveBeenCalledTimes(1);
+    const copied = new URL(writeText.mock.calls[0][0]);
+    expect(copied.searchParams.get('content')).toBe('nonlinear-career-path');
+    expect(copied.searchParams.has('panel')).toBe(false);
+  });
+
+  it('copies a bare content permalink from an open Info panel', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    renderLaunchpad();
+
+    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'Info' }));
+    await flushAsyncWork();
+    fireEvent.click(within(screen.getByRole('dialog', { name: /ai tools/i })).getByRole('button', { name: 'Share' }));
+    await flushAsyncWork();
+
+    expect(window.location.search).toBe('?content=ai-tools-student-workflow&panel=info');
+    const copied = new URL(writeText.mock.calls.at(-1)?.[0]);
+    expect(copied.searchParams.get('content')).toBe('ai-tools-student-workflow');
+    expect(copied.searchParams.has('panel')).toBe(false);
   });
 
   it('removes the passive desktop scroll hint', () => {
@@ -717,6 +819,83 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/search careers/i)).not.toBeInTheDocument();
     expect(window.location.search).not.toContain('content=');
+  });
+
+  it('uses popstate content URLs to focus feed content and open or close the panel', async () => {
+    renderLaunchpad();
+    await dismissFeedOnboarding();
+
+    window.history.pushState({}, '', '/?content=nonlinear-career-path');
+    fireEvent.popState(window);
+    await flushAsyncWork();
+
+    expect(screen.getByTestId('feed-media-card-video-nonlinear-path')).toHaveAttribute('data-current', 'true');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    window.history.pushState({}, '', '/?content=nonlinear-career-path&panel=info');
+    fireEvent.popState(window);
+    await flushAsyncWork();
+
+    expect(screen.getByTestId('feed-media-card-video-nonlinear-path')).toHaveAttribute('data-current', 'true');
+    expect(screen.getByRole('dialog', { name: /the career path was not a straight line/i })).toBeInTheDocument();
+
+    window.history.pushState({}, '', '/?content=nonlinear-career-path');
+    fireEvent.popState(window);
+    await flushAsyncWork();
+
+    expect(screen.getByTestId('feed-media-card-video-nonlinear-path')).toHaveAttribute('data-current', 'true');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('lets back navigation close an in-app panel while keeping the feed item focused', async () => {
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path');
+    renderLaunchpad('nonlinear-career-path');
+    await flushAsyncWork();
+
+    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'Info' }));
+    await flushAsyncWork();
+
+    expect(window.location.search).toBe('?content=nonlinear-career-path&panel=info');
+    expect(screen.getByRole('dialog', { name: /the career path was not a straight line/i })).toBeInTheDocument();
+
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path');
+    fireEvent.popState(window);
+    await flushAsyncWork();
+
+    expect(screen.getByTestId('feed-media-card-video-nonlinear-path')).toHaveAttribute('data-current', 'true');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(window.location.search).toBe('?content=nonlinear-career-path');
+  });
+
+  it('tracks direct-link and in-app panel analytics without double-firing from URL writes', async () => {
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path');
+    const { unmount } = renderLaunchpad('nonlinear-career-path');
+    await flushAsyncWork();
+
+    let events = storedEvents();
+    expect(events.filter((event) => event.eventType === 'content_open' && event.contentId === 'video-nonlinear-path')).toHaveLength(1);
+    expect(events.filter((event) => event.eventType === 'learn_more_open' && event.contentId === 'video-nonlinear-path')).toHaveLength(0);
+
+    unmount();
+    cleanup();
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path&panel=info');
+    renderLaunchpad('nonlinear-career-path', fixtureContent, 'info');
+    await flushAsyncWork();
+
+    events = storedEvents();
+    expect(events.filter((event) => event.eventType === 'content_open' && event.contentId === 'video-nonlinear-path')).toHaveLength(1);
+    expect(events.filter((event) => event.eventType === 'learn_more_open' && event.contentId === 'video-nonlinear-path')).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: /close/i }));
+    await flushAsyncWork();
+    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'Info' }));
+    await flushAsyncWork();
+
+    events = storedEvents();
+    expect(events.filter((event) => event.eventType === 'content_open' && event.contentId === 'video-nonlinear-path')).toHaveLength(2);
+    expect(events.filter((event) => event.eventType === 'learn_more_open' && event.contentId === 'video-nonlinear-path')).toHaveLength(2);
   });
 });
 

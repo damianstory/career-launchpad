@@ -54,11 +54,13 @@ const BLUE = '#0092FF';
 const FEED_TRANSITION_MS = 280;
 const FEED_NAV_LOCK_MS = 320;
 const RAIL_FEEDBACK_MS = 1800;
+const SHARED_LINK_ONBOARDING_DELAY_MS = 2500;
 const BRAND_MARK_SRC = '/launchpad-logo.svg';
 
 type AutoplayMode = 'audible' | 'muted-fallback';
 type FeedDirection = 'next' | 'prev';
 type FeedMediaVariant = 'mobile' | 'desktop-immersive';
+type InitialPanel = 'info' | null;
 type RailFeedbackAction = 'share' | 'info';
 type RailFeedback = { action: RailFeedbackAction; contentId: string };
 
@@ -429,21 +431,41 @@ type LaunchpadAppProps = {
   initialContent: LaunchpadContent[];
   initialCategories: LaunchpadCategory[];
   initialContentSlug?: string | null;
+  initialPanel?: InitialPanel;
 };
 
 export function LaunchpadApp({
   initialContent,
   initialCategories,
   initialContentSlug = null,
+  initialPanel = null,
 }: LaunchpadAppProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const previewContent = useMemo(
+    () => initialContent.filter((content) => content.format !== 'playbook'),
+    [initialContent]
+  );
+  const unfilteredFeedContent = useMemo(
+    () => orderContentForFeed(previewContent, { categories: [], format: null }),
+    [previewContent]
+  );
+  const initialLinkedContent = useMemo(
+    () => getContentBySlug(previewContent, initialContentSlug ?? null),
+    [initialContentSlug, previewContent]
+  );
+  const initialFeedIndex = useMemo(() => {
+    if (!initialLinkedContent) return 0;
+    return Math.max(0, unfilteredFeedContent.findIndex((entry) => entry.id === initialLinkedContent.id));
+  }, [initialLinkedContent, unfilteredFeedContent]);
   const [filters, setFilters] = useState<ContentFilters>({ categories: [], format: null });
   const [query, setQuery] = useState('');
-  const [feedIdx, setFeedIdx] = useState(0);
+  const [feedIdx, setFeedIdx] = useState(initialFeedIndex);
   const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [selected, setSelected] = useState<LaunchpadContent | null>(null);
+  const [selected, setSelected] = useState<LaunchpadContent | null>(
+    initialPanel === 'info' ? (initialLinkedContent ?? null) : null
+  );
   const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [pathsDrawerOpen, setPathsDrawerOpen] = useState(false);
@@ -459,18 +481,16 @@ export function LaunchpadApp({
   const [navSurfaceElement, setNavSurfaceElement] = useState<HTMLDivElement | null>(null);
   const feedDeckRef = useRef<HTMLDivElement | null>(null);
   const navLockedUntilRef = useRef(0);
-  const processedInitialSlugRef = useRef<string | null>(null);
+  const processedInitialRouteRef = useRef<string | null>(null);
   const activePlayerRef = useRef<YouTubePlayerInstance | null>(null);
+  const sharedLinkOnboardingTimerRef = useRef<number | null>(null);
+  const currentFeedCardRef = useRef<HTMLDivElement | null>(null);
+  const focusedFeedIdRef = useRef<string | null>(null);
+  const [pendingFeedFocusId, setPendingFeedFocusId] = useState<string | null>(
+    initialLinkedContent && initialPanel !== 'info' ? initialLinkedContent.id : null
+  );
   const isMobile = useIsMobile();
   const reducedMotion = usePrefersReducedMotion();
-  const previewContent = useMemo(
-    () => initialContent.filter((content) => content.format !== 'playbook'),
-    [initialContent]
-  );
-  const unfilteredFeedContent = useMemo(
-    () => orderContentForFeed(previewContent, { categories: [], format: null }),
-    [previewContent]
-  );
 
   const filteredContent = useMemo(() => {
     const base = applyContentFilters(previewContent, filters);
@@ -509,6 +529,59 @@ export function LaunchpadApp({
     railFeedbackTimer.current = window.setTimeout(() => setActiveRailFeedback(null), RAIL_FEEDBACK_MS);
   }, []);
 
+  const cancelSharedLinkOnboarding = useCallback(() => {
+    if (!sharedLinkOnboardingTimerRef.current) return;
+    window.clearTimeout(sharedLinkOnboardingTimerRef.current);
+    sharedLinkOnboardingTimerRef.current = null;
+    setOnboardingChecked(true);
+    setFeedOnboardingOpen(false);
+  }, []);
+
+  const focusFeedContent = useCallback(
+    (target: LaunchpadContent, options: { panel: boolean; focusFeed?: boolean }) => {
+      const nextIdx = Math.max(0, unfilteredFeedContent.findIndex((entry) => entry.id === target.id));
+
+      activePlayerRef.current?.pauseVideo?.();
+      setPlayingContentId(null);
+      setSearchOpen(false);
+      setPathsDrawerOpen(false);
+      setFormatsDrawerOpen(false);
+      setFilters({ categories: [], format: null });
+      setQuery('');
+      setPrevFilterKey('||');
+      setNavDirection('next');
+      navLockedUntilRef.current = 0;
+      setFeedIdx(nextIdx);
+      setSelected(options.panel ? target : null);
+      if (options.focusFeed && !options.panel) {
+        focusedFeedIdRef.current = null;
+        setPendingFeedFocusId(target.id);
+      }
+    },
+    [unfilteredFeedContent]
+  );
+
+  const openSearch = useCallback(() => {
+    cancelSharedLinkOnboarding();
+    setSearchOpen(true);
+  }, [cancelSharedLinkOnboarding]);
+
+  const setPathsDrawerOpenWithOnboardingCancel = useCallback(
+    (open: boolean) => {
+      if (open) cancelSharedLinkOnboarding();
+      setPathsDrawerOpen(open);
+    },
+    [cancelSharedLinkOnboarding]
+  );
+
+  const setFormatsDrawerOpenWithOnboardingCancel = useCallback(
+    (open: boolean) => {
+      if (open) cancelSharedLinkOnboarding();
+      setFormatsDrawerOpen(open);
+    },
+    [cancelSharedLinkOnboarding]
+  );
+
   // Initial load
   useEffect(() => {
     queueMicrotask(() => setSavedIds(readSavedIds()));
@@ -517,43 +590,84 @@ export function LaunchpadApp({
 
   useEffect(() => {
     queueMicrotask(() => {
+      if (initialLinkedContent && initialPanel !== 'info') {
+        sharedLinkOnboardingTimerRef.current = window.setTimeout(() => {
+          sharedLinkOnboardingTimerRef.current = null;
+          setOnboardingChecked(true);
+          setFeedOnboardingOpen(true);
+        }, SHARED_LINK_ONBOARDING_DELAY_MS);
+        return;
+      }
+
       setOnboardingChecked(true);
       setFeedOnboardingOpen(true);
     });
-  }, []);
+    return () => {
+      if (sharedLinkOnboardingTimerRef.current) {
+        window.clearTimeout(sharedLinkOnboardingTimerRef.current);
+        sharedLinkOnboardingTimerRef.current = null;
+      }
+    };
+  }, [initialLinkedContent, initialPanel]);
 
   useEffect(() => {
     return () => {
       if (toastTimer.current) window.clearTimeout(toastTimer.current);
       if (railFeedbackTimer.current) window.clearTimeout(railFeedbackTimer.current);
+      if (sharedLinkOnboardingTimerRef.current) window.clearTimeout(sharedLinkOnboardingTimerRef.current);
     };
   }, []);
 
   // Deep link
   useEffect(() => {
-    const linked = getContentBySlug(previewContent, initialContentSlug ?? null);
-    if (initialContentSlug && processedInitialSlugRef.current === initialContentSlug) {
-      return;
+    const routeKey = `${initialContentSlug ?? ''}|${initialPanel ?? ''}`;
+
+    if (initialContentSlug && processedInitialRouteRef.current !== routeKey) {
+      processedInitialRouteRef.current = routeKey;
+      if (initialLinkedContent) {
+        queueMicrotask(() => {
+          focusFeedContent(initialLinkedContent, {
+            panel: initialPanel === 'info',
+            focusFeed: initialPanel !== 'info',
+          });
+        });
+        trackEvent('content_open', { contentId: initialLinkedContent.id, metadata: { source: 'direct_link' } });
+        if (initialPanel === 'info') {
+          trackEvent('learn_more_open', { contentId: initialLinkedContent.id, metadata: { source: 'direct_link' } });
+        }
+      } else {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('content');
+        params.delete('panel');
+        const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+        router.replace(nextUrl);
+        queueMicrotask(() => showToast('Content not available'));
+      }
     }
-    if (linked) {
-      processedInitialSlugRef.current = initialContentSlug;
-      queueMicrotask(() => setSelected(linked));
-      trackEvent('learn_more_open', { contentId: linked.id, metadata: { source: 'direct_link' } });
-    } else if (initialContentSlug) {
-      processedInitialSlugRef.current = initialContentSlug;
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('content');
-      const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-      router.replace(nextUrl);
-      queueMicrotask(() => showToast('Content not available'));
-    }
+
     const onPop = () => {
       const next = new URLSearchParams(window.location.search);
-      setSelected(getContentBySlug(previewContent, next.get('content')) ?? null);
+      const linked = getContentBySlug(previewContent, next.get('content'));
+      const panel = next.get('panel') === 'info';
+      if (linked) {
+        focusFeedContent(linked, { panel, focusFeed: !panel });
+      } else {
+        setSelected(null);
+      }
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, [initialContentSlug, pathname, previewContent, router, searchParams, showToast]);
+  }, [
+    focusFeedContent,
+    initialContentSlug,
+    initialLinkedContent,
+    initialPanel,
+    pathname,
+    previewContent,
+    router,
+    searchParams,
+    showToast,
+  ]);
 
   const toggleCategory = useCallback((slug: CategorySlug) => {
     setFilters((current) => {
@@ -575,21 +689,24 @@ export function LaunchpadApp({
     trackEvent('format_filter', { metadata: { format: format ?? 'all' } });
   }, []);
 
-  const openPanel = useCallback((target: LaunchpadContent, source: string) => {
-    activePlayerRef.current?.pauseVideo?.();
-    setPlayingContentId(null);
-    setSelected(target);
-    const url = new URL(window.location.href);
-    url.searchParams.set('content', target.slug);
-    window.history.pushState({ contentSlug: target.slug }, '', url);
-    trackEvent('content_open', { contentId: target.id, metadata: { source } });
-    trackEvent('learn_more_open', { contentId: target.id, metadata: { source } });
-  }, []);
+  const openPanel = useCallback(
+    (target: LaunchpadContent, source: string) => {
+      cancelSharedLinkOnboarding();
+      focusFeedContent(target, { panel: true });
+      const url = new URL(window.location.href);
+      url.searchParams.set('content', target.slug);
+      url.searchParams.set('panel', 'info');
+      window.history.pushState({ contentSlug: target.slug, panel: 'info' }, '', url);
+      trackEvent('content_open', { contentId: target.id, metadata: { source } });
+      trackEvent('learn_more_open', { contentId: target.id, metadata: { source } });
+    },
+    [cancelSharedLinkOnboarding, focusFeedContent]
+  );
 
   const closePanel = useCallback(() => {
     setSelected(null);
     const url = new URL(window.location.href);
-    url.searchParams.delete('content');
+    url.searchParams.delete('panel');
     window.history.replaceState({}, '', url);
   }, []);
 
@@ -632,6 +749,7 @@ export function LaunchpadApp({
     async (target: LaunchpadContent) => {
       const url = new URL(window.location.href);
       url.searchParams.set('content', target.slug);
+      url.searchParams.delete('panel');
       try {
         await window.navigator.clipboard.writeText(url.toString());
       } catch {
@@ -679,6 +797,13 @@ export function LaunchpadApp({
   const shouldShowFeedOnboarding =
     onboardingChecked && feedOnboardingOpen && !selected && !searchOpen && !pathsDrawerOpen && !formatsDrawerOpen;
 
+  useEffect(() => {
+    if (!pendingFeedFocusId || item?.id !== pendingFeedFocusId || selected) return;
+    if (focusedFeedIdRef.current === pendingFeedFocusId) return;
+    currentFeedCardRef.current?.focus({ preventScroll: true });
+    focusedFeedIdRef.current = pendingFeedFocusId;
+  }, [item?.id, pendingFeedFocusId, selected]);
+
   useFeedNavigation(navSurfaceElement, {
     disabled: Boolean(selected || searchOpen || shouldShowFeedOnboarding),
     onNavigate: navigateFeed,
@@ -711,7 +836,7 @@ export function LaunchpadApp({
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchOpen(true);
+        openSearch();
         return;
       }
       if (selected || searchOpen || shouldShowFeedOnboarding) return;
@@ -734,6 +859,7 @@ export function LaunchpadApp({
   }, [
     effectivePlayingContentId,
     item,
+    openSearch,
     playItem,
     searchOpen,
     selected,
@@ -788,12 +914,13 @@ export function LaunchpadApp({
       showRailFeedback('share', item.id);
       void shareItem(item);
     },
-    onSearch: () => setSearchOpen(true),
+    onSearch: openSearch,
     pathsDrawerOpen,
-    setPathsDrawerOpen,
+    setPathsDrawerOpen: setPathsDrawerOpenWithOnboardingCancel,
     formatsDrawerOpen,
-    setFormatsDrawerOpen,
+    setFormatsDrawerOpen: setFormatsDrawerOpenWithOnboardingCancel,
     feedDeckRef,
+    currentFeedCardRef,
     navDirection,
     reducedMotion,
     isPlaying: effectivePlayingContentId === item.id,
@@ -917,6 +1044,7 @@ type StageProps = {
   setFormatsDrawerOpen: (open: boolean) => void;
   navSurfaceRef: (node: HTMLDivElement | null) => void;
   feedDeckRef: RefObject<HTMLDivElement | null>;
+  currentFeedCardRef: RefObject<HTMLDivElement | null>;
   navDirection: FeedDirection;
   reducedMotion: boolean;
   isPlaying: boolean;
@@ -947,6 +1075,7 @@ function DesktopStage({
   setFormatsDrawerOpen,
   navSurfaceRef,
   feedDeckRef,
+  currentFeedCardRef,
   navDirection,
   reducedMotion,
   isPlaying,
@@ -1215,6 +1344,7 @@ function DesktopStage({
         >
           <FeedMediaDeck
             deckRef={feedDeckRef}
+            currentCardRef={currentFeedCardRef}
             item={item}
             nextItem={nextItem}
             blockColor={blockColor}
@@ -1262,6 +1392,7 @@ function MobileStage({
   setFormatsDrawerOpen,
   navSurfaceRef,
   feedDeckRef,
+  currentFeedCardRef,
   navDirection,
   reducedMotion,
   isPlaying,
@@ -1364,6 +1495,7 @@ function MobileStage({
       <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
         <FeedMediaDeck
           deckRef={feedDeckRef}
+          currentCardRef={currentFeedCardRef}
           item={item}
           nextItem={null}
           blockColor={CATEGORY_BLOCK_BG[item.primaryCategory]}
@@ -1424,6 +1556,7 @@ type MediaDeckCard = {
 
 function FeedMediaDeck({
   deckRef,
+  currentCardRef,
   item,
   nextItem,
   blockColor,
@@ -1444,6 +1577,7 @@ function FeedMediaDeck({
   onPlayerReady,
 }: {
   deckRef: RefObject<HTMLDivElement | null>;
+  currentCardRef: RefObject<HTMLDivElement | null>;
   item: LaunchpadContent;
   nextItem: LaunchpadContent | null;
   blockColor: string;
@@ -1523,8 +1657,8 @@ function FeedMediaDeck({
 
   const cardStyle = (role: 'current' | 'previous'): CSSProperties => {
     const baseStyle: CSSProperties = isMobileVariant
-      ? { position: 'absolute', inset: 0 }
-      : { position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' };
+      ? { position: 'absolute', inset: 0, outline: 'none' }
+      : { position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', outline: 'none' };
 
     if (!transitioning || reducedMotion) {
       return { ...baseStyle, transform: 'translate3d(0, 0, 0)', opacity: 1 };
@@ -1572,7 +1706,14 @@ function FeedMediaDeck({
           />
         </div>
       )}
-      <div data-testid={`feed-media-card-${current.item.id}`} style={cardStyle('current')}>
+      <div
+        ref={currentCardRef}
+        data-testid={`feed-media-card-${current.item.id}`}
+        data-current="true"
+        aria-current="true"
+        tabIndex={-1}
+        style={cardStyle('current')}
+      >
         <MediaStage
           item={current.item}
           nextItem={nextItem}
