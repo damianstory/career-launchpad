@@ -1,7 +1,7 @@
 # Career LaunchPAD Widget — Handoff to myBlueprint
 
 Self-contained HTML/CSS/JS widget for the myBlueprint student dashboard.
-Drives traffic to the public Career LaunchPAD site at https://career-launchpad-woad.vercel.app/.
+Drives traffic to the public Career LaunchPAD site at https://launchpad.myblueprint.ca/.
 
 **Contact:** Damian Matheson (damian.matheson@myblueprint.ca)
 **Companion spec:** [../../superpowers/specs/2026-05-14-career-launchpad-widget-design.md](../../superpowers/specs/2026-05-14-career-launchpad-widget-design.md)
@@ -36,7 +36,7 @@ On the myBlueprint student dashboard:
 4. **Every `<button>` has `type="button"`** — prevents accidental form submission
    if the widget lands inside an ancestor `<form>` in the dashboard markup.
 5. **Replace the thumbnail `src` attributes** (currently relative paths
-   `assets/thumb-1.jpg` and `assets/thumb-2.jpg`) with the final myBlueprint
+   `assets/thumb-1.png` and `assets/thumb-2.png`) with the final myBlueprint
    CDN URLs. The actual image files for swapping are committed in this directory
    under `assets/`.
 
@@ -72,8 +72,8 @@ All three carry UTM parameters for GA4 attribution. The QR code encodes the
 |---|---|
 | 1 | Specific launchpad video with `?utm_source=myblueprint&utm_medium=widget&utm_campaign=career-launchpad-v1&utm_content=card-1` |
 | 2 | Specific launchpad video with `utm_content=card-2` |
-| 3 (QR) | `https://career-launchpad-woad.vercel.app/` with `utm_content=qr-handoff` |
-| View more | `https://career-launchpad-woad.vercel.app/` with `utm_content=view-more` — secondary CTA in the header for students not drawn to the two seeded videos |
+| 3 (QR) | `https://launchpad.myblueprint.ca/` with `utm_content=qr-handoff` |
+| View more | `https://launchpad.myblueprint.ca/` with `utm_content=view-more` — secondary CTA in the header for students not drawn to the two seeded videos |
 
 ## Card 3 swappability
 
@@ -81,7 +81,7 @@ Card 3 ships in QR mode (`.cl-card--qr` modifier, base64 inline image). To swap
 to a regular thumbnail:
 
 1. Remove the `cl-card--qr` class from the third `<li>`.
-2. Replace the `<img src="data:image/png;base64,…">` with `<img src="https://your-cdn/...jpg">`.
+2. Replace the `<img src="data:image/png;base64,…">` with `<img src="https://your-cdn/...png">`.
 3. Update the `alt` text to describe the new image (not the QR URL).
 4. Update the `<a href="...">` to point at the new destination — include the UTM string
    with a new `utm_content` value (e.g. `card-3-new-content`).
