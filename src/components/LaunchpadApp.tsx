@@ -35,7 +35,7 @@ import {
   getContentBySlug,
   getRelatedContent,
   getYouTubeId,
-  orderContentForFeed,
+  shuffleContentForVisit,
 } from '@/lib/content';
 import { trackEvent } from '@/lib/analytics';
 import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types';
@@ -432,6 +432,7 @@ type LaunchpadAppProps = {
   initialCategories: LaunchpadCategory[];
   initialContentSlug?: string | null;
   initialPanel?: InitialPanel;
+  feedSeed: string;
 };
 
 export function LaunchpadApp({
@@ -439,6 +440,7 @@ export function LaunchpadApp({
   initialCategories,
   initialContentSlug = null,
   initialPanel = null,
+  feedSeed,
 }: LaunchpadAppProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -448,8 +450,8 @@ export function LaunchpadApp({
     [initialContent]
   );
   const unfilteredFeedContent = useMemo(
-    () => orderContentForFeed(previewContent, { categories: [], format: null }),
-    [previewContent]
+    () => shuffleContentForVisit(previewContent, feedSeed),
+    [feedSeed, previewContent]
   );
   const initialLinkedContent = useMemo(
     () => getContentBySlug(previewContent, initialContentSlug ?? null),
@@ -493,15 +495,14 @@ export function LaunchpadApp({
   const reducedMotion = usePrefersReducedMotion();
 
   const filteredContent = useMemo(() => {
-    const base = applyContentFilters(previewContent, filters);
-    const visible = query.trim()
-      ? base.filter((item) => {
-          const q = query.trim().toLowerCase();
-          return [item.title, item.description, ...item.categories, item.format].join(' ').toLowerCase().includes(q);
-        })
-      : base;
-    return orderContentForFeed(visible, filters);
-  }, [filters, previewContent, query]);
+    const base = applyContentFilters(unfilteredFeedContent, filters);
+    if (!query.trim()) return base;
+
+    const q = query.trim().toLowerCase();
+    return base.filter((item) =>
+      [item.title, item.description, ...item.categories, item.format].join(' ').toLowerCase().includes(q)
+    );
+  }, [filters, query, unfilteredFeedContent]);
 
   // Reset feedIdx when filters/query change — React-recommended "store info from
   // previous renders" pattern: detect the change during render and reset before paint.
@@ -996,7 +997,7 @@ export function LaunchpadApp({
 
       {searchOpen && (
         <SearchModal
-          content={previewContent}
+          content={unfilteredFeedContent}
           categories={initialCategories}
           mobile={isMobile}
           onClose={() => setSearchOpen(false)}
@@ -2542,7 +2543,7 @@ function SearchModal({
   }, [onClose]);
 
   const results = useMemo(() => {
-    if (!q.trim()) return orderContentForFeed(content, { categories: [], format: null }).slice(0, 6);
+    if (!q.trim()) return content.slice(0, 6);
     const needle = q.trim().toLowerCase();
     return content.filter((entry) =>
       [entry.title, entry.description, ...entry.categories, entry.format]

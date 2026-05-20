@@ -100,7 +100,8 @@ function installYouTubeMock() {
 function renderLaunchpad(
   initialContentSlug: string | null = null,
   content = fixtureContent,
-  initialPanel: 'info' | null = null
+  initialPanel: 'info' | null = null,
+  feedSeed = 'test-9'
 ) {
   return render(
     <LaunchpadApp
@@ -108,6 +109,7 @@ function renderLaunchpad(
       initialCategories={fixtureCategories}
       initialContentSlug={initialContentSlug}
       initialPanel={initialPanel}
+      feedSeed={feedSeed}
     />
   );
 }
@@ -444,10 +446,10 @@ describe('LaunchpadApp feed navigation', () => {
     });
   });
 
-  it('starts with video content even when articles arrive first from the server', () => {
+  it('uses the visit shuffle even when articles arrive first from the server', () => {
     const articleFirst = [fixtureContent[1], fixtureContent[0], fixtureContent[3], fixtureContent[2], fixtureContent[4]];
 
-    renderLaunchpad(null, articleFirst);
+    renderLaunchpad(null, articleFirst, null, 'seed-2');
 
     expectHeading('AI Tools That Make Schoolwork Less Messy');
     expect(screen.getByTestId('desktop-format-pill')).toHaveTextContent('Video');
@@ -633,7 +635,7 @@ describe('LaunchpadApp feed navigation', () => {
     fireEvent.click(primaryCta);
     await flushAsyncWork();
 
-    expect(screen.getByRole('dialog', { name: /the skills that travel/i })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /what your first internship/i })).toBeInTheDocument();
   });
 
   it('keeps the Playbooks filter option but excludes playbook examples from the preview feed', () => {
@@ -745,7 +747,14 @@ describe('LaunchpadApp feed navigation', () => {
     );
   });
 
-  it('shows video-first default search results before articles', () => {
+  it('uses the visit shuffle for the first visible feed card', async () => {
+    renderLaunchpad(null, fixtureContent, null, 'seed-1');
+    await dismissFeedOnboarding();
+
+    expectHeading('An Article With No Learn More Copy');
+  });
+
+  it('shows shuffled default search results', () => {
     const articleBase = fixtureContent[1];
     const videoBase = fixtureContent[0];
     const content: LaunchpadContent[] = [
@@ -760,22 +769,19 @@ describe('LaunchpadApp feed navigation', () => {
       ),
     ];
 
-    renderLaunchpad(null, content);
+    renderLaunchpad(null, content, null, 'seed-1');
     fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
 
     const results = screen.getAllByTestId('search-result');
     expect(results).toHaveLength(6);
-    expect(results.map((result) => result.dataset.format)).toEqual([
-      'video',
-      'video',
-      'video',
-      'video',
-      'video',
-      'video',
+    expect(results.map((result) => result.textContent)).toEqual([
+      'Article Barticle · Mindsets',
+      'Video Result 6video · Life Skills',
+      'Video Result 4video · Life Skills',
+      'Video Result 5video · Life Skills',
+      'Video Result 1video · Life Skills',
+      'Video Result 3video · Life Skills',
     ]);
-    expect(results.map((result) => result.textContent)).toEqual(
-      expect.arrayContaining(['Video Result 1video · Life Skills'])
-    );
   });
 
   it('keeps typed search results in matching content order', () => {
@@ -790,15 +796,42 @@ describe('LaunchpadApp feed navigation', () => {
       title: 'Alpha Video',
     });
 
-    renderLaunchpad(null, [articleMatch, videoMatch]);
+    renderLaunchpad(null, [articleMatch, videoMatch], null, 'seed-1');
     fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
     fireEvent.change(screen.getByPlaceholderText(/search careers/i), { target: { value: 'alpha' } });
 
     const results = screen.getAllByTestId('search-result');
     expect(results.map((result) => result.textContent)).toEqual([
-      'Alpha Articlearticle · Mindsets',
       'Alpha Videovideo · Life Skills',
+      'Alpha Articlearticle · Mindsets',
     ]);
+  });
+
+  it('preserves shuffled-relative order when filtering by category', async () => {
+    renderLaunchpad(null, fixtureContent, null, 'seed-1');
+    await dismissFeedOnboarding();
+
+    fireEvent.click(screen.getByRole('button', { name: /10 paths/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Mindsets/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Done/i }));
+
+    expectHeading('An Article With No Learn More Copy');
+    dispatchWheel(navigationSurface(), 180);
+    await finishTransition();
+    expectHeading('The Skills That Travel With You');
+  });
+
+  it('preserves shuffled-relative order when filtering by format', async () => {
+    renderLaunchpad(null, fixtureContent, null, 'seed-1');
+    await dismissFeedOnboarding();
+
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Videos/i }));
+
+    expectHeading('The Career Path Was Not a Straight Line');
+    dispatchWheel(navigationSurface(), 180);
+    await finishTransition();
+    expectHeading('AI Tools That Make Schoolwork Less Messy');
   });
 
   it('jumps from a search result to the feed card without opening Learn More', async () => {
@@ -822,7 +855,7 @@ describe('LaunchpadApp feed navigation', () => {
   });
 
   it('uses popstate content URLs to focus feed content and open or close the panel', async () => {
-    renderLaunchpad();
+    renderLaunchpad(null, fixtureContent, null, 'seed-1');
     await dismissFeedOnboarding();
 
     window.history.pushState({}, '', '/?content=nonlinear-career-path');
@@ -987,7 +1020,7 @@ describe('LaunchpadApp playback', () => {
     });
     await finishTransition();
 
-    expectHeading('The Skills That Travel With You');
+    expectHeading('What Your First Internship Actually Teaches You');
     expect(screen.queryByTestId('youtube-scroll-overlay')).not.toBeInTheDocument();
   });
 
@@ -1060,7 +1093,7 @@ describe('LaunchpadApp playback', () => {
   });
 
   it('auto-advances to an article and stops playback when the ended video is followed by non-video content', async () => {
-    renderLaunchpad(null, [fixtureContent[0], fixtureContent[1]]);
+    renderLaunchpad(null, [fixtureContent[0], fixtureContent[1]], null, 'seed-2');
 
     fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
     act(() => {

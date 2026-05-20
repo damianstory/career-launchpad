@@ -27,6 +27,7 @@ async function LaunchpadPage({
   const initialContentSlug = Array.isArray(params.content) ? params.content[0] : params.content;
   const panelParam = Array.isArray(params.panel) ? params.panel[0] : params.panel;
   const { items, categories } = await getLaunchpadContent();
+  const feedSeed = crypto.randomUUID();
 
   return (
     <LaunchpadApp
@@ -34,6 +35,7 @@ async function LaunchpadPage({
       initialCategories={categories}
       initialContentSlug={initialContentSlug ?? null}
       initialPanel={panelParam === 'info' ? 'info' : null}
+      feedSeed={feedSeed}
     />
   );
 }

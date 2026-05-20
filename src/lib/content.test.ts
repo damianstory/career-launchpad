@@ -7,7 +7,7 @@ import {
   getContentBySlug,
   getRelatedContent,
   getYouTubeId,
-  orderContentForFeed,
+  shuffleContentForVisit,
 } from './content';
 
 describe('content filtering', () => {
@@ -41,51 +41,54 @@ describe('content filtering', () => {
 
     expect(result.map((item) => item.id)).toEqual(['skills-on-job', 'mindset-only']);
   });
+
+  it('preserves matching item order', () => {
+    const content: LaunchpadContent[] = [
+      { ...fixtureContent[1], id: 'first-match', categories: ['mindsets'], primaryCategory: 'mindsets' },
+      { ...fixtureContent[0], id: 'non-match', categories: ['life-skills'], primaryCategory: 'life-skills' },
+      { ...fixtureContent[4], id: 'second-match', categories: ['mindsets'], primaryCategory: 'mindsets' },
+    ];
+
+    const result = applyContentFilters(content, {
+      categories: ['mindsets'],
+      format: null,
+    });
+
+    expect(result.map((item) => item.id)).toEqual(['first-match', 'second-match']);
+  });
 });
 
-describe('feed ordering', () => {
-  it('promotes videos first when no format filter is selected', () => {
-    const articleFirst = [fixtureContent[1], fixtureContent[0], fixtureContent[3], fixtureContent[2]];
-
-    const result = orderContentForFeed(articleFirst, { categories: [], format: null });
-
-    expect(result.map((item) => item.slug)).toEqual([
-      'ai-tools-student-workflow',
+describe('visit shuffle', () => {
+  it('returns the same order for the same seed', () => {
+    expect(shuffleContentForVisit(fixtureContent, 'seed-1').map((item) => item.slug)).toEqual([
+      'article-empty-learn-more',
+      'first-internship-real-talk',
       'nonlinear-career-path',
       'future-proof-skills',
-      'first-internship-real-talk',
+      'ai-tools-student-workflow',
     ]);
   });
 
-  it('keeps videos first inside a category when no format filter is selected', () => {
-    const categoryContent: LaunchpadContent[] = [
-      {
-        ...fixtureContent[1],
-        id: 'article-life-skills',
-        slug: 'article-life-skills',
-        categories: ['life-skills'],
-        primaryCategory: 'life-skills',
-      },
-      fixtureContent[0],
-      {
-        ...fixtureContent[3],
-        id: 'article-life-skills-2',
-        slug: 'article-life-skills-2',
-        categories: ['life-skills'],
-        primaryCategory: 'life-skills',
-      },
-    ];
-
-    const filtered = applyContentFilters(categoryContent, { categories: ['life-skills'], format: null });
-    const result = orderContentForFeed(filtered, { categories: ['life-skills'], format: null });
-
-    expect(result.map((item) => item.format)).toEqual(['video', 'article', 'article']);
+  it('returns different fixture-derived orders for different seeds', () => {
+    expect(shuffleContentForVisit(fixtureContent, 'seed-2').map((item) => item.slug)).toEqual([
+      'future-proof-skills',
+      'ai-tools-student-workflow',
+      'nonlinear-career-path',
+      'first-internship-real-talk',
+      'article-empty-learn-more',
+    ]);
   });
 
-  it('preserves explicit format-filter order', () => {
-    const articleFirst = [fixtureContent[1], fixtureContent[0], fixtureContent[3], fixtureContent[2]];
+  it('does not mutate the source list', () => {
+    const source = [...fixtureContent];
 
-    expect(orderContentForFeed(articleFirst, { categories: [], format: 'video' })).toEqual(articleFirst);
+    shuffleContentForVisit(source, 'seed-1');
+
+    expect(source).toEqual(fixtureContent);
+  });
+
+  it('returns an empty array for empty input', () => {
+    expect(shuffleContentForVisit([], 'seed-1')).toEqual([]);
   });
 });
 
