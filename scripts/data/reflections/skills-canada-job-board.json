@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "label": "skills-canada-job-board",
+    "expected_count": 13
+  },
+  "rows": [
+    {
+      "id": "skills-canada-094",
+      "title": "Build your future in skilled trades",
+      "reflection": "Most jobs ask you to feel productive without showing anyone what you did that day. As you think about your own preferences, would you rather end a workday with something visible you can point at, or with progress that only you and your team can see?"
+    },
+    {
+      "id": "skills-canada-095",
+      "title": "BOOMING Skilled Trades in Canada Can Pay Up to C$100,000 a Year?",
+      "reflection": "Big trade salaries are real, but they usually belong to people who picked a specific certification carefully. As you think about your own next step, are you the kind of person who would research the credential first, or follow the work and figure that out later?"
+    },
+    {
+      "id": "skills-canada-110",
+      "title": "Industrial Mechanic | $78,900 to repair and maintain machines in factories and warehouses",
+      "reflection": "Some careers reward people who get energized when something breaks. As you think about your own workday, would you rather walk into predictable routine, or into a problem you have never seen before that someone needs solved by the end of the shift?"
+    },
+    {
+      "id": "skills-canada-112",
+      "title": "Mechatronics Technician | $104,690 to test, repair, and maintain electromechanical machines",
+      "reflection": "Most jobs ask you to specialize in one discipline; a few sit at the intersection of several. As you think about your own interests, would you rather go deep in one field, or work somewhere that requires you to be useful in a few at once?"
+    },
+    {
+      "id": "skills-canada-123",
+      "title": "What does an Aerospace Engineer do (Salaries and Opportunities)",
+      "reflection": "Some careers reward speed; others reward being right even if it takes years. As you think about your own pace, which would feel more like you: shipping something every few weeks, or working on one thing that has to be perfect before it ever leaves the ground?"
+    },
+    {
+      "id": "skills-canada-126",
+      "title": "What is Automotive Technology?",
+      "reflection": "Some industries you can master once; others ask you to relearn the basics every few years. As you think about your own appetite for change, do you want a career where the fundamentals stay the same, or one where the ground shifts and you stay current?"
+    },
+    {
+      "id": "skills-canada-135",
+      "title": "The BEST Careers in Canada right now",
+      "reflection": "Lists of best careers are usually written for the year they are published. As you think about your own future, what would change if you looked for jobs that are quietly short on workers, instead of jobs that are loudly in fashion?"
+    },
+    {
+      "id": "skills-canada-139",
+      "title": "What Is Graphic Design? A Simple Motion Graphic For Beginner Graphic Designer",
+      "reflection": "Most students picture creative jobs as expressing themselves all day. As you think about creative work you might do, how would it feel if most of the time you were solving someone else's problem, in their voice, instead of your own?"
+    },
+    {
+      "id": "skills-canada-141",
+      "title": "How Does Animation Work?",
+      "reflection": "Creative jobs are sometimes more about iteration than invention. As you think about your own patience, would you rather build something quickly from your own idea, or spend months polishing someone else's vision until it feels right?"
+    },
+    {
+      "id": "skills-canada-145",
+      "title": "Electrical and Electronic Engineering Technologists and Technician Career Video",
+      "reflection": "Some careers translate between people who design and people who build. As you think about your own way of working, would you rather be the one drawing up the plan, the one realizing it physically, or the one in the middle making the handoff actually work?"
+    },
+    {
+      "id": "skills-canada-147",
+      "title": "Web Development Explained in 60 Seconds",
+      "reflection": "Some careers ask you to commit four years before you can earn anything. As you think about your own next step, what would it change if you knew a real job was possible in months, not years, and the cost was mostly your own time?"
+    },
+    {
+      "id": "skills-canada-152",
+      "title": "What is a Mechanical Engineer?",
+      "reflection": "Some careers commit you to a narrow lane; others keep your options open for a long time. As you think about your own next step, do you want to feel certain of the destination, or comfortable not knowing it yet and ready to change direction?"
+    },
+    {
+      "id": "skills-canada-155",
+      "title": "Job Talks - Cabinetmaker - Lynn Describes What it Takes to be a Cabinetmaker",
+      "reflection": "In many skilled trades, the technical work depends on understanding what the customer actually wants. As you think about your own strengths, do you trust yourself more on the building side, the listening side, or the part where you turn one into the other?"
+    }
+  ]
+}

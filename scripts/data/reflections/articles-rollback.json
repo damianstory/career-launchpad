@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "label": "articles",
+    "expected_count": 7
+  },
+  "rows": [
+    {
+      "id": "12ea285e-557e-4f12-856b-2db012af7721",
+      "previous_reflection": null
+    },
+    {
+      "id": "1cf7ce0f-fe0a-4336-a923-770928620196",
+      "previous_reflection": null
+    },
+    {
+      "id": "1ec760f3-60e8-4940-ab8b-6f534d1db91c",
+      "previous_reflection": null
+    },
+    {
+      "id": "5b776a32-411a-439c-b834-2761902d40ab",
+      "previous_reflection": null
+    },
+    {
+      "id": "ac04d4a2-80d9-480d-a823-5722e3634b72",
+      "previous_reflection": null
+    },
+    {
+      "id": "cf5cbfe4-30fa-4c27-aa9b-d9f5a2b33405",
+      "previous_reflection": null
+    },
+    {
+      "id": "fd0980f6-911b-4a3e-9ae7-b1d5a71b0cf3",
+      "previous_reflection": null
+    }
+  ]
+}

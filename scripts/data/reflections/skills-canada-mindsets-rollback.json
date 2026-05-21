@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "label": "skills-canada-mindsets",
+    "expected_count": 8
+  },
+  "rows": [
+    {
+      "id": "skills-canada-035",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-067",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-078",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-079",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-096",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-099",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-100",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-109",
+      "previous_reflection": null
+    }
+  ]
+}

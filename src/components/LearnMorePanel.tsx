@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Heart,
   Play,
+  Quote,
   Share2,
   X,
 } from 'lucide-react';
@@ -157,15 +158,6 @@ export function LearnMorePanel({
 
           <div ref={bodyRef} data-testid="learn-more-body" className="learn-more-body">
             <div className="learn-more-top">
-              <div className="learn-more-poster">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.thumbnailUrl} alt="" />
-                {item.format === 'video' ? (
-                  <div className="learn-more-play-marker" aria-hidden="true">
-                    <Play size={21} />
-                  </div>
-                ) : null}
-              </div>
               <div className="learn-more-intro">
                 <Dialog.Title asChild>
                   <h1
@@ -212,6 +204,14 @@ export function LearnMorePanel({
                 <p>{item.learnMore.takeaway}</p>
               </div>
             ) : null}
+
+            <div className="learn-more-reflection">
+              <div className="learn-more-reflection-label">
+                <Quote size={14} aria-hidden="true" />
+                Reflection
+              </div>
+              <p>{item.learnMore.reflection}</p>
+            </div>
 
             {related.length > 0 ? (
               <PanelSection title="Related">

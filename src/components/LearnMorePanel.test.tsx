@@ -90,6 +90,32 @@ describe('LearnMorePanel', () => {
     expect(screen.getByRole('button', { name: 'Unlike' })).toHaveAttribute('data-active', 'true');
   });
 
+  it('does not render a thumbnail image or play marker inside the modal', () => {
+    const video = fixtureContent.find((entry) => entry.id === 'video-ai-tools');
+    if (!video) throw new Error('Missing video fixture');
+
+    renderPanel({ item: video });
+
+    const dialog = screen.getByRole('dialog');
+    const thumbImg = within(dialog)
+      .queryAllByRole('img', { hidden: true })
+      .find((img) => img.getAttribute('src') === video.thumbnailUrl);
+    expect(thumbImg).toBeUndefined();
+    expect(dialog.querySelector('.learn-more-poster')).toBeNull();
+    expect(dialog.querySelector('.learn-more-play-marker')).toBeNull();
+  });
+
+  it('renders the Reflection card when item.learnMore.reflection is set', () => {
+    const video = fixtureContent.find((entry) => entry.id === 'video-ai-tools');
+    if (!video?.learnMore.reflection) throw new Error('Fixture must include a reflection');
+
+    renderPanel({ item: video });
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText(/^reflection$/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(video.learnMore.reflection)).toBeInTheDocument();
+  });
+
   it('swaps related content without closing and resets the scroll container to the top', () => {
     const item = fixtureContent[0];
     const related = getRelatedContent(fixtureContent, item);

@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "label": "articles",
+    "expected_count": 7
+  },
+  "rows": [
+    {
+      "id": "12ea285e-557e-4f12-856b-2db012af7721",
+      "title": "In 2026, your resume won't get you hired anymore. New media will.",
+      "reflection": "Resumes describe who you have been; what you create online describes who you are becoming. As you think about your next step after high school, what would you want a future employer to find when they search your name?"
+    },
+    {
+      "id": "1cf7ce0f-fe0a-4336-a923-770928620196",
+      "title": "What to Bring to an Interview",
+      "reflection": "Interview prep is mostly about lowering the temperature when nerves run high. As you imagine your own first interview after high school, what would help you feel most yourself in the room: a list, a ritual, a person nearby, or something else?"
+    },
+    {
+      "id": "1ec760f3-60e8-4940-ab8b-6f534d1db91c",
+      "title": "Jobs at the Zoo",
+      "reflection": "We tend to picture careers as the obvious ones we hear about at school. As you think about your own future work, what kind of place do you imagine actually walking into every day, and what would make it feel like the right one?"
+    },
+    {
+      "id": "5b776a32-411a-439c-b834-2761902d40ab",
+      "title": "Senior Research Manager, Vaccines",
+      "reflection": "Job postings can sound far away from where you are right now. As you read this one, what part of the work feels like something you could grow into over time, and what part feels like a completely different planet?"
+    },
+    {
+      "id": "ac04d4a2-80d9-480d-a823-5722e3634b72",
+      "title": "Careers in Logistics",
+      "reflection": "Some industries hide in plain sight until you notice how much depends on them. As you think about your own career options, would you rather work in something visible to the world, or in something the world only notices when it stops working?"
+    },
+    {
+      "id": "cf5cbfe4-30fa-4c27-aa9b-d9f5a2b33405",
+      "title": "Role at Coefficient Giving",
+      "reflection": "Some jobs ask you to figure out where money does the most good. As you think about your own values, would you rather build something new, fix something broken, or move resources to where they are needed most?"
+    },
+    {
+      "id": "fd0980f6-911b-4a3e-9ae7-b1d5a71b0cf3",
+      "title": "AI & Biosecurity Research Resident",
+      "reflection": "Some jobs sit on the edge of new technology and old risks. As you think about your own future, do you want a career that watches the world change from the outside, or one that helps decide which changes are safe to make?"
+    }
+  ]
+}

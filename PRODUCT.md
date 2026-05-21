@@ -26,6 +26,10 @@ This must explicitly NOT look like:
 - **Corporate career sites** (LinkedIn, Indeed). No commercial job-board feel — sponsored ads, profile-first, employer-driven framing. This is exploration, not job hunting.
 - **Stock-photo Canadiana.** No red maple leaves, mountain photography, hockey imagery as decoration. Modernity wins over national signaling.
 
+## Content authoring
+
+Learn More content includes a **Reflection** prompt — one open question that ties the content to the student's own life-after-high-school decisions. See [`docs/content-authoring.md`](docs/content-authoring.md) for the editorial rule, examples, and the JSON → preflight → generator pipeline.
+
 ## Design Principles
 
 1. **Content over chrome — show, don't tell.** The content (videos, articles, real Canadians doing real work) is the hero. UI scaffolding fades. Visual-first storytelling, generous whitespace, typography-forward layouts. Don't explain what a career is — show someone living it.

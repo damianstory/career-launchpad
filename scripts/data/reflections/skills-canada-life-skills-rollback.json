@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "label": "skills-canada-life-skills",
+    "expected_count": 8
+  },
+  "rows": [
+    {
+      "id": "skills-canada-040",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-058",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-101",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-118",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-119",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-120",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-159",
+      "previous_reflection": null
+    },
+    {
+      "id": "skills-canada-160",
+      "previous_reflection": null
+    }
+  ]
+}

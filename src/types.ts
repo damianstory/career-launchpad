@@ -39,6 +39,7 @@ export interface LaunchpadContent {
     whyItMatters?: string;
     planningConnection?: string;
     takeaway?: string;
+    reflection: string;
     relatedContentIds: string[];
   };
 }

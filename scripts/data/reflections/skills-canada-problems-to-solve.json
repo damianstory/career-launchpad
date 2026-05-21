@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "label": "skills-canada-problems-to-solve",
+    "expected_count": 4
+  },
+  "rows": [
+    {
+      "id": "skills-canada-031",
+      "title": "What Is Cloud Computing And How Does It Work? AWS Explained",
+      "reflection": "Most of the technology you use every day depends on systems you cannot see. As you think about what kind of work you might do, are you drawn to the visible side of products, or to the invisible infrastructure that lets everything else work?"
+    },
+    {
+      "id": "skills-canada-092",
+      "title": "What it's like to be a Pastry Chef",
+      "reflection": "Some jobs reward creativity; others reward doing the same thing perfectly, again and again. As you think about your own strengths, which one feels more like you, and what would it mean to be paid for that exact ability?"
+    },
+    {
+      "id": "skills-canada-136",
+      "title": "3 Unethical Job Search Hacks",
+      "reflection": "Almost every career path will tempt you to take a shortcut at some point. As you think about your own way of working, what kind of corner are you willing to cut, and where is the line you would not cross even for an offer?"
+    },
+    {
+      "id": "skills-canada-154",
+      "title": "Toyota Developed An All New Painting Process For Cars",
+      "reflection": "Some of the biggest changes in the world come from people improving things you would never notice. As you imagine your own working life, would you rather work on visible products, or on the invisible processes that make millions of products possible?"
+    }
+  ]
+}

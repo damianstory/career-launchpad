@@ -122,7 +122,7 @@ def check_schema(env: dict[str, str]) -> list[str]:
         return ["missing SUPABASE_URL or SUPABASE_ANON_KEY/SUPABASE_SERVICE_ROLE_KEY"]
 
     missing: list[str] = []
-    for column in ("takeaway", "why_it_matters", "planning_connection"):
+    for column in ("takeaway", "why_it_matters", "planning_connection", "reflection"):
         query = urllib.parse.urlencode({"select": column, "limit": "0"})
         request = urllib.request.Request(
             f"{url.rstrip('/')}/rest/v1/content?{query}",

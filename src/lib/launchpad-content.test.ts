@@ -30,6 +30,7 @@ function row(overrides: Record<string, unknown> = {}) {
     why_it_matters: 'Why it matters',
     planning_connection: 'Planning connection',
     takeaway: 'Takeaway',
+    reflection: 'Sample reflection',
     content_categories: [
       { categories: { slug: 'life-skills', name: 'Life Skills', display_order: 3 } },
       { categories: { slug: 'day-in-the-life', name: 'On the Job', display_order: 2 } },
@@ -129,6 +130,7 @@ describe('normalizeLaunchpadContent', () => {
           why_it_matters: null,
           planning_connection: null,
           takeaway: null,
+          reflection: null,
         }),
       ] as never,
       categories as never
@@ -143,5 +145,24 @@ describe('normalizeLaunchpadContent', () => {
       learnMore: { relatedContentIds: ['related-id'] },
     });
     expect(result.items[0].learnMore.whyItMatters).toBeUndefined();
+    // reflection is required at the type level; null/missing collapses to empty string
+    // so the read path stays type-safe (the live DB enforces non-empty via CHECK).
+    expect(result.items[0].learnMore.reflection).toBe('');
+  });
+
+  it('maps reflection through when present and keeps rows when reflection is null', () => {
+    const result = normalizeLaunchpadContent(
+      [
+        row({ id: 'with-reflection', reflection: 'When you choose, what are you choosing?' }),
+        row({ id: 'null-reflection', reflection: null }),
+      ] as never,
+      categories as never
+    );
+
+    expect(result.items).toHaveLength(2);
+    expect(result.items.find((item) => item.id === 'with-reflection')?.learnMore.reflection).toBe(
+      'When you choose, what are you choosing?'
+    );
+    expect(result.items.find((item) => item.id === 'null-reflection')?.learnMore.reflection).toBe('');
   });
 });

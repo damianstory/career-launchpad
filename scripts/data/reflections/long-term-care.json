@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "label": "long-term-care",
+    "expected_count": 17
+  },
+  "rows": [
+    {
+      "id": "ltc-careers-001",
+      "title": "Food Service Worker: A Career in Long-Term Care",
+      "reflection": "Health care can mean clinical work, but it can also mean the meal that gets to someone at the right time. As you think about your own future, what kind of impact do you want your daily work to have on the people around you?"
+    },
+    {
+      "id": "ltc-careers-002",
+      "title": "Nursing: A Career in Long-Term Care",
+      "reflection": "Some careers ask you to choose between technical skill and close human connection. As you think about life after high school, would you rather a role that grows your expertise quickly, one that grows your relationships slowly, or both at the same time?"
+    },
+    {
+      "id": "ltc-careers-003",
+      "title": "Recreation Professional: A Career in Long-Term Care",
+      "reflection": "We do not always picture creativity inside a hospital or care home. As you think about your own next step, where do you want your creativity to live, and what kind of place do you imagine making it useful?"
+    },
+    {
+      "id": "ltc-careers-004",
+      "title": "Food Services: Careers in Long-Term Care",
+      "reflection": "Most meals you eat are made by a team you never see. As you think about the work you might do after high school, what would it feel like to be on the side of the counter where someone else's dignity is part of your job?"
+    },
+    {
+      "id": "ltc-careers-005",
+      "title": "Physiotherapy: A Career in Long-Term Care",
+      "reflection": "Independence is something most of us take for granted until we start losing it. As you think about your own life after high school, what would it look like to help someone else hold on to theirs, and would that kind of work appeal to you?"
+    },
+    {
+      "id": "ltc-careers-006",
+      "title": "Housekeeping: A Career in Long-Term Care",
+      "reflection": "It is easy to overlook the jobs that keep places safe and livable. As you imagine your future workplace, what would it mean to take pride in work that is mostly invisible until it stops happening?"
+    },
+    {
+      "id": "ltc-careers-007",
+      "title": "Social Work: A Career in Long-Term Care",
+      "reflection": "Some careers exist for the hardest moments in other people's lives. As you think about life after high school, do you want a job that meets people on their best days, their worst days, or somewhere in between?"
+    },
+    {
+      "id": "ltc-careers-008",
+      "title": "Music Therapy: A Career in Long-Term Care",
+      "reflection": "Art and health care do not always feel like they belong in the same conversation. As you think about what you are good at, what would it look like to use a creative skill of yours in a job that helps someone else?"
+    },
+    {
+      "id": "ltc-careers-009",
+      "title": "Personal Support Workers: Making a Difference in Long-Term Care",
+      "reflection": "Trust is usually built in small, repeated moments, not in big ones. As you imagine your own first job after high school, where would you want to be the person who shows up consistently enough to actually be trusted?"
+    },
+    {
+      "id": "ltc-careers-010",
+      "title": "Edge Factor Career Profiles: Food Service Worker",
+      "reflection": "Not every health care career starts with years of school. As you think about your own pace, would you rather find a hands-on entry point quickly and grow from there, or take a longer route through more training first?"
+    },
+    {
+      "id": "ltc-careers-011",
+      "title": "Edge Factor Career Profiles: Personal Support Worker",
+      "reflection": "Some jobs hide their impact for months; others let you feel it inside one shift. As you imagine your future work, how soon do you want to be able to see the difference you are making?"
+    },
+    {
+      "id": "ltc-careers-012",
+      "title": "Edge Factor Career Profiles: Registered Practical Nurse - IPAC Lead",
+      "reflection": "Careers do not have to stay flat. As you think about your own future five or ten years out, do you imagine yourself going deeper into one specialty, moving into leadership, or staying close to the people you started serving?"
+    },
+    {
+      "id": "ltc-careers-013",
+      "title": "Edge Factor Skilled Responders: Long-Term Care Administrator",
+      "reflection": "Big places only work because someone is balancing a lot of competing needs at once. As you picture your own working life, would you rather be the one delivering the care directly, or the one keeping the whole place running?"
+    },
+    {
+      "id": "ltc-careers-014",
+      "title": "Neuro-Behavioural Nurse Practitioner: A Career in Long-Term Care",
+      "reflection": "Some careers reward people who like complexity. As you think about what kind of problems you want to spend years getting good at, would you rather work on questions with clean answers or on questions where the answer keeps shifting?"
+    },
+    {
+      "id": "ltc-careers-015",
+      "title": "Nurse Practitioner: A Career in Long-Term Care",
+      "reflection": "Many careers look smaller from the outside than they actually are. As you start considering your own path, what would it change if you knew a role you thought of as one job could expand into something much bigger?"
+    },
+    {
+      "id": "ltc-careers-016",
+      "title": "Collaboration in Long-Term Care: Soft Skills on the Job",
+      "reflection": "School often grades you on individual work, but most jobs grade you on what your team does together. As you think about your strengths, what kind of teammate do you want to be known as in your first real role?"
+    },
+    {
+      "id": "ltc-careers-017",
+      "title": "Critical Thinking in Long-Term Care: Soft Skills on the Job",
+      "reflection": "Critical thinking is not just for tests. As you think about the kind of work you want to do, where would you rather be making careful, small judgments all day: in front of a screen, on a worksite, or alongside other people?"
+    }
+  ]
+}

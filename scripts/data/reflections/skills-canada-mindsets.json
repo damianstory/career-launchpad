@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "label": "skills-canada-mindsets",
+    "expected_count": 8
+  },
+  "rows": [
+    {
+      "id": "skills-canada-035",
+      "title": "How much does a chef make?",
+      "reflection": "Starting pay tells you almost nothing about what a career actually pays over time. As you think about your own options, what would change if you compared two paths by where they go in five years, instead of by where they start?"
+    },
+    {
+      "id": "skills-canada-067",
+      "title": "Jeff Bezos's Advice to Entrepreneurs and Small Businesses",
+      "reflection": "Most business advice ages quickly because it focuses on tactics. As you think about what kind of work might endure, what is one need in your own life or community that you think will still be true in ten years?"
+    },
+    {
+      "id": "skills-canada-078",
+      "title": "How to crush your next presentation",
+      "reflection": "Most students prepare for a presentation by trying not to mess up. As you think about your next time in front of a group, what would change if you focused on landing one specific idea instead of getting through every slide?"
+    },
+    {
+      "id": "skills-canada-079",
+      "title": "So you want to be an industrial mechanic millwright?",
+      "reflection": "Some careers reward people who get curious about how things break. As you think about your own way of approaching problems, do you like tracing a broken system to its root, or would you rather build something new from scratch?"
+    },
+    {
+      "id": "skills-canada-096",
+      "title": "Woman In Trades",
+      "reflection": "Reputations about who belongs in a career take longer to update than the careers themselves. As you think about a path you might be talked out of, who would you want to talk to inside that field before you let the assumption stick?"
+    },
+    {
+      "id": "skills-canada-099",
+      "title": "Gen Z Electricians",
+      "reflection": "More young people are choosing trades after watching what debt does to friends in other paths. As you think about your own next step, what would it mean to optimize for being debt-free and certified, instead of for the most familiar option?"
+    },
+    {
+      "id": "skills-canada-100",
+      "title": "What does it take to become a great electrician",
+      "reflection": "Great work in many fields blurs the line between skills you can list and skills you have to feel. As you think about something you want to be good at, which kind of skill would you rather grow first, and how would you practice it?"
+    },
+    {
+      "id": "skills-canada-109",
+      "title": "So you want to be an industrial mechanic millwright?",
+      "reflection": "Some careers are not picked from a list; they are picked because something about the work felt obvious the first time you saw it. As you think back over the last year, has any kind of work surprised you by being more interesting than you expected?"
+    }
+  ]
+}

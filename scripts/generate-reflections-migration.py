@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""Generate a reflection backfill migration from a reflections JSON.
+
+Reads `--input <path>`, validates the same editorial rule as
+scripts/preflight-reflections.py (without hitting Supabase), and emits a
+single UPDATE migration with a row-count assertion.
+
+JSON shape: see scripts/preflight-reflections.py.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+MIGRATIONS_DIR = Path("supabase/migrations")
+REQUIRED_ROW_FIELDS = ("id", "reflection")
+REQUIRED_META_FIELDS = ("label", "expected_count")
+
+WORD_MIN = 20
+WORD_MAX = 50
+SECOND_PERSON_RE = re.compile(r"\byou(?:r|rs|rself)?\b", re.IGNORECASE)
+EM_DASH = "—"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True, type=Path,
+                        help="Path to reflections JSON")
+    parser.add_argument("--output", type=Path, default=None,
+                        help="Output SQL path (default: timestamped file under supabase/migrations)")
+    args = parser.parse_args()
+
+    if not args.input.exists():
+        print(f"Reflections JSON not found: {args.input}", file=sys.stderr)
+        return 1
+
+    data = json.loads(args.input.read_text())
+    errors = validate(data)
+    if errors:
+        print("Refusing to write SQL:", file=sys.stderr)
+        for error in errors:
+            print(f"- {error}", file=sys.stderr)
+        return 1
+
+    meta = data["meta"]
+    output = args.output or default_output_path(meta["label"])
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(render_sql(data, args.input))
+    print(f"Wrote {output}")
+    return 0
+
+
+def validate(data: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(data, dict):
+        return ["JSON root must be an object with 'meta' and 'rows' keys"]
+    if "meta" not in data or not isinstance(data["meta"], dict):
+        errors.append("missing or invalid 'meta' block")
+    if "rows" not in data or not isinstance(data["rows"], list):
+        errors.append("missing or invalid 'rows' array")
+    if errors:
+        return errors
+
+    meta = data["meta"]
+    for field in REQUIRED_META_FIELDS:
+        if field not in meta:
+            errors.append(f"meta missing field: {field!r}")
+    if errors:
+        return errors
+
+    if not isinstance(meta["label"], str) or not meta["label"].strip():
+        errors.append("meta.label must be a non-empty string")
+    if not isinstance(meta["expected_count"], int) or meta["expected_count"] <= 0:
+        errors.append(f"meta.expected_count must be a positive int, got {meta['expected_count']!r}")
+    if errors:
+        return errors
+
+    rows = data["rows"]
+    if len(rows) != meta["expected_count"]:
+        errors.append(f"row count is {len(rows)}, expected {meta['expected_count']}")
+
+    ids = [r.get("id") for r in rows]
+    if len(set(ids)) != len(ids):
+        dupes = sorted({i for i in ids if ids.count(i) > 1})
+        errors.append(f"duplicate ids: {dupes}")
+
+    for index, row in enumerate(rows, start=1):
+        missing = [field for field in REQUIRED_ROW_FIELDS if field not in row]
+        if missing:
+            errors.append(f"row {index} ({row.get('id')}) missing fields: {missing}")
+            continue
+        errors.extend(validate_editorial_rule(index, row))
+
+    return errors
+
+
+def validate_editorial_rule(index: int, row: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    rid = row.get("id")
+    value = row["reflection"]
+
+    if not isinstance(value, str) or not value.strip():
+        errors.append(f"row {index} ({rid}) empty reflection")
+        return errors
+
+    text = value.strip()
+    word_count = len(text.split())
+
+    if word_count < WORD_MIN or word_count > WORD_MAX:
+        errors.append(
+            f"row {index} ({rid}) reflection has {word_count} words; "
+            f"expected {WORD_MIN}-{WORD_MAX}"
+        )
+    if not SECOND_PERSON_RE.search(text):
+        errors.append(f"row {index} ({rid}) reflection must use second-person ('you'/'your')")
+    if not text.endswith("?"):
+        errors.append(f"row {index} ({rid}) reflection must end with '?'")
+    if EM_DASH in text:
+        errors.append(f"row {index} ({rid}) reflection contains em-dash; use a comma or colon")
+
+    return errors
+
+
+def default_output_path(label: str) -> Path:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    safe = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
+    return MIGRATIONS_DIR / f"{stamp}_reflection_{safe}.sql"
+
+
+def quote(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
+def render_value_row(row: dict[str, Any]) -> str:
+    return f"      ({quote(row['id'])}, {quote(row['reflection'].strip())})"
+
+
+def render_sql(data: dict[str, Any], source: Path) -> str:
+    meta = data["meta"]
+    rows = data["rows"]
+    expected_count = meta["expected_count"]
+    label = meta["label"]
+    values_block = ",\n".join(render_value_row(row) for row in rows)
+    return f"""-- Backfill reflection for the {expected_count} '{label}' rows.
+-- Generated by scripts/generate-reflections-migration.py from {source}.
+-- Targets rows by stable id. Fails the transaction if the expected row
+-- count is not updated.
+
+do $$
+declare
+  expected_count int := {expected_count};
+  actual_count int;
+begin
+  with v(id, new_reflection) as (values
+{values_block}
+  )
+  update public.content c
+  set reflection = v.new_reflection
+  from v
+  where c.id = v.id;
+
+  get diagnostics actual_count = row_count;
+  if actual_count <> expected_count then
+    raise exception 'Expected % rows updated, got %', expected_count, actual_count;
+  end if;
+end $$;
+"""
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -16,7 +16,7 @@ const CONTENT_SELECT = `
   article_embed_url, article_source_name, article_content,
   playbook_content, reading_time_minutes,
   related_playbook_id, published_at, why_it_matters,
-  planning_connection, takeaway,
+  planning_connection, takeaway, reflection,
   content_categories ( categories ( slug, name, display_order ) )
 `;
 

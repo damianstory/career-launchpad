@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "label": "skills-canada-life-skills",
+    "expected_count": 8
+  },
+  "rows": [
+    {
+      "id": "skills-canada-040",
+      "title": "Job Talks OYAP - Cabinetmaker Apprentice",
+      "reflection": "Most career conversations in high school focus on what comes after, but some paths begin in the classroom itself. As you think about your own next move, would it change anything to know you could be earning and learning a trade before you graduate?"
+    },
+    {
+      "id": "skills-canada-058",
+      "title": "Sprinkler Fitters - Skilled Trades Expert Testimonials",
+      "reflection": "Some of the steadiest careers are ones most people have never heard of. As you think about your future, how would you actually go about finding a path that pays well but does not get talked about, and who would you ask?"
+    },
+    {
+      "id": "skills-canada-101",
+      "title": "Learn A Skilled Trade!",
+      "reflection": "We tend to compare debt and salary as if they are the same kind of number. As you think about your own path after high school, what would it mean to start your working life debt-free and earning sooner, even if the title sounds different than university?"
+    },
+    {
+      "id": "skills-canada-118",
+      "title": "The Key to becoming more ENGAGING when you speak!",
+      "reflection": "Most students think engaging speakers are simply louder or more confident. As you think about your own voice in front of a group, what is one small thing you could change about how you speak that you have never tried on purpose?"
+    },
+    {
+      "id": "skills-canada-119",
+      "title": "How can an INTROVERT speak with more confidence?",
+      "reflection": "There is a quiet myth that confidence requires extroversion. As you think about how you show up in front of others, what kind of preparation or small ritual would let you sound like yourself, only steadier?"
+    },
+    {
+      "id": "skills-canada-120",
+      "title": "Try this if you're afraid of public speaking",
+      "reflection": "Most fears shrink with exposure, not with effort to feel less afraid. As you think about something that scares you about your future, is there a small, low-stakes version of it you could practice this month before it gets bigger?"
+    },
+    {
+      "id": "skills-canada-159",
+      "title": "Common Public Speaking Mistake to Avoid!",
+      "reflection": "Pauses feel longer to the speaker than to the audience. As you think about how you talk in front of others, what would it change to treat the silences between your words as part of what you are saying?"
+    },
+    {
+      "id": "skills-canada-160",
+      "title": "This Is How To Master Public Speaking",
+      "reflection": "Some skills only get better through doing them in front of real people. As you think about something you want to be good at after high school, how could you find small, real audiences for it before the stakes get high?"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "label": "skills-canada-post-secondary",
+    "expected_count": 14
+  },
+  "rows": [
+    {
+      "id": "skills-canada-003",
+      "title": "Carpentry certificate",
+      "reflection": "Certificates open doors but rarely close paths. As you think about your own next step, would it feel right to start with a credential that gets you working quickly, knowing the deeper learning happens after you are already in the trade?"
+    },
+    {
+      "id": "skills-canada-010",
+      "title": "Carney pitches new apprenticeship grant for skilled trades",
+      "reflection": "Policy details around training can quietly remove or add big barriers. As you think about your own path, how much would it shift your options if money for training was easier to find, and would you actually check before deciding?"
+    },
+    {
+      "id": "skills-canada-017",
+      "title": "Applying to Fashion TMU for Fall 2026? Make your portfolio stand out.",
+      "reflection": "Creative programs judge portfolios on point of view, not polish. As you think about something you might apply to, what would your work look like if you stopped trying to impress reviewers and showed them what you actually care about?"
+    },
+    {
+      "id": "skills-canada-045",
+      "title": "Sheridan College. School of Skilled Trades - Plumbing",
+      "reflection": "Some programs hand you a finished credential; others hand you the start of one. As you think about your own next step, would you rather complete a path inside school, or finish it on real job sites with people already doing the work?"
+    },
+    {
+      "id": "skills-canada-051",
+      "title": "Welding - Skilled Trades",
+      "reflection": "Some careers let you start working and stack credentials as you go. As you think about your own pace, would it feel better to wait until you are fully qualified before earning, or to start small and grow your title over time?"
+    },
+    {
+      "id": "skills-canada-053",
+      "title": "Architectural Technology at Humber Polytechnic",
+      "reflection": "There is usually more than one way into an industry. As you think about a field you are drawn to, would you rather take the long, traditional route, or the faster one that puts you next to the work without the same title?"
+    },
+    {
+      "id": "skills-canada-074",
+      "title": "Everything I learned in cosmetology school",
+      "reflection": "Some kinds of training mostly happen by doing the work with real people. As you think about a craft you might learn, where would you want most of your hours spent: in lectures, in a practice studio, or in front of actual clients from day one?"
+    },
+    {
+      "id": "skills-canada-124",
+      "title": "Real Truth about Aerospace Engineering - is it Worth it?",
+      "reflection": "Some careers pay back over decades, not in the first job. As you think about your own patience, would you rather pick a path where the rewards come quickly, or one that asks for years of depth before the work starts feeling like enough?"
+    },
+    {
+      "id": "skills-canada-127",
+      "title": "Automotive Engineering Class",
+      "reflection": "Programs that prepare you for the industry as it was can feel safe at the time and outdated five years later. As you compare schools, what would change if you picked the one whose curriculum looks ahead, instead of the one with the longest history?"
+    },
+    {
+      "id": "skills-canada-130",
+      "title": "Heavy Duty Equipment Program at Conestoga",
+      "reflection": "Some careers go where the workers are; others pull the workers wherever the work is. As you think about your own next step, would you mind moving to follow the job, or do you need a path that lets you stay rooted somewhere specific?"
+    },
+    {
+      "id": "skills-canada-137",
+      "title": "The Key to Choosing a Fulfilling Career",
+      "reflection": "Fulfilling careers usually live at the overlap of what you would do for free and what someone will pay for. As you think about what you already do without being asked, where might that overlap exist for you, even if it takes years to find?"
+    },
+    {
+      "id": "skills-canada-144",
+      "title": "Learn More about Electronics Technician",
+      "reflection": "Some training programs build the muscle to diagnose problems; others just build vocabulary about them. As you think about a field you might enter, how would you tell which kind of program you were actually choosing before you committed?"
+    },
+    {
+      "id": "skills-canada-150",
+      "title": "Typical Day in the Life of a Canadian Engineering Student | Western University",
+      "reflection": "Some programs are closer to a profession than to a degree. As you imagine your own next four years, would it feel motivating to be trained like a future engineer from day one, or would you want more room to figure out what you want first?"
+    },
+    {
+      "id": "skills-canada-156",
+      "title": "Woodworking, Furniture & Cabinetmaking at Humber Polytechnic",
+      "reflection": "Career paths sometimes fork earlier than you expect. As you think about a craft you might learn, would you rather train for steady volume work inside someone else's shop, or for one-off creative pieces in a shop you eventually run yourself?"
+    }
+  ]
+}

@@ -43,6 +43,7 @@ export type DbContent = {
   why_it_matters?: string | null;
   planning_connection?: string | null;
   takeaway?: string | null;
+  reflection?: string | null;
   content_categories?: DbContentCategory[] | null;
 };
 
@@ -99,6 +100,7 @@ function normalizeContentRow(
       whyItMatters: row.why_it_matters || undefined,
       planningConnection: row.planning_connection || undefined,
       takeaway: row.takeaway || undefined,
+      reflection: row.reflection ?? '',
       relatedContentIds: row.related_playbook_id ? [row.related_playbook_id] : [],
     },
   };
