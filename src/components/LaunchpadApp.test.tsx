@@ -6,8 +6,16 @@ import type { AnalyticsEvent, LaunchpadContent } from '@/types';
 
 import { LaunchpadApp } from './LaunchpadApp';
 
-const { replaceMock } = vi.hoisted(() => ({
+const { replaceMock, gumletPlayers } = vi.hoisted(() => ({
   replaceMock: vi.fn(),
+  gumletPlayers: [] as Array<{
+    videoID: string;
+    props: Record<string, unknown>;
+    play: ReturnType<typeof vi.fn>;
+    pause: ReturnType<typeof vi.fn>;
+    mute: ReturnType<typeof vi.fn>;
+    unmute: ReturnType<typeof vi.fn>;
+  }>,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -15,6 +23,46 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: replaceMock }),
   useSearchParams: () => new URLSearchParams(window.location.search),
 }));
+
+vi.mock('@gumlet/react-embed-player', async () => {
+  const React = await vi.importActual<typeof import('react')>('react');
+
+  return {
+    GumletPlayer: React.forwardRef(function MockGumletPlayer(
+      props: { videoID?: string; [key: string]: unknown },
+      ref
+    ) {
+      const videoID = props.videoID ?? '';
+      const record = React.useMemo(
+        () => ({
+          videoID,
+          props,
+          play: vi.fn(),
+          pause: vi.fn(),
+          mute: vi.fn(),
+          unmute: vi.fn(),
+        }),
+        [props, videoID]
+      );
+
+      React.useImperativeHandle(ref, () => ({
+        play: record.play,
+        pause: record.pause,
+        mute: record.mute,
+        unmute: record.unmute,
+      }));
+
+      React.useEffect(() => {
+        gumletPlayers.push(record);
+      }, [record]);
+
+      return React.createElement('iframe', {
+        'data-testid': `gumlet-player-${videoID}`,
+        title: props.title as string,
+      });
+    }),
+  };
+});
 
 type PlayerEvents = {
   onReady?: () => void;
@@ -121,6 +169,17 @@ function contentVariant(
   return { ...base, ...overrides };
 }
 
+function gumletTestContent(): LaunchpadContent {
+  return contentVariant(fixtureContent[0], {
+    id: 'video-gumlet-test',
+    slug: 'gumlet-test-video',
+    title: 'Gumlet Test Video',
+    mediaUrl:
+      'https://play.gumlet.io/embed/6a106a3589ec653eb39ce727?background=false&autoplay=false&loop=false&disable_player_controls=false',
+    thumbnailUrl: '/images/article-placeholder.svg',
+  });
+}
+
 function feedDeck() {
   return screen.getByTestId('feed-media-deck');
 }
@@ -188,6 +247,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   reducedMotion = false;
   mobileViewport = false;
+  gumletPlayers.length = 0;
   installMatchMedia();
   installYouTubeMock();
   window.localStorage.clear();
@@ -933,6 +993,56 @@ describe('LaunchpadApp feed navigation', () => {
 });
 
 describe('LaunchpadApp playback', () => {
+  it('plays a Gumlet embed URL in the feed media frame', () => {
+    renderLaunchpad(null, [gumletTestContent()]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play gumlet test video/i }));
+
+    expect(screen.getByTestId('gumlet-host-6a106a3589ec653eb39ce727')).toBeInTheDocument();
+  });
+
+  it('starts Gumlet playback on ready and falls back to muted autoplay if playback does not start', async () => {
+    renderLaunchpad(null, [gumletTestContent()]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play gumlet test video/i }));
+    await flushAsyncWork();
+
+    const player = gumletPlayers.at(-1);
+    if (!player) throw new Error('Expected Gumlet player');
+
+    act(() => {
+      (player.props.onReady as () => void)();
+    });
+    expect(player.play).toHaveBeenCalledTimes(1);
+    expect(player.mute).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+
+    expect(player.mute).toHaveBeenCalledTimes(1);
+    expect(player.play).toHaveBeenCalledTimes(2);
+  });
+
+  it('auto-advances from a Gumlet video when it ends', async () => {
+    renderLaunchpad(null, [gumletTestContent(), fixtureContent[1]], null, 'seed-2');
+
+    fireEvent.click(screen.getByRole('button', { name: /play gumlet test video/i }));
+    await flushAsyncWork();
+    const player = gumletPlayers.at(-1);
+    if (!player) throw new Error('Expected Gumlet player');
+
+    act(() => {
+      (player.props.onReady as () => void)();
+      (player.props.onPlay as () => void)();
+      (player.props.onEnded as () => void)();
+    });
+    await finishTransition();
+
+    expectHeading('The Skills That Travel With You');
+    expect(screen.queryByTestId('gumlet-host-6a106a3589ec653eb39ce727')).not.toBeInTheDocument();
+  });
+
   it('creates a YouTube player after a user play intent and falls back to muted autoplay if playback does not start', () => {
     renderLaunchpad();
 

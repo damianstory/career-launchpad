@@ -1,5 +1,9 @@
 import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadContent } from '@/types';
 
+export type VideoSource =
+  | { provider: 'youtube'; id: string }
+  | { provider: 'gumlet'; id: string };
+
 export function applyContentFilters(
   content: LaunchpadContent[],
   filters: ContentFilters
@@ -80,7 +84,11 @@ export function getYouTubeId(url: string | undefined): string | null {
 
   try {
     const parsed = new URL(url);
-    if (parsed.hostname.includes('youtu.be')) return parsed.pathname.slice(1);
+    const hostname = parsed.hostname.replace(/^www\./, '');
+    const isYouTubeHost = hostname === 'youtube.com' || hostname === 'm.youtube.com' || hostname === 'youtu.be';
+    if (!isYouTubeHost) return null;
+
+    if (hostname === 'youtu.be') return parsed.pathname.slice(1);
     if (parsed.searchParams.has('v')) return parsed.searchParams.get('v');
     const embedMatch = parsed.pathname.match(/\/embed\/([^/?]+)/);
     const shortsMatch = parsed.pathname.match(/\/shorts\/([^/?]+)/);
@@ -89,6 +97,29 @@ export function getYouTubeId(url: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+export function getGumletId(url: string | undefined): string | null {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.endsWith('gumlet.io')) return null;
+    const embedMatch = parsed.pathname.match(/\/embed\/(?:live\/)?([^/?]+)/);
+    return embedMatch?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function getVideoSource(url: string | undefined): VideoSource | null {
+  const youtubeId = getYouTubeId(url);
+  if (youtubeId) return { provider: 'youtube', id: youtubeId };
+
+  const gumletId = getGumletId(url);
+  if (gumletId) return { provider: 'gumlet', id: gumletId };
+
+  return null;
 }
 
 /**

@@ -6,6 +6,7 @@ import {
   applyContentFilters,
   getContentBySlug,
   getRelatedContent,
+  getVideoSource,
   getYouTubeId,
   shuffleContentForVisit,
 } from './content';
@@ -113,5 +114,25 @@ describe('YouTube URL parsing', () => {
     expect(getYouTubeId('https://www.youtube.com/shorts/short123')).toBe('short123');
     expect(getYouTubeId('https://youtu.be/shortlink123')).toBe('shortlink123');
     expect(getYouTubeId('https://www.youtube.com/embed/embed123')).toBe('embed123');
+  });
+});
+
+describe('video source parsing', () => {
+  it('detects Gumlet embed URLs from pasted embed codes', () => {
+    expect(
+      getVideoSource(
+        'https://play.gumlet.io/embed/6a106a3589ec653eb39ce727?background=false&autoplay=false&loop=false&disable_player_controls=false'
+      )
+    ).toEqual({
+      provider: 'gumlet',
+      id: '6a106a3589ec653eb39ce727',
+    });
+  });
+
+  it('still detects YouTube URLs', () => {
+    expect(getVideoSource('https://www.youtube.com/watch?v=abc123')).toEqual({
+      provider: 'youtube',
+      id: 'abc123',
+    });
   });
 });

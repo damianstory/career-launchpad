@@ -28,13 +28,15 @@ import {
   useRef,
   useState,
 } from 'react';
+import { GumletPlayer, type GumletPlayerHandle } from '@gumlet/react-embed-player';
 
 import {
   applyContentFilters,
   formatDuration,
   getContentBySlug,
   getRelatedContent,
-  getYouTubeId,
+  getVideoSource,
+  type VideoSource,
   shuffleContentForVisit,
 } from '@/lib/content';
 import { trackEvent } from '@/lib/analytics';
@@ -142,6 +144,14 @@ function LearnMoreCta({
     </div>
   );
 }
+
+type FeedPlayerInstance = {
+  playVideo?: () => void;
+  pauseVideo?: () => void;
+  mute?: () => void;
+  unMute?: () => void;
+  destroy?: () => void;
+};
 
 type YouTubePlayerInstance = {
   playVideo: () => void;
@@ -256,7 +266,7 @@ function isInteractiveShortcutTarget(target: EventTarget | null): boolean {
 }
 
 function isPlayableContent(item: LaunchpadContent | undefined): boolean {
-  return item?.format === 'video' && Boolean(getYouTubeId(item.mediaUrl));
+  return item?.format === 'video' && Boolean(getVideoSource(item.mediaUrl));
 }
 
 function nowMs(): number {
@@ -484,7 +494,7 @@ export function LaunchpadApp({
   const feedDeckRef = useRef<HTMLDivElement | null>(null);
   const navLockedUntilRef = useRef(0);
   const processedInitialRouteRef = useRef<string | null>(null);
-  const activePlayerRef = useRef<YouTubePlayerInstance | null>(null);
+  const activePlayerRef = useRef<FeedPlayerInstance | null>(null);
   const sharedLinkOnboardingTimerRef = useRef<number | null>(null);
   const currentFeedCardRef = useRef<HTMLDivElement | null>(null);
   const focusedFeedIdRef = useRef<string | null>(null);
@@ -828,7 +838,7 @@ export function LaunchpadApp({
     if (!advanced) setPlayingContentId(null);
   }, [item, navigateFeed]);
 
-  const handlePlayerReady = useCallback((player: YouTubePlayerInstance | null) => {
+  const handlePlayerReady = useCallback((player: FeedPlayerInstance | null) => {
     activePlayerRef.current = player;
   }, []);
 
@@ -1054,7 +1064,7 @@ type StageProps = {
   onPause: () => void;
   onVideoEnd: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
-  onPlayerReady: (player: YouTubePlayerInstance | null) => void;
+  onPlayerReady: (player: FeedPlayerInstance | null) => void;
 };
 
 function DesktopStage({
@@ -1596,7 +1606,7 @@ function FeedMediaDeck({
   onShare: () => void;
   onLearnMore: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
-  onPlayerReady: (player: YouTubePlayerInstance | null) => void;
+  onPlayerReady: (player: FeedPlayerInstance | null) => void;
 }) {
   const [current, setCurrent] = useState<MediaDeckCard>({ item, blockColor });
   const [previous, setPrevious] = useState<MediaDeckCard | null>(null);
@@ -1796,7 +1806,7 @@ function YouTubePlayer({
   autoplayMode: AutoplayMode;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onVideoEnd: () => void;
-  onPlayerReady: (player: YouTubePlayerInstance | null) => void;
+  onPlayerReady: (player: FeedPlayerInstance | null) => void;
 }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
@@ -1927,6 +1937,169 @@ function YouTubePlayer({
   );
 }
 
+function EmbeddedVideoPlayer({
+  source,
+  title,
+  autoplayMode,
+  onAutoplayModeChange,
+  onVideoEnd,
+  onPlayerReady,
+}: {
+  source: VideoSource;
+  title: string;
+  autoplayMode: AutoplayMode;
+  onAutoplayModeChange: (mode: AutoplayMode) => void;
+  onVideoEnd: () => void;
+  onPlayerReady: (player: FeedPlayerInstance | null) => void;
+}) {
+  if (source.provider === 'youtube') {
+    return (
+      <YouTubePlayer
+        videoId={source.id}
+        title={title}
+        autoplayMode={autoplayMode}
+        onAutoplayModeChange={onAutoplayModeChange}
+        onPlayerReady={onPlayerReady}
+        onVideoEnd={onVideoEnd}
+      />
+    );
+  }
+
+  return (
+    <GumletVideoPlayer
+      videoId={source.id}
+      title={title}
+      autoplayMode={autoplayMode}
+      onAutoplayModeChange={onAutoplayModeChange}
+      onPlayerReady={onPlayerReady}
+      onVideoEnd={onVideoEnd}
+    />
+  );
+}
+
+function GumletVideoPlayer({
+  videoId,
+  title,
+  autoplayMode,
+  onAutoplayModeChange,
+  onVideoEnd,
+  onPlayerReady,
+}: {
+  videoId: string;
+  title: string;
+  autoplayMode: AutoplayMode;
+  onAutoplayModeChange: (mode: AutoplayMode) => void;
+  onVideoEnd: () => void;
+  onPlayerReady: (player: FeedPlayerInstance | null) => void;
+}) {
+  const playerRef = useRef<GumletPlayerHandle | null>(null);
+  const fallbackTimerRef = useRef<number | null>(null);
+  const playedRef = useRef(false);
+  const endedRef = useRef(false);
+  const initialAutoplayModeRef = useRef(autoplayMode);
+  const [initialMuted] = useState(() => autoplayMode === 'muted-fallback');
+  const [hasPlayed, setHasPlayed] = useState(false);
+
+  const clearFallbackTimer = useCallback(() => {
+    if (!fallbackTimerRef.current) return;
+    window.clearTimeout(fallbackTimerRef.current);
+    fallbackTimerRef.current = null;
+  }, []);
+
+  const fallbackToMuted = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    player.mute();
+    onAutoplayModeChange('muted-fallback');
+    player.play();
+  }, [onAutoplayModeChange]);
+
+  useEffect(() => {
+    return () => {
+      clearFallbackTimer();
+      onPlayerReady(null);
+    };
+  }, [clearFallbackTimer, onPlayerReady]);
+
+  const handleReady = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    const policy = window.navigator.getAutoplayPolicy?.('mediaelement');
+    const shouldStartMuted = initialAutoplayModeRef.current === 'muted-fallback' || policy === 'allowed-muted';
+    if (shouldStartMuted) {
+      player.mute();
+      onAutoplayModeChange('muted-fallback');
+    } else {
+      player.unmute();
+    }
+
+    player.play();
+    fallbackTimerRef.current = window.setTimeout(() => {
+      if (!playedRef.current) fallbackToMuted();
+    }, 900);
+    onPlayerReady({
+      pauseVideo: () => player.pause(),
+      mute: () => player.mute(),
+      unMute: () => player.unmute(),
+    });
+  }, [fallbackToMuted, onAutoplayModeChange, onPlayerReady]);
+
+  const handlePlay = useCallback(() => {
+    playedRef.current = true;
+    setHasPlayed(true);
+    clearFallbackTimer();
+  }, [clearFallbackTimer]);
+
+  const handleEnded = useCallback(() => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    clearFallbackTimer();
+    onVideoEnd();
+  }, [clearFallbackTimer, onVideoEnd]);
+
+  return (
+    <div
+      data-testid={`gumlet-host-${videoId}`}
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 2,
+        opacity: hasPlayed ? 1 : 0,
+        overflow: 'hidden',
+        transition: 'opacity 160ms var(--ease-standard)',
+        pointerEvents: 'none',
+      }}
+    >
+      <GumletPlayer
+        ref={playerRef}
+        videoID={videoId}
+        title={title}
+        autoplay={false}
+        preload
+        muted={initialMuted}
+        background={false}
+        loop={false}
+        disable_player_controls={false}
+        onReady={handleReady}
+        onPlay={handlePlay}
+        onEnded={handleEnded}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+        iframeStyle={{
+          border: 'none',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          height: '100%',
+          width: '100%',
+          display: 'block',
+        }}
+      />
+    </div>
+  );
+}
+
 function MediaStage({
   item,
   nextItem,
@@ -1947,12 +2120,12 @@ function MediaStage({
   onPlay: () => void;
   onPause: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
-  onPlayerReady: (player: YouTubePlayerInstance | null) => void;
+  onPlayerReady: (player: FeedPlayerInstance | null) => void;
   onVideoEnd: () => void;
 }) {
   const progressTracked = useRef(new Set<number>());
-  const videoId = getYouTubeId(item.mediaUrl);
-  const isPlayableVideo = item.format === 'video' && Boolean(videoId);
+  const videoSource = getVideoSource(item.mediaUrl);
+  const isPlayableVideo = item.format === 'video' && Boolean(videoSource);
   const isMobileVariant = variant === 'mobile';
 
   // Video progress milestones
@@ -2021,10 +2194,10 @@ function MediaStage({
             </div>
           </button>
         )}
-        {isPlayableVideo && isPlaying && videoId && (
+        {isPlayableVideo && isPlaying && videoSource && (
           <>
-            <YouTubePlayer
-              videoId={videoId}
+            <EmbeddedVideoPlayer
+              source={videoSource}
               title={item.title}
               autoplayMode={autoplayMode}
               onAutoplayModeChange={onAutoplayModeChange}
@@ -2134,10 +2307,10 @@ function MediaStage({
             </div>
           </button>
         )}
-        {isPlayableVideo && isPlaying && videoId && (
+        {isPlayableVideo && isPlaying && videoSource && (
           <>
-            <YouTubePlayer
-              videoId={videoId}
+            <EmbeddedVideoPlayer
+              source={videoSource}
               title={item.title}
               autoplayMode={autoplayMode}
               onAutoplayModeChange={onAutoplayModeChange}
