@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'img.youtube.com', pathname: '/vi/**' },
+      { protocol: 'https', hostname: 'video.gumlet.io', pathname: '/**' },
     ],
   },
 };
