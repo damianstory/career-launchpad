@@ -14,6 +14,7 @@ import {
   Search,
   Share2,
   Sparkles,
+  Volume2,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -36,6 +37,7 @@ import {
   getContentBySlug,
   getRelatedContent,
   getVideoSource,
+  itemMatchesFilters,
   type VideoSource,
   shuffleContentForVisit,
 } from '@/lib/content';
@@ -58,6 +60,9 @@ const FEED_NAV_LOCK_MS = 320;
 const RAIL_FEEDBACK_MS = 1800;
 const SHARED_LINK_ONBOARDING_DELAY_MS = 2500;
 const BRAND_MARK_SRC = '/launchpad-logo.svg';
+function isGumletAudioRecoveryEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_LAUNCHPAD_GUMLET_AUDIO_RECOVERY !== 'false';
+}
 
 type AutoplayMode = 'audible' | 'muted-fallback';
 type FeedDirection = 'next' | 'prev';
@@ -65,6 +70,8 @@ type FeedMediaVariant = 'mobile' | 'desktop-immersive';
 type InitialPanel = 'info' | null;
 type RailFeedbackAction = 'share' | 'info';
 type RailFeedback = { action: RailFeedbackAction; contentId: string };
+type GumletAudioState = { contentId: string; muted: boolean; volume: number };
+type GumletAudioRecovery = GumletAudioState;
 
 type IconCmp = ComponentType<{
   size?: number;
@@ -150,6 +157,9 @@ type FeedPlayerInstance = {
   pauseVideo?: () => void;
   mute?: () => void;
   unMute?: () => void;
+  setVolume?: (volume: number) => void;
+  getMuted?: () => Promise<boolean>;
+  getVolume?: () => Promise<number>;
   destroy?: () => void;
 };
 
@@ -485,6 +495,7 @@ export function LaunchpadApp({
   const [navDirection, setNavDirection] = useState<FeedDirection>('next');
   const [playingContentId, setPlayingContentId] = useState<string | null>(null);
   const [autoplayMode, setAutoplayMode] = useState<AutoplayMode>('audible');
+  const [gumletAudioRecovery, setGumletAudioRecovery] = useState<GumletAudioRecovery | null>(null);
   const [activeRailFeedback, setActiveRailFeedback] = useState<RailFeedback | null>(null);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [feedOnboardingOpen, setFeedOnboardingOpen] = useState(false);
@@ -495,6 +506,7 @@ export function LaunchpadApp({
   const navLockedUntilRef = useRef(0);
   const processedInitialRouteRef = useRef<string | null>(null);
   const activePlayerRef = useRef<FeedPlayerInstance | null>(null);
+  const gumletAudioRecoveryShownRef = useRef(new Set<string>());
   const sharedLinkOnboardingTimerRef = useRef<number | null>(null);
   const currentFeedCardRef = useRef<HTMLDivElement | null>(null);
   const focusedFeedIdRef = useRef<string | null>(null);
@@ -527,6 +539,12 @@ export function LaunchpadApp({
   const item: LaunchpadContent | undefined = filteredContent[safeIdx];
   const nextItem = filteredContent[safeIdx + 1] ?? null;
   const effectivePlayingContentId = item?.id === playingContentId && isPlayableContent(item) ? playingContentId : null;
+  const currentGumletAudioRecovery =
+    isGumletAudioRecoveryEnabled() &&
+    gumletAudioRecovery?.contentId === item?.id &&
+    effectivePlayingContentId === item?.id
+      ? gumletAudioRecovery
+      : null;
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -703,15 +721,37 @@ export function LaunchpadApp({
   const openPanel = useCallback(
     (target: LaunchpadContent, source: string) => {
       cancelSharedLinkOnboarding();
-      focusFeedContent(target, { panel: true });
+      activePlayerRef.current?.pauseVideo?.();
+      setPlayingContentId(null);
+      setSearchOpen(false);
+      setPathsDrawerOpen(false);
+      setFormatsDrawerOpen(false);
+
+      const isCurrent = target.id === item?.id;
+      if (!isCurrent) {
+        const fits = itemMatchesFilters(target, filters);
+        if (!fits) {
+          setFilters({ categories: [], format: null });
+          setQuery('');
+          setPrevFilterKey('||');
+        }
+        setNavDirection('next');
+        navLockedUntilRef.current = 0;
+        const list = fits ? filteredContent : unfilteredFeedContent;
+        setFeedIdx(Math.max(0, list.findIndex((entry) => entry.id === target.id)));
+      }
+
+      setSelected(target);
+
       const url = new URL(window.location.href);
       url.searchParams.set('content', target.slug);
       url.searchParams.set('panel', 'info');
       window.history.pushState({ contentSlug: target.slug, panel: 'info' }, '', url);
+
       trackEvent('content_open', { contentId: target.id, metadata: { source } });
       trackEvent('learn_more_open', { contentId: target.id, metadata: { source } });
     },
-    [cancelSharedLinkOnboarding, focusFeedContent]
+    [cancelSharedLinkOnboarding, filteredContent, filters, item?.id, unfilteredFeedContent]
   );
 
   const closePanel = useCallback(() => {
@@ -823,17 +863,79 @@ export function LaunchpadApp({
   const playItem = useCallback((target: LaunchpadContent) => {
     if (!isPlayableContent(target)) return;
     setAutoplayMode('audible');
+    setGumletAudioRecovery(null);
     setPlayingContentId(target.id);
   }, []);
 
   const stopPlayback = useCallback(() => {
+    setGumletAudioRecovery(null);
     setPlayingContentId(null);
   }, []);
+
+  const handleGumletAudioState = useCallback((state: GumletAudioState) => {
+    const needsRecovery = state.muted || state.volume <= 0;
+
+    if (!isGumletAudioRecoveryEnabled()) {
+      gumletAudioRecoveryShownRef.current.delete(state.contentId);
+      setGumletAudioRecovery((current) => (current?.contentId === state.contentId ? null : current));
+      return;
+    }
+
+    if (!needsRecovery) {
+      const wasRecovering = gumletAudioRecoveryShownRef.current.has(state.contentId);
+      gumletAudioRecoveryShownRef.current.delete(state.contentId);
+      setGumletAudioRecovery((current) => (current?.contentId === state.contentId ? null : current));
+      if (wasRecovering) {
+        trackEvent('video_audio_recovery', {
+          contentId: state.contentId,
+          metadata: { provider: 'gumlet', action: 'confirmed', muted: state.muted, volume: state.volume },
+        });
+      }
+      return;
+    }
+
+    if (!gumletAudioRecoveryShownRef.current.has(state.contentId)) {
+      gumletAudioRecoveryShownRef.current.add(state.contentId);
+      trackEvent('video_audio_recovery', {
+        contentId: state.contentId,
+        metadata: { provider: 'gumlet', action: 'shown', muted: state.muted, volume: state.volume },
+      });
+    }
+
+    setGumletAudioRecovery(state);
+  }, []);
+
+  const recoverGumletAudio = useCallback(async () => {
+    if (!item || !currentGumletAudioRecovery) return;
+
+    const player = activePlayerRef.current;
+    trackEvent('video_audio_recovery', {
+      contentId: item.id,
+      metadata: {
+        provider: 'gumlet',
+        action: 'clicked',
+        muted: currentGumletAudioRecovery.muted,
+        volume: currentGumletAudioRecovery.volume,
+      },
+    });
+
+    player?.unMute?.();
+    player?.setVolume?.(100);
+    player?.playVideo?.();
+
+    const [muted, volume] = await Promise.all([
+      player?.getMuted?.() ?? Promise.resolve(false),
+      player?.getVolume?.() ?? Promise.resolve(100),
+    ]);
+
+    handleGumletAudioState({ contentId: item.id, muted, volume });
+  }, [currentGumletAudioRecovery, handleGumletAudioState, item]);
 
   const handleVideoEnd = useCallback(() => {
     if (item) {
       trackEvent('video_complete', { contentId: item.id });
     }
+    setGumletAudioRecovery(null);
     const advanced = navigateFeed('next', { ignoreLock: true });
     if (!advanced) setPlayingContentId(null);
   }, [item, navigateFeed]);
@@ -910,6 +1012,7 @@ export function LaunchpadApp({
     categories: initialCategories,
     isSaved,
     activeRailFeedback: currentRailFeedback,
+    audioRecoveryVisible: Boolean(currentGumletAudioRecovery),
     activeCategories: filters.categories,
     activeFormat: filters.format,
     toggleCategory,
@@ -924,6 +1027,9 @@ export function LaunchpadApp({
     onShare: () => {
       showRailFeedback('share', item.id);
       void shareItem(item);
+    },
+    onAudioRecovery: () => {
+      void recoverGumletAudio();
     },
     onSearch: openSearch,
     pathsDrawerOpen,
@@ -941,6 +1047,7 @@ export function LaunchpadApp({
     onVideoEnd: handleVideoEnd,
     onAutoplayModeChange: setAutoplayMode,
     onPlayerReady: handlePlayerReady,
+    onGumletAudioState: handleGumletAudioState,
     navSurfaceRef: setNavSurfaceElement,
   };
 
@@ -1039,6 +1146,7 @@ type StageProps = {
   categories: LaunchpadCategory[];
   isSaved: boolean;
   activeRailFeedback: RailFeedbackAction | null;
+  audioRecoveryVisible: boolean;
   activeCategories: CategorySlug[];
   activeFormat: ContentFormat | null;
   toggleCategory: (slug: CategorySlug) => void;
@@ -1048,6 +1156,7 @@ type StageProps = {
   onInfo: () => void;
   onSave: () => void;
   onShare: () => void;
+  onAudioRecovery: () => void;
   onSearch: () => void;
   pathsDrawerOpen: boolean;
   setPathsDrawerOpen: (open: boolean) => void;
@@ -1065,6 +1174,7 @@ type StageProps = {
   onVideoEnd: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: FeedPlayerInstance | null) => void;
+  onGumletAudioState: (state: GumletAudioState) => void;
 };
 
 function DesktopStage({
@@ -1073,12 +1183,14 @@ function DesktopStage({
   categories,
   isSaved,
   activeRailFeedback,
+  audioRecoveryVisible,
   activeCategories,
   activeFormat,
   onLearnMore,
   onInfo,
   onSave,
   onShare,
+  onAudioRecovery,
   onSearch,
   pathsDrawerOpen,
   setPathsDrawerOpen,
@@ -1096,6 +1208,7 @@ function DesktopStage({
   onVideoEnd,
   onAutoplayModeChange,
   onPlayerReady,
+  onGumletAudioState,
 }: StageProps) {
   const blockColor = CATEGORY_BLOCK_BG[item.primaryCategory] ?? BLUE;
   const DESKTOP_STAGE_MAX_WIDTH = 1720;
@@ -1365,15 +1478,18 @@ function DesktopStage({
             isPlaying={isPlaying}
             isSaved={isSaved}
             activeRailFeedback={activeRailFeedback}
+            audioRecoveryVisible={audioRecoveryVisible}
             autoplayMode={autoplayMode}
             onPlay={onPlay}
             onPause={onPause}
             onVideoEnd={onVideoEnd}
             onSave={onSave}
             onShare={onShare}
+            onAudioRecovery={onAudioRecovery}
             onLearnMore={onInfo}
             onAutoplayModeChange={onAutoplayModeChange}
             onPlayerReady={onPlayerReady}
+            onGumletAudioState={onGumletAudioState}
           />
         </div>
         </div>
@@ -1390,12 +1506,14 @@ function MobileStage({
   categories,
   isSaved,
   activeRailFeedback,
+  audioRecoveryVisible,
   activeCategories,
   activeFormat,
   onLearnMore,
   onInfo,
   onSave,
   onShare,
+  onAudioRecovery,
   onSearch,
   pathsDrawerOpen,
   setPathsDrawerOpen,
@@ -1413,6 +1531,7 @@ function MobileStage({
   onVideoEnd,
   onAutoplayModeChange,
   onPlayerReady,
+  onGumletAudioState,
 }: StageProps) {
   const pathsCtaText = (() => {
     if (activeCategories.length === 0) return null;
@@ -1516,15 +1635,18 @@ function MobileStage({
           isPlaying={isPlaying}
           isSaved={isSaved}
           activeRailFeedback={activeRailFeedback}
+          audioRecoveryVisible={audioRecoveryVisible}
           autoplayMode={autoplayMode}
           onPlay={onPlay}
           onPause={onPause}
           onVideoEnd={onVideoEnd}
           onSave={onSave}
           onShare={onShare}
+          onAudioRecovery={onAudioRecovery}
           onLearnMore={onInfo}
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
+          onGumletAudioState={onGumletAudioState}
         />
 
         {/* floating action rail */}
@@ -1547,6 +1669,9 @@ function MobileStage({
             active={isSaved}
             onClick={onSave}
           />
+          {audioRecoveryVisible && (
+            <MobileRailBtn icon={Volume2} label="Sound" active onClick={onAudioRecovery} />
+          )}
           <MobileRailBtn icon={Share2} label="Share" active={activeRailFeedback === 'share'} onClick={onShare} />
           <MobileRailBtn icon={Info} label="Info" active={activeRailFeedback === 'info'} onClick={onInfo} />
         </div>
@@ -1577,15 +1702,18 @@ function FeedMediaDeck({
   isPlaying,
   isSaved,
   activeRailFeedback,
+  audioRecoveryVisible,
   autoplayMode,
   onPlay,
   onPause,
   onVideoEnd,
   onSave,
   onShare,
+  onAudioRecovery,
   onLearnMore,
   onAutoplayModeChange,
   onPlayerReady,
+  onGumletAudioState,
 }: {
   deckRef: RefObject<HTMLDivElement | null>;
   currentCardRef: RefObject<HTMLDivElement | null>;
@@ -1598,15 +1726,18 @@ function FeedMediaDeck({
   isPlaying: boolean;
   isSaved: boolean;
   activeRailFeedback: RailFeedbackAction | null;
+  audioRecoveryVisible: boolean;
   autoplayMode: AutoplayMode;
   onPlay: () => void;
   onPause: () => void;
   onVideoEnd: () => void;
   onSave: () => void;
   onShare: () => void;
+  onAudioRecovery: () => void;
   onLearnMore: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: FeedPlayerInstance | null) => void;
+  onGumletAudioState: (state: GumletAudioState) => void;
 }) {
   const [current, setCurrent] = useState<MediaDeckCard>({ item, blockColor });
   const [previous, setPrevious] = useState<MediaDeckCard | null>(null);
@@ -1714,6 +1845,7 @@ function FeedMediaDeck({
             onVideoEnd={onVideoEnd}
             onAutoplayModeChange={onAutoplayModeChange}
             onPlayerReady={onPlayerReady}
+            onGumletAudioState={onGumletAudioState}
           />
         </div>
       )}
@@ -1736,14 +1868,17 @@ function FeedMediaDeck({
           onVideoEnd={onVideoEnd}
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
+          onGumletAudioState={onGumletAudioState}
         />
       </div>
       {!isMobileVariant && (
         <DesktopOverlayRail
           isSaved={isSaved}
           activeRailFeedback={activeRailFeedback}
+          audioRecoveryVisible={audioRecoveryVisible}
           onSave={onSave}
           onShare={onShare}
+          onAudioRecovery={onAudioRecovery}
           onLearnMore={onLearnMore}
         />
       )}
@@ -1754,14 +1889,18 @@ function FeedMediaDeck({
 function DesktopOverlayRail({
   isSaved,
   activeRailFeedback,
+  audioRecoveryVisible,
   onSave,
   onShare,
+  onAudioRecovery,
   onLearnMore,
 }: {
   isSaved: boolean;
   activeRailFeedback: RailFeedbackAction | null;
+  audioRecoveryVisible: boolean;
   onSave: () => void;
   onShare: () => void;
+  onAudioRecovery: () => void;
   onLearnMore?: () => void;
 }) {
   return (
@@ -1785,6 +1924,9 @@ function DesktopOverlayRail({
         active={isSaved}
         onClick={onSave}
       />
+      {audioRecoveryVisible && (
+        <DesktopRailBtn icon={Volume2} label="Sound" active onClick={onAudioRecovery} />
+      )}
       <DesktopRailBtn icon={Share2} label="Share" active={activeRailFeedback === 'share'} onClick={onShare} />
       {onLearnMore && (
         <DesktopRailBtn icon={Info} label="Info" active={activeRailFeedback === 'info'} onClick={onLearnMore} />
@@ -1939,18 +2081,22 @@ function YouTubePlayer({
 
 function EmbeddedVideoPlayer({
   source,
+  contentId,
   title,
   autoplayMode,
   onAutoplayModeChange,
   onVideoEnd,
   onPlayerReady,
+  onGumletAudioState,
 }: {
   source: VideoSource;
+  contentId: string;
   title: string;
   autoplayMode: AutoplayMode;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onVideoEnd: () => void;
   onPlayerReady: (player: FeedPlayerInstance | null) => void;
+  onGumletAudioState: (state: GumletAudioState) => void;
 }) {
   if (source.provider === 'youtube') {
     return (
@@ -1967,30 +2113,36 @@ function EmbeddedVideoPlayer({
 
   return (
     <GumletVideoPlayer
+      contentId={contentId}
       videoId={source.id}
       title={title}
       autoplayMode={autoplayMode}
       onAutoplayModeChange={onAutoplayModeChange}
       onPlayerReady={onPlayerReady}
+      onGumletAudioState={onGumletAudioState}
       onVideoEnd={onVideoEnd}
     />
   );
 }
 
 function GumletVideoPlayer({
+  contentId,
   videoId,
   title,
   autoplayMode,
   onAutoplayModeChange,
   onVideoEnd,
   onPlayerReady,
+  onGumletAudioState,
 }: {
+  contentId: string;
   videoId: string;
   title: string;
   autoplayMode: AutoplayMode;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onVideoEnd: () => void;
   onPlayerReady: (player: FeedPlayerInstance | null) => void;
+  onGumletAudioState: (state: GumletAudioState) => void;
 }) {
   const playerRef = useRef<GumletPlayerHandle | null>(null);
   const fallbackTimerRef = useRef<number | null>(null);
@@ -2005,6 +2157,14 @@ function GumletVideoPlayer({
     window.clearTimeout(fallbackTimerRef.current);
     fallbackTimerRef.current = null;
   }, []);
+
+  const reportAudioState = useCallback(async () => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    const [muted, volume] = await Promise.all([player.getMuted(), player.getVolume()]);
+    onGumletAudioState({ contentId, muted, volume });
+  }, [contentId, onGumletAudioState]);
 
   const fallbackToMuted = useCallback(() => {
     const player = playerRef.current;
@@ -2032,24 +2192,43 @@ function GumletVideoPlayer({
       onAutoplayModeChange('muted-fallback');
     } else {
       player.unmute();
+      player.setVolume(100);
     }
 
     player.play();
+    void reportAudioState();
     fallbackTimerRef.current = window.setTimeout(() => {
       if (!playedRef.current) fallbackToMuted();
     }, 900);
     onPlayerReady({
+      playVideo: () => player.play(),
       pauseVideo: () => player.pause(),
       mute: () => player.mute(),
       unMute: () => player.unmute(),
+      setVolume: (volume: number) => player.setVolume(volume),
+      getMuted: () => player.getMuted(),
+      getVolume: () => player.getVolume(),
     });
-  }, [fallbackToMuted, onAutoplayModeChange, onPlayerReady]);
+  }, [fallbackToMuted, onAutoplayModeChange, onPlayerReady, reportAudioState]);
 
   const handlePlay = useCallback(() => {
     playedRef.current = true;
     setHasPlayed(true);
     clearFallbackTimer();
-  }, [clearFallbackTimer]);
+    void reportAudioState();
+  }, [clearFallbackTimer, reportAudioState]);
+
+  const handleVolumeChange = useCallback(
+    (event: { muted?: boolean; volume?: number }) => {
+      if (typeof event.muted === 'boolean' && typeof event.volume === 'number') {
+        onGumletAudioState({ contentId, muted: event.muted, volume: event.volume });
+        return;
+      }
+
+      void reportAudioState();
+    },
+    [contentId, onGumletAudioState, reportAudioState]
+  );
 
   const handleEnded = useCallback(() => {
     if (endedRef.current) return;
@@ -2084,6 +2263,7 @@ function GumletVideoPlayer({
         disable_player_controls={false}
         onReady={handleReady}
         onPlay={handlePlay}
+        onVolumeChange={handleVolumeChange}
         onEnded={handleEnded}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
         iframeStyle={{
@@ -2110,6 +2290,7 @@ function MediaStage({
   onPause,
   onAutoplayModeChange,
   onPlayerReady,
+  onGumletAudioState,
   onVideoEnd,
 }: {
   item: LaunchpadContent;
@@ -2121,6 +2302,7 @@ function MediaStage({
   onPause: () => void;
   onAutoplayModeChange: (mode: AutoplayMode) => void;
   onPlayerReady: (player: FeedPlayerInstance | null) => void;
+  onGumletAudioState: (state: GumletAudioState) => void;
   onVideoEnd: () => void;
 }) {
   const progressTracked = useRef(new Set<number>());
@@ -2198,10 +2380,12 @@ function MediaStage({
           <>
             <EmbeddedVideoPlayer
               source={videoSource}
+              contentId={item.id}
               title={item.title}
               autoplayMode={autoplayMode}
               onAutoplayModeChange={onAutoplayModeChange}
               onPlayerReady={onPlayerReady}
+              onGumletAudioState={onGumletAudioState}
               onVideoEnd={onVideoEnd}
             />
             <div
@@ -2311,10 +2495,12 @@ function MediaStage({
           <>
             <EmbeddedVideoPlayer
               source={videoSource}
+              contentId={item.id}
               title={item.title}
               autoplayMode={autoplayMode}
               onAutoplayModeChange={onAutoplayModeChange}
               onPlayerReady={onPlayerReady}
+              onGumletAudioState={onGumletAudioState}
               onVideoEnd={onVideoEnd}
             />
             <div

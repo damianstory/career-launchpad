@@ -4,17 +4,18 @@ export type VideoSource =
   | { provider: 'youtube'; id: string }
   | { provider: 'gumlet'; id: string };
 
+export function itemMatchesFilters(item: LaunchpadContent, filters: ContentFilters): boolean {
+  if (filters.format && item.format !== filters.format) return false;
+  if (filters.categories.length > 0 && !filters.categories.some((slug) => item.categories.includes(slug))) return false;
+  return true;
+}
+
 export function applyContentFilters(
   content: LaunchpadContent[],
   filters: ContentFilters
 ): LaunchpadContent[] {
   if (filters.categories.length === 0 && !filters.format) return content;
-
-  return content.filter((item) => {
-    if (filters.categories.length > 0 && !filters.categories.some((slug) => item.categories.includes(slug))) return false;
-    if (filters.format && item.format !== filters.format) return false;
-    return true;
-  });
+  return content.filter((item) => itemMatchesFilters(item, filters));
 }
 
 export function shuffleContentForVisit<T>(content: T[], seed: string): T[] {

@@ -11,10 +11,15 @@ const { replaceMock, gumletPlayers } = vi.hoisted(() => ({
   gumletPlayers: [] as Array<{
     videoID: string;
     props: Record<string, unknown>;
+    muted: boolean;
+    volume: number;
     play: ReturnType<typeof vi.fn>;
     pause: ReturnType<typeof vi.fn>;
     mute: ReturnType<typeof vi.fn>;
     unmute: ReturnType<typeof vi.fn>;
+    setVolume: ReturnType<typeof vi.fn>;
+    getMuted: ReturnType<typeof vi.fn>;
+    getVolume: ReturnType<typeof vi.fn>;
   }>,
 }));
 
@@ -33,23 +38,44 @@ vi.mock('@gumlet/react-embed-player', async () => {
       ref
     ) {
       const videoID = props.videoID ?? '';
-      const record = React.useMemo(
-        () => ({
+      const record = React.useMemo(() => {
+        const entry = {
           videoID,
           props,
+          muted: props.muted === true,
+          volume: 100,
           play: vi.fn(),
           pause: vi.fn(),
           mute: vi.fn(),
           unmute: vi.fn(),
-        }),
-        [props, videoID]
-      );
+          setVolume: vi.fn(),
+          getMuted: vi.fn(),
+          getVolume: vi.fn(),
+        };
+
+        entry.mute.mockImplementation(() => {
+          entry.muted = true;
+        });
+        entry.unmute.mockImplementation(() => {
+          entry.muted = false;
+        });
+        entry.setVolume.mockImplementation((volume: number) => {
+          entry.volume = volume;
+        });
+        entry.getMuted.mockImplementation(() => Promise.resolve(entry.muted));
+        entry.getVolume.mockImplementation(() => Promise.resolve(entry.volume));
+
+        return entry;
+      }, [props, videoID]);
 
       React.useImperativeHandle(ref, () => ({
         play: record.play,
         pause: record.pause,
         mute: record.mute,
         unmute: record.unmute,
+        setVolume: record.setVolume,
+        getMuted: record.getMuted,
+        getVolume: record.getVolume,
       }));
 
       React.useEffect(() => {
@@ -247,6 +273,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   reducedMotion = false;
   mobileViewport = false;
+  delete process.env.NEXT_PUBLIC_LAUNCHPAD_GUMLET_AUDIO_RECOVERY;
   gumletPlayers.length = 0;
   installMatchMedia();
   installYouTubeMock();
@@ -894,6 +921,109 @@ describe('LaunchpadApp feed navigation', () => {
     expectHeading('AI Tools That Make Schoolwork Less Messy');
   });
 
+  it('keeps the Video format filter after opening Learn More on the current video card', async () => {
+    renderLaunchpad();
+    await dismissFeedOnboarding();
+
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Videos/i }));
+
+    fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Video$/, hidden: true })).toHaveAttribute('data-active', 'true');
+    expect(screen.queryByRole('button', { name: /3 formats/i, hidden: true })).not.toBeInTheDocument();
+  });
+
+  it('keeps the Article format filter after opening Read it on the current article card', async () => {
+    renderLaunchpad(null, fixtureContent, null, 'seed-1');
+    await dismissFeedOnboarding();
+
+    expectHeading('An Article With No Learn More Copy');
+
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Articles/i }));
+
+    fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /article with no learn more copy/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Article$/, hidden: true })).toHaveAttribute('data-active', 'true');
+    expect(screen.queryByRole('button', { name: /3 formats/i, hidden: true })).not.toBeInTheDocument();
+  });
+
+  it('clears the format filter when a picked related item does not match it', async () => {
+    const articleWithVideoRelated = contentVariant(fixtureContent[1], {
+      id: 'article-x',
+      slug: 'article-x',
+      title: 'Article X',
+      learnMore: { ...fixtureContent[1].learnMore, relatedContentIds: ['video-y'] },
+    });
+    const videoY = contentVariant(fixtureContent[0], {
+      id: 'video-y',
+      slug: 'video-y',
+      title: 'Video Y',
+      mediaUrl: 'https://www.youtube.com/watch?v=yyyyyyyyyyy',
+      learnMore: { ...fixtureContent[0].learnMore, relatedContentIds: [] },
+    });
+    renderLaunchpad(null, [articleWithVideoRelated, videoY]);
+    await dismissFeedOnboarding();
+
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Articles/i }));
+    expectHeading('Article X');
+
+    fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
+    await flushAsyncWork();
+
+    const dialog = screen.getByRole('dialog', { name: /article x/i });
+    expect(screen.getByRole('button', { name: /^Article$/, hidden: true })).toHaveAttribute('data-active', 'true');
+
+    const videoYTitle = within(dialog).getByText('Video Y');
+    fireEvent.click(videoYTitle.closest('button') as HTMLButtonElement);
+    await flushAsyncWork();
+
+    expect(screen.queryByRole('button', { name: /^Article$/, hidden: true })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /3 formats/i, hidden: true })).toBeInTheDocument();
+  });
+
+  it('preserves the format filter when a picked related item matches it', async () => {
+    const videoA = contentVariant(fixtureContent[0], {
+      id: 'video-a',
+      slug: 'video-a',
+      title: 'Video A',
+      mediaUrl: 'https://www.youtube.com/watch?v=aaaaaaaaaaa',
+      learnMore: { ...fixtureContent[0].learnMore, relatedContentIds: ['video-b'] },
+    });
+    const videoB = contentVariant(fixtureContent[0], {
+      id: 'video-b',
+      slug: 'video-b',
+      title: 'Video B',
+      mediaUrl: 'https://www.youtube.com/watch?v=bbbbbbbbbbb',
+      learnMore: { ...fixtureContent[0].learnMore, relatedContentIds: ['video-a'] },
+    });
+    renderLaunchpad(null, [videoA, videoB]);
+    await dismissFeedOnboarding();
+
+    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Videos/i }));
+
+    fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
+    await flushAsyncWork();
+
+    const dialogA = screen.queryByRole('dialog', { name: /video a/i });
+    const dialog = dialogA ?? screen.getByRole('dialog', { name: /video b/i });
+    const otherTitle = dialogA ? 'Video B' : 'Video A';
+
+    const relatedTitle = within(dialog).getByText(otherTitle);
+    fireEvent.click(relatedTitle.closest('button') as HTMLButtonElement);
+    await flushAsyncWork();
+
+    expect(screen.getByRole('button', { name: /^Video$/, hidden: true })).toHaveAttribute('data-active', 'true');
+    expect(screen.queryByRole('button', { name: /3 formats/i, hidden: true })).not.toBeInTheDocument();
+  });
+
   it('jumps from a search result to the feed card without opening Learn More', async () => {
     renderLaunchpad();
     await dismissFeedOnboarding();
@@ -1013,6 +1143,8 @@ describe('LaunchpadApp playback', () => {
     act(() => {
       (player.props.onReady as () => void)();
     });
+    expect(player.unmute).toHaveBeenCalledTimes(1);
+    expect(player.setVolume).toHaveBeenCalledWith(100);
     expect(player.play).toHaveBeenCalledTimes(1);
     expect(player.mute).not.toHaveBeenCalled();
 
@@ -1022,6 +1154,89 @@ describe('LaunchpadApp playback', () => {
 
     expect(player.mute).toHaveBeenCalledTimes(1);
     expect(player.play).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows a rail-level sound recovery control when Gumlet stays muted', async () => {
+    renderLaunchpad(null, [gumletTestContent()]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play gumlet test video/i }));
+    await flushAsyncWork();
+
+    const player = gumletPlayers.at(-1);
+    if (!player) throw new Error('Expected Gumlet player');
+
+    act(() => {
+      (player.props.onReady as () => void)();
+      player.muted = true;
+      player.volume = 0;
+      (player.props.onVolumeChange as (event: { muted: boolean; volume: number }) => void)({
+        muted: true,
+        volume: 0,
+      });
+    });
+
+    expect(within(desktopRail()).getByRole('button', { name: 'Sound' })).toBeInTheDocument();
+  });
+
+  it('retries Gumlet audio from the rail-level sound control and records analytics', async () => {
+    renderLaunchpad(null, [gumletTestContent()]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play gumlet test video/i }));
+    await flushAsyncWork();
+
+    const player = gumletPlayers.at(-1);
+    if (!player) throw new Error('Expected Gumlet player');
+
+    act(() => {
+      (player.props.onReady as () => void)();
+      player.muted = true;
+      player.volume = 0;
+      (player.props.onVolumeChange as (event: { muted: boolean; volume: number }) => void)({
+        muted: true,
+        volume: 0,
+      });
+    });
+
+    const soundButton = within(desktopRail()).getByRole('button', { name: 'Sound' });
+    fireEvent.click(soundButton);
+    await flushAsyncWork();
+
+    expect(player.unmute).toHaveBeenCalledTimes(2);
+    expect(player.setVolume).toHaveBeenLastCalledWith(100);
+    expect(player.play).toHaveBeenCalledTimes(2);
+    expect(within(desktopRail()).queryByRole('button', { name: 'Sound' })).not.toBeInTheDocument();
+    expect(
+      storedEvents().some(
+        (event) =>
+          event.eventType === 'video_audio_recovery' &&
+          event.contentId === 'video-gumlet-test' &&
+          event.metadata?.action === 'clicked'
+      )
+    ).toBe(true);
+  });
+
+  it('hides Gumlet audio recovery when the kill switch is disabled', async () => {
+    process.env.NEXT_PUBLIC_LAUNCHPAD_GUMLET_AUDIO_RECOVERY = 'false';
+    renderLaunchpad(null, [gumletTestContent()]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play gumlet test video/i }));
+    await flushAsyncWork();
+
+    const player = gumletPlayers.at(-1);
+    if (!player) throw new Error('Expected Gumlet player');
+
+    act(() => {
+      (player.props.onReady as () => void)();
+      player.muted = true;
+      player.volume = 0;
+      (player.props.onVolumeChange as (event: { muted: boolean; volume: number }) => void)({
+        muted: true,
+        volume: 0,
+      });
+    });
+
+    expect(within(desktopRail()).queryByRole('button', { name: 'Sound' })).not.toBeInTheDocument();
+    expect(storedEvents().some((event) => event.eventType === 'video_audio_recovery')).toBe(false);
   });
 
   it('auto-advances from a Gumlet video when it ends', async () => {

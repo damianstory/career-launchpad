@@ -8,6 +8,7 @@ import {
   getRelatedContent,
   getVideoSource,
   getYouTubeId,
+  itemMatchesFilters,
   shuffleContentForVisit,
 } from './content';
 
@@ -56,6 +57,42 @@ describe('content filtering', () => {
     });
 
     expect(result.map((item) => item.id)).toEqual(['first-match', 'second-match']);
+  });
+});
+
+describe('itemMatchesFilters', () => {
+  const videoLifeSkills = fixtureContent[0];
+  const articleMindsets = fixtureContent[1];
+
+  it('matches any item when filters are empty', () => {
+    expect(itemMatchesFilters(videoLifeSkills, { categories: [], format: null })).toBe(true);
+    expect(itemMatchesFilters(articleMindsets, { categories: [], format: null })).toBe(true);
+  });
+
+  it('respects format filter independently of categories', () => {
+    expect(itemMatchesFilters(videoLifeSkills, { categories: [], format: 'video' })).toBe(true);
+    expect(itemMatchesFilters(articleMindsets, { categories: [], format: 'video' })).toBe(false);
+  });
+
+  it('uses OR semantics across categories', () => {
+    expect(
+      itemMatchesFilters(videoLifeSkills, { categories: ['life-skills', 'mindsets'], format: null })
+    ).toBe(true);
+    expect(
+      itemMatchesFilters(videoLifeSkills, { categories: ['on-the-job', 'mindsets'], format: null })
+    ).toBe(false);
+  });
+
+  it('requires both format and category to match when both are set', () => {
+    expect(
+      itemMatchesFilters(videoLifeSkills, { categories: ['life-skills'], format: 'video' })
+    ).toBe(true);
+    expect(
+      itemMatchesFilters(videoLifeSkills, { categories: ['life-skills'], format: 'article' })
+    ).toBe(false);
+    expect(
+      itemMatchesFilters(videoLifeSkills, { categories: ['mindsets'], format: 'video' })
+    ).toBe(false);
   });
 });
 

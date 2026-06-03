@@ -56,6 +56,7 @@ export type AnalyticsEventType =
   | 'video_play'
   | 'video_progress'
   | 'video_complete'
+  | 'video_audio_recovery'
   | 'learn_more_open'
   | 'category_filter'
   | 'format_filter'
