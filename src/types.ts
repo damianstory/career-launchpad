@@ -49,26 +49,52 @@ export interface ContentFilters {
   format: ContentFormat | null;
 }
 
-export type AnalyticsEventType =
-  | 'entry_view'
-  | 'feed_impression'
-  | 'content_open'
-  | 'video_play'
-  | 'video_progress'
-  | 'video_complete'
-  | 'video_audio_recovery'
-  | 'learn_more_open'
-  | 'category_filter'
-  | 'format_filter'
-  | 'like'
-  | 'share'
-  | 'related_content_click'
-  | 'outbound_click';
+export const ANALYTICS_EVENT_TYPES = [
+  'session_start',
+  'entry_view',
+  'feed_impression',
+  'content_open',
+  'video_play',
+  'video_progress',
+  'video_pause',
+  'video_complete',
+  'video_audio_recovery',
+  'learn_more_open',
+  'category_filter',
+  'format_filter',
+  'like',
+  'share',
+  'related_content_click',
+  'outbound_click',
+  'search_open',
+  'search_query',
+  'search_zero_results',
+  'search_result_click',
+] as const;
+
+export type AnalyticsEventType = (typeof ANALYTICS_EVENT_TYPES)[number];
+
+export type AnalyticsDeviceType = 'desktop' | 'tablet' | 'mobile' | 'unknown';
+
+export interface AnalyticsEventContext {
+  deviceType: AnalyticsDeviceType;
+  pagePath: string;
+  referrerHost?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+}
 
 export interface AnalyticsEvent {
+  eventId: string;
+  eventVersion: 1;
   eventType: AnalyticsEventType;
   timestamp: string;
+  visitorId: string;
   sessionId: string;
   contentId?: string;
   metadata?: Record<string, unknown>;
+  context: AnalyticsEventContext;
 }

@@ -41,7 +41,7 @@ import {
   type VideoSource,
   shuffleContentForVisit,
 } from '@/lib/content';
-import { trackEvent } from '@/lib/analytics';
+import { sanitizeSearchQuery, trackEvent } from '@/lib/analytics';
 import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types';
 
 import { BrowseDrawer } from '@/components/BrowseDrawer';
@@ -508,6 +508,7 @@ export function LaunchpadApp({
   const activePlayerRef = useRef<FeedPlayerInstance | null>(null);
   const gumletAudioRecoveryShownRef = useRef(new Set<string>());
   const sharedLinkOnboardingTimerRef = useRef<number | null>(null);
+  const sessionStartTrackedRef = useRef(false);
   const currentFeedCardRef = useRef<HTMLDivElement | null>(null);
   const focusedFeedIdRef = useRef<string | null>(null);
   const [pendingFeedFocusId, setPendingFeedFocusId] = useState<string | null>(
@@ -566,6 +567,23 @@ export function LaunchpadApp({
     setFeedOnboardingOpen(false);
   }, []);
 
+  const trackVideoPause = useCallback(
+    (reason: unknown) => {
+      if (!item || effectivePlayingContentId !== item.id || item.format !== 'video') return;
+      const source = getVideoSource(item.mediaUrl);
+      trackEvent('video_pause', {
+        contentId: item.id,
+        metadata: {
+          reason: typeof reason === 'string' ? reason : 'explicit',
+          provider: source?.provider,
+          format: item.format,
+          durationSeconds: item.durationSeconds,
+        },
+      });
+    },
+    [effectivePlayingContentId, item]
+  );
+
   const focusFeedContent = useCallback(
     (target: LaunchpadContent, options: { panel: boolean; focusFeed?: boolean }) => {
       const nextIdx = Math.max(0, unfilteredFeedContent.findIndex((entry) => entry.id === target.id));
@@ -592,8 +610,12 @@ export function LaunchpadApp({
 
   const openSearch = useCallback(() => {
     cancelSharedLinkOnboarding();
+    if (!searchOpen) trackEvent('search_open');
+    trackVideoPause('search');
+    activePlayerRef.current?.pauseVideo?.();
+    setPlayingContentId(null);
     setSearchOpen(true);
-  }, [cancelSharedLinkOnboarding]);
+  }, [cancelSharedLinkOnboarding, searchOpen, trackVideoPause]);
 
   const setPathsDrawerOpenWithOnboardingCancel = useCallback(
     (open: boolean) => {
@@ -614,6 +636,10 @@ export function LaunchpadApp({
   // Initial load
   useEffect(() => {
     queueMicrotask(() => setSavedIds(readSavedIds()));
+    if (!sessionStartTrackedRef.current) {
+      sessionStartTrackedRef.current = true;
+      trackEvent('session_start', { metadata: { contentCount: previewContent.length } });
+    }
     trackEvent('entry_view', { metadata: { contentCount: previewContent.length } });
   }, [previewContent.length]);
 
@@ -721,6 +747,7 @@ export function LaunchpadApp({
   const openPanel = useCallback(
     (target: LaunchpadContent, source: string) => {
       cancelSharedLinkOnboarding();
+      trackVideoPause('panel');
       activePlayerRef.current?.pauseVideo?.();
       setPlayingContentId(null);
       setSearchOpen(false);
@@ -751,7 +778,7 @@ export function LaunchpadApp({
       trackEvent('content_open', { contentId: target.id, metadata: { source } });
       trackEvent('learn_more_open', { contentId: target.id, metadata: { source } });
     },
-    [cancelSharedLinkOnboarding, filteredContent, filters, item?.id, unfilteredFeedContent]
+    [cancelSharedLinkOnboarding, filteredContent, filters, item?.id, trackVideoPause, unfilteredFeedContent]
   );
 
   const closePanel = useCallback(() => {
@@ -762,7 +789,11 @@ export function LaunchpadApp({
   }, []);
 
   const jumpToSearchResult = useCallback(
-    (target: LaunchpadContent) => {
+    (
+      target: LaunchpadContent,
+      searchAnalytics?: { query: string; resultCount: number; rank: number }
+    ) => {
+      trackVideoPause('search');
       activePlayerRef.current?.pauseVideo?.();
       setPlayingContentId(null);
       setSearchOpen(false);
@@ -777,9 +808,15 @@ export function LaunchpadApp({
       const url = new URL(window.location.href);
       url.searchParams.delete('content');
       window.history.replaceState({}, '', url);
+      if (searchAnalytics?.query) {
+        trackEvent('search_result_click', {
+          contentId: target.id,
+          metadata: { ...searchAnalytics, selectedContentId: target.id },
+        });
+      }
       trackEvent('content_open', { contentId: target.id, metadata: { source: 'search' } });
     },
-    [unfilteredFeedContent]
+    [trackVideoPause, unfilteredFeedContent]
   );
 
   const toggleSave = useCallback(
@@ -867,10 +904,14 @@ export function LaunchpadApp({
     setPlayingContentId(target.id);
   }, []);
 
-  const stopPlayback = useCallback(() => {
-    setGumletAudioRecovery(null);
-    setPlayingContentId(null);
-  }, []);
+  const stopPlayback = useCallback(
+    (reason = 'explicit') => {
+      trackVideoPause(reason);
+      setGumletAudioRecovery(null);
+      setPlayingContentId(null);
+    },
+    [trackVideoPause]
+  );
 
   const handleGumletAudioState = useCallback((state: GumletAudioState) => {
     const needsRecovery = state.muted || state.volume <= 0;
@@ -933,7 +974,11 @@ export function LaunchpadApp({
 
   const handleVideoEnd = useCallback(() => {
     if (item) {
-      trackEvent('video_complete', { contentId: item.id });
+      const source = getVideoSource(item.mediaUrl);
+      trackEvent('video_complete', {
+        contentId: item.id,
+        metadata: { provider: source?.provider, format: item.format, durationSeconds: item.durationSeconds },
+      });
     }
     setGumletAudioRecovery(null);
     const advanced = navigateFeed('next', { ignoreLock: true });
@@ -1118,8 +1163,12 @@ export function LaunchpadApp({
           categories={initialCategories}
           mobile={isMobile}
           onClose={() => setSearchOpen(false)}
-          onPick={(picked) => {
-            jumpToSearchResult(picked);
+          onPick={jumpToSearchResult}
+          onSearchQuery={(query, resultCount) => {
+            trackEvent('search_query', { metadata: { query, resultCount } });
+            if (resultCount === 0) {
+              trackEvent('search_zero_results', { metadata: { query, resultCount } });
+            }
           }}
         />
       )}
@@ -2312,22 +2361,32 @@ function MediaStage({
 
   // Video progress milestones
   useEffect(() => {
+    progressTracked.current.clear();
+  }, [item.id]);
+
+  useEffect(() => {
     if (!isPlaying || item.format !== 'video') return;
-    trackEvent('video_play', { contentId: item.id });
-    let elapsed = 0;
     const duration = item.durationSeconds ?? 90;
+    trackEvent('video_play', {
+      contentId: item.id,
+      metadata: { provider: videoSource?.provider, format: item.format, durationSeconds: duration },
+    });
+    let elapsed = 0;
     const timer = window.setInterval(() => {
       elapsed += 5;
       const progress = Math.min(100, Math.round((elapsed / duration) * 100));
       [25, 50, 80].forEach((milestone) => {
         if (progress >= milestone && !progressTracked.current.has(milestone)) {
           progressTracked.current.add(milestone);
-          trackEvent('video_progress', { contentId: item.id, metadata: { milestone } });
+          trackEvent('video_progress', {
+            contentId: item.id,
+            metadata: { milestone, provider: videoSource?.provider, format: item.format, durationSeconds: duration },
+          });
         }
       });
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [item, isPlaying]);
+  }, [item, isPlaying, videoSource?.provider]);
 
   if (isMobileVariant) {
     return (
@@ -2391,7 +2450,7 @@ function MediaStage({
             <div
               data-testid="youtube-scroll-overlay"
               aria-hidden="true"
-              onClick={onPause}
+              onClick={() => onPause()}
               style={{ position: 'absolute', inset: 0, zIndex: 4, cursor: 'pointer' }}
             />
           </>
@@ -2506,7 +2565,7 @@ function MediaStage({
             <div
               data-testid="youtube-scroll-overlay"
               aria-hidden="true"
-              onClick={onPause}
+              onClick={() => onPause()}
               style={{ position: 'absolute', inset: 0, zIndex: 4, cursor: 'pointer' }}
             />
           </>
@@ -2879,15 +2938,18 @@ function SearchModal({
   mobile,
   onClose,
   onPick,
+  onSearchQuery,
 }: {
   content: LaunchpadContent[];
   categories: LaunchpadCategory[];
   mobile: boolean;
   onClose: () => void;
-  onPick: (item: LaunchpadContent) => void;
+  onPick: (item: LaunchpadContent, analytics?: { query: string; resultCount: number; rank: number }) => void;
+  onSearchQuery: (query: string, resultCount: number) => void;
 }) {
   const [q, setQ] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastTrackedQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -2911,6 +2973,20 @@ function SearchModal({
         .includes(needle)
     );
   }, [content, q]);
+
+  const sanitizedQuery = useMemo(() => sanitizeSearchQuery(q), [q]);
+
+  useEffect(() => {
+    if (!sanitizedQuery) return;
+
+    const timer = window.setTimeout(() => {
+      if (lastTrackedQueryRef.current === sanitizedQuery) return;
+      lastTrackedQueryRef.current = sanitizedQuery;
+      onSearchQuery(sanitizedQuery, results.length);
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [onSearchQuery, results.length, sanitizedQuery]);
 
   return (
     <div
@@ -2983,12 +3059,17 @@ function SearchModal({
               No matches yet. Try &ldquo;internship&rdquo; or &ldquo;feedback&rdquo;.
             </div>
           ) : (
-            results.map((entry) => (
+            results.map((entry, index) => (
               <button
                 key={entry.id}
                 data-testid="search-result"
                 data-format={entry.format}
-                onClick={() => onPick(entry)}
+                onClick={() =>
+                  onPick(
+                    entry,
+                    sanitizedQuery ? { query: sanitizedQuery, resultCount: results.length, rank: index + 1 } : undefined
+                  )
+                }
                 style={{
                   display: 'flex',
                   alignItems: 'center',

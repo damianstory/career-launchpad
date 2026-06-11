@@ -894,6 +894,73 @@ describe('LaunchpadApp feed navigation', () => {
     ]);
   });
 
+  it('tracks session start and sanitized zero-result search analytics', async () => {
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    expect(storedEvents().filter((event) => event.eventType === 'session_start')).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
+    fireEvent.change(screen.getByPlaceholderText(/search careers/i), {
+      target: { value: ' Student.Name@example.com 613-555-0199 ' },
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(450);
+    });
+    await flushAsyncWork();
+
+    const events = storedEvents();
+    expect(events.filter((event) => event.eventType === 'search_open')).toHaveLength(1);
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          eventType: 'search_query',
+          metadata: { query: '[redacted-email] [redacted-phone]', resultCount: 0 },
+        }),
+        expect.objectContaining({
+          eventType: 'search_zero_results',
+          metadata: { query: '[redacted-email] [redacted-phone]', resultCount: 0 },
+        }),
+      ])
+    );
+  });
+
+  it('tracks search result clicks with query, result count, rank, and selected content id', async () => {
+    const articleMatch = contentVariant(fixtureContent[1], {
+      id: 'article-alpha',
+      slug: 'article-alpha',
+      title: 'Alpha Article',
+    });
+    const videoMatch = contentVariant(fixtureContent[0], {
+      id: 'video-alpha',
+      slug: 'video-alpha',
+      title: 'Alpha Video',
+    });
+
+    renderLaunchpad(null, [articleMatch, videoMatch], null, 'seed-1');
+    await flushAsyncWork();
+    fireEvent.click(screen.getByRole('button', { name: 'Open search' }));
+    fireEvent.change(screen.getByPlaceholderText(/search careers/i), { target: { value: ' Alpha ' } });
+
+    act(() => {
+      vi.advanceTimersByTime(450);
+    });
+    await flushAsyncWork();
+    fireEvent.click(screen.getAllByTestId('search-result')[0]);
+    await flushAsyncWork();
+
+    expect(storedEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          eventType: 'search_result_click',
+          contentId: 'video-alpha',
+          metadata: { query: 'alpha', resultCount: 2, rank: 1, selectedContentId: 'video-alpha' },
+        }),
+      ])
+    );
+  });
+
   it('preserves shuffled-relative order when filtering by category', async () => {
     renderLaunchpad(null, fixtureContent, null, 'seed-1');
     await dismissFeedOnboarding();
@@ -1129,6 +1196,75 @@ describe('LaunchpadApp playback', () => {
     fireEvent.click(screen.getByRole('button', { name: /play gumlet test video/i }));
 
     expect(screen.getByTestId('gumlet-host-6a106a3589ec653eb39ce727')).toBeInTheDocument();
+  });
+
+  it('tracks explicit video pause actions', async () => {
+    renderLaunchpad(null, [fixtureContent[0]]);
+
+    fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
+    await flushAsyncWork();
+    fireEvent.click(screen.getByTestId('youtube-scroll-overlay'));
+    await flushAsyncWork();
+
+    expect(storedEvents()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          eventType: 'video_pause',
+          contentId: 'video-ai-tools',
+          metadata: expect.objectContaining({ reason: 'explicit' }),
+        }),
+      ])
+    );
+  });
+
+  it('tracks video progress milestones independently for each feed item', async () => {
+    const firstVideo = contentVariant(fixtureContent[0], {
+      id: 'video-progress-one',
+      slug: 'video-progress-one',
+      title: 'Progress One',
+      durationSeconds: 20,
+    });
+    const secondVideo = contentVariant(fixtureContent[2], {
+      id: 'video-progress-two',
+      slug: 'video-progress-two',
+      title: 'Progress Two',
+      durationSeconds: 20,
+    });
+
+    renderLaunchpad('video-progress-one', [firstVideo, secondVideo], null, 'progress');
+    await flushAsyncWork();
+
+    fireEvent.click(screen.getByRole('button', { name: /play progress one/i }));
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    const firstPlayer = players.at(-1);
+    if (!firstPlayer) throw new Error('Expected first YouTube player');
+    if (!window.YT) throw new Error('Expected YouTube API mock');
+    const endedState = window.YT.PlayerState.ENDED;
+    act(() => {
+      firstPlayer.events.onStateChange?.({ data: endedState });
+    });
+    await finishTransition();
+
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    const progressEvents = storedEvents().filter((event) => event.eventType === 'video_progress');
+    expect(progressEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          contentId: 'video-progress-one',
+          metadata: expect.objectContaining({ milestone: 25 }),
+        }),
+        expect.objectContaining({
+          contentId: 'video-progress-two',
+          metadata: expect.objectContaining({ milestone: 25 }),
+        }),
+      ])
+    );
   });
 
   it('starts Gumlet playback on ready and falls back to muted autoplay if playback does not start', async () => {
