@@ -1,4 +1,4 @@
-import type { CategorySlug, ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types';
+import type { CategorySlug, LaunchpadCategory, LaunchpadContent } from '@/types';
 
 const PLACEHOLDER_THUMBNAIL = '/images/article-placeholder.svg';
 const KNOWN_CATEGORY_SLUGS: CategorySlug[] = [
@@ -28,7 +28,7 @@ export type DbContent = {
   slug: string;
   title: string;
   description: string;
-  content_type: ContentFormat;
+  content_type: string;
   thumbnail_url: string | null;
   video_url: string | null;
   video_orientation: 'vertical' | 'horizontal' | null;
@@ -67,8 +67,9 @@ function normalizeContentRow(
   row: DbContent,
   categoryBySlug: Map<CategorySlug, LaunchpadCategory>
 ): LaunchpadContent | null {
+  // The DB can still hold legacy or future content types; only supported formats reach the feed.
   const format = row.content_type;
-  if (format === 'playbook') return null;
+  if (format !== 'video' && format !== 'article') return null;
   if (format === 'article' && !row.article_embed_url) return null;
 
   const categories = flattenCategories(row.content_categories ?? [], categoryBySlug);

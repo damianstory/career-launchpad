@@ -20,7 +20,6 @@ import type { ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types
 const FORMAT_ICON: Record<ContentFormat, typeof Play> = {
   video: Play,
   article: BookOpen,
-  playbook: BookOpen,
 };
 
 type LearnMorePanelProps = {

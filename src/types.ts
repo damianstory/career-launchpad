@@ -9,7 +9,7 @@ export type CategorySlug =
   | 'job-board'
   | 'skills-canada';
 
-export type ContentFormat = 'video' | 'article' | 'playbook';
+export type ContentFormat = 'video' | 'article';
 
 export type VideoOrientation = 'vertical' | 'horizontal';
 

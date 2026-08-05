@@ -38,12 +38,11 @@ const CATEGORY_ICON: Record<CategorySlug, typeof Rocket> = {
   'skills-canada': Trophy,
 };
 
-// Note: Playbook uses ListChecks here (differs from LearnMorePanel's BookOpen).
-// BookOpen is retained for article; Play for video.
+const FORMAT_ORDER = ['video', 'article'] as const satisfies readonly ContentFormat[];
+
 const FORMAT_ICON: Record<ContentFormat, typeof Play> = {
   video: Play,
   article: BookOpen,
-  playbook: ListChecks,
 };
 
 // ---------------------------------------------------------------------------
@@ -65,8 +64,7 @@ const ALL_PATHS_DESCRIPTION = "Every path. Start here if you don't know where to
 
 const FORMAT_DESCRIPTION: Record<ContentFormat, string> = {
   video: 'Three to five minute videos from real Canadians at work.',
-  article: 'Long-form pieces. Four to eight minute reads.',
-  playbook: 'Step-by-step guides for figuring something out.',
+  article: 'Prefer to read? These are for you.',
 };
 
 const ALL_FORMATS_DESCRIPTION = 'Every story, regardless of format.';
@@ -74,7 +72,6 @@ const ALL_FORMATS_DESCRIPTION = 'Every story, regardless of format.';
 const FORMAT_LABEL: Record<ContentFormat, string> = {
   video: 'Videos',
   article: 'Articles',
-  playbook: 'Playbooks',
 };
 
 // ---------------------------------------------------------------------------
@@ -234,7 +231,7 @@ export function BrowseDrawer({
                       </button>
                     );
                   })
-                : (['video', 'article', 'playbook'] as ContentFormat[]).map((fmt) => {
+                : FORMAT_ORDER.map((fmt) => {
                     const Icon = FORMAT_ICON[fmt];
                     const isActive = activeFormat === fmt;
                     const count = countContentByFormat(fmt, activeCategories, content);

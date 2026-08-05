@@ -9,7 +9,6 @@ import {
   Clock,
   Heart,
   Info,
-  ListChecks,
   Play,
   Search,
   Share2,
@@ -218,13 +217,11 @@ const CATEGORY_BLOCK_BG: Record<CategorySlug, string> = {
 const FORMAT_ICON: Record<ContentFormat, IconCmp> = {
   video: Play,
   article: BookOpen,
-  playbook: ListChecks,
 };
 
 const FORMAT_LABEL: Record<ContentFormat, string> = {
   video: 'Video',
   article: 'Article',
-  playbook: 'Playbook',
 };
 
 function readSavedIds(): string[] {
@@ -499,17 +496,13 @@ export function LaunchpadApp({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const previewContent = useMemo(
-    () => initialContent.filter((content) => content.format !== 'playbook'),
-    [initialContent]
-  );
   const unfilteredFeedContent = useMemo(
-    () => shuffleContentForVisit(previewContent, feedSeed),
-    [feedSeed, previewContent]
+    () => shuffleContentForVisit(initialContent, feedSeed),
+    [feedSeed, initialContent]
   );
   const initialLinkedContent = useMemo(
-    () => getContentBySlug(previewContent, initialContentSlug ?? null),
-    [initialContentSlug, previewContent]
+    () => getContentBySlug(initialContent, initialContentSlug ?? null),
+    [initialContentSlug, initialContent]
   );
   const initialFeedIndex = useMemo(() => {
     if (!initialLinkedContent) return 0;
@@ -687,10 +680,10 @@ export function LaunchpadApp({
     queueMicrotask(() => setSavedIds(readSavedIds()));
     if (!sessionStartTrackedRef.current) {
       sessionStartTrackedRef.current = true;
-      trackEvent('session_start', { metadata: { contentCount: previewContent.length } });
+      trackEvent('session_start', { metadata: { contentCount: initialContent.length } });
     }
-    trackEvent('entry_view', { metadata: { contentCount: previewContent.length } });
-  }, [previewContent.length]);
+    trackEvent('entry_view', { metadata: { contentCount: initialContent.length } });
+  }, [initialContent.length]);
 
   useEffect(() => {
     let cancelled = false;
@@ -770,7 +763,7 @@ export function LaunchpadApp({
 
     const onPop = () => {
       const next = new URLSearchParams(window.location.search);
-      const linked = getContentBySlug(previewContent, next.get('content'));
+      const linked = getContentBySlug(initialContent, next.get('content'));
       const panel = next.get('panel') === 'info';
       if (linked) {
         focusFeedContent(linked, { panel, focusFeed: !panel });
@@ -782,11 +775,11 @@ export function LaunchpadApp({
     return () => window.removeEventListener('popstate', onPop);
   }, [
     focusFeedContent,
+    initialContent,
     initialContentSlug,
     initialLinkedContent,
     initialPanel,
     pathname,
-    previewContent,
     router,
     searchParams,
     showToast,
@@ -1392,12 +1385,12 @@ function DesktopStage({
           onClick={() => setFormatsDrawerOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={formatsDrawerOpen}
-          aria-label={activeFormat === null ? '3 Formats' : FORMAT_LABEL[activeFormat]}
+          aria-label={activeFormat === null ? '2 Formats' : FORMAT_LABEL[activeFormat]}
           data-active={activeFormat !== null ? 'true' : 'false'}
         >
           {activeFormat === null ? (
             <>
-              <span className="num" aria-hidden="true">3</span>
+              <span className="num" aria-hidden="true">2</span>
               <span aria-hidden="true">Formats</span>
             </>
           ) : (
@@ -1708,12 +1701,12 @@ function MobileStage({
           onClick={() => setFormatsDrawerOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={formatsDrawerOpen}
-          aria-label={activeFormat === null ? '3 Formats' : FORMAT_LABEL[activeFormat]}
+          aria-label={activeFormat === null ? '2 Formats' : FORMAT_LABEL[activeFormat]}
           data-active={activeFormat !== null ? 'true' : 'false'}
         >
           {activeFormat === null ? (
             <>
-              <span className="num" aria-hidden="true">3</span>
+              <span className="num" aria-hidden="true">2</span>
               <span aria-hidden="true">Formats</span>
             </>
           ) : (
@@ -1793,7 +1786,7 @@ function MobileStage({
 }
 
 // ============================================================
-// Media Stage (video / article / playbook poster)
+// Media Stage (video / article poster)
 // ============================================================
 type MediaDeckCard = {
   item: LaunchpadContent;

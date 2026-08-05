@@ -824,16 +824,25 @@ describe('LaunchpadApp feed navigation', () => {
     expect(screen.getByRole('dialog', { name: /what your first internship/i })).toBeInTheDocument();
   });
 
-  it('keeps the Playbooks filter option but excludes playbook examples from the preview feed', () => {
+  it.each([
+    ['desktop', false],
+    ['mobile', true],
+  ])('offers only Videos and Articles as formats on %s', async (_label, isMobile) => {
+    mobileViewport = isMobile;
+    installMatchMedia();
     renderLaunchpad();
+    await flushAsyncWork();
 
-    // Open the formats drawer and pick Playbooks
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    const formatsButton = screen.getByRole('button', { name: /2 formats/i });
+    expect(formatsButton).toHaveAccessibleName('2 Formats');
+    expect(formatsButton).toHaveTextContent('2');
+    expect(formatsButton).toHaveTextContent('Formats');
+
+    fireEvent.click(formatsButton);
     const drawer = screen.getByRole('dialog');
-    fireEvent.click(within(drawer).getByRole('button', { name: /Playbooks/i }));
-
-    expect(screen.getByRole('heading', { name: /no matches yet/i })).toBeInTheDocument();
-    expect(screen.queryByText('How to Write a Cold Email That Gets a Reply')).not.toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: /Videos/i })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: /Articles/i })).toBeInTheDocument();
+    expect(within(drawer).queryByRole('button', { name: /Playbooks/i })).not.toBeInTheDocument();
   });
 
   it('uses the full brand on desktop and the shortened brand on mobile', async () => {
@@ -1078,7 +1087,7 @@ describe('LaunchpadApp feed navigation', () => {
     renderLaunchpad(null, fixtureContent, null, 'seed-1');
     await dismissFeedOnboarding();
 
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Videos/i }));
 
     expectHeading('The Career Path Was Not a Straight Line');
@@ -1091,7 +1100,7 @@ describe('LaunchpadApp feed navigation', () => {
     renderLaunchpad();
     await dismissFeedOnboarding();
 
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Videos/i }));
 
     fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
@@ -1099,7 +1108,7 @@ describe('LaunchpadApp feed navigation', () => {
 
     expect(screen.getByRole('dialog', { name: /ai tools that make schoolwork/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Video$/, hidden: true })).toHaveAttribute('data-active', 'true');
-    expect(screen.queryByRole('button', { name: /3 formats/i, hidden: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /2 formats/i, hidden: true })).not.toBeInTheDocument();
   });
 
   it('keeps the Article format filter after opening Read it on the current article card', async () => {
@@ -1108,7 +1117,7 @@ describe('LaunchpadApp feed navigation', () => {
 
     expectHeading('An Article With No Learn More Copy');
 
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Articles/i }));
 
     fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
@@ -1116,7 +1125,7 @@ describe('LaunchpadApp feed navigation', () => {
 
     expect(screen.getByRole('dialog', { name: /article with no learn more copy/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Article$/, hidden: true })).toHaveAttribute('data-active', 'true');
-    expect(screen.queryByRole('button', { name: /3 formats/i, hidden: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /2 formats/i, hidden: true })).not.toBeInTheDocument();
   });
 
   it('clears the format filter when a picked related item does not match it', async () => {
@@ -1136,7 +1145,7 @@ describe('LaunchpadApp feed navigation', () => {
     renderLaunchpad(null, [articleWithVideoRelated, videoY]);
     await dismissFeedOnboarding();
 
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Articles/i }));
     expectHeading('Article X');
 
@@ -1151,7 +1160,7 @@ describe('LaunchpadApp feed navigation', () => {
     await flushAsyncWork();
 
     expect(screen.queryByRole('button', { name: /^Article$/, hidden: true })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /3 formats/i, hidden: true })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /2 formats/i, hidden: true })).toBeInTheDocument();
   });
 
   it('preserves the format filter when a picked related item matches it', async () => {
@@ -1172,7 +1181,7 @@ describe('LaunchpadApp feed navigation', () => {
     renderLaunchpad(null, [videoA, videoB]);
     await dismissFeedOnboarding();
 
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Videos/i }));
 
     fireEvent.click(screen.getByTestId('learn-more-primary-cta'));
@@ -1187,7 +1196,7 @@ describe('LaunchpadApp feed navigation', () => {
     await flushAsyncWork();
 
     expect(screen.getByRole('button', { name: /^Video$/, hidden: true })).toHaveAttribute('data-active', 'true');
-    expect(screen.queryByRole('button', { name: /3 formats/i, hidden: true })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /2 formats/i, hidden: true })).not.toBeInTheDocument();
   });
 
   it('jumps from a search result to the feed card without opening Learn More', async () => {
@@ -1604,7 +1613,7 @@ describe('LaunchpadApp playback', () => {
     await dismissFeedOnboarding();
 
     // Open formats drawer and pick Videos
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Videos/i }));
     fireEvent.click(screen.getByRole('button', { name: /play ai tools/i }));
     act(() => {
@@ -1740,11 +1749,11 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
     expect(screen.getByTestId('browse-drawer')).toHaveAttribute('data-mode', 'paths');
   });
 
-  it('opens the formats drawer when the 3 Formats button is clicked', () => {
+  it('opens the formats drawer when the 2 Formats button is clicked', () => {
     renderLaunchpad();
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByTestId('browse-drawer')).toHaveAttribute('data-mode', 'formats');
   });
@@ -1824,12 +1833,12 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
   it('shows the active format name in the header CTA after a format is selected', () => {
     renderLaunchpad();
 
-    fireEvent.click(screen.getByRole('button', { name: /3 formats/i }));
+    fireEvent.click(screen.getByRole('button', { name: /2 formats/i }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Videos/i }));
 
     // Formats drawer closes on tap (single-select preserved)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /3 formats/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /2 formats/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /video/i })).toBeInTheDocument();
   });
 

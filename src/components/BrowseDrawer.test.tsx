@@ -245,12 +245,14 @@ describe('BrowseDrawer — formats mode', () => {
     expect(within(drawer).getByRole('button', { name: /All Formats/i })).toBeInTheDocument();
   });
 
-  it('renders 3 format cards (Videos, Articles, Playbooks)', () => {
+  it('renders 2 format cards (Videos, Articles) and no Playbooks card', () => {
     renderFormatsDrawer();
 
+    const drawer = screen.getByRole('dialog');
+    expect(drawer.querySelectorAll('[data-format]')).toHaveLength(2);
     expect(screen.getByRole('button', { name: /Videos/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Articles/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Playbooks/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Playbooks/i })).not.toBeInTheDocument();
   });
 
   it('calls onPickFormat with the format when a format card is clicked', () => {
