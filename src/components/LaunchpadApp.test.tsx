@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fixtureCategories, fixtureContent } from '@/test/fixtures/content';
 import type { AnalyticsEvent, LaunchpadContent } from '@/types';
 
-import { LaunchpadApp } from './LaunchpadApp';
+import { FEED_ONBOARDING_SEEN_KEY, isFeedOnboardingSeen, LaunchpadApp } from './LaunchpadApp';
 
 const { replaceMock, gumletPlayers } = vi.hoisted(() => ({
   replaceMock: vi.fn(),
@@ -398,7 +398,7 @@ describe('LaunchpadApp feed navigation', () => {
     expect(feedDeck()).toHaveAttribute('data-transitioning', 'false');
   });
 
-  it('shows desktop feed onboarding on each page load and dismisses only the current mount', async () => {
+  it('shows desktop feed onboarding on the first visit and persists dismissal across mounts', async () => {
     const { unmount } = renderLaunchpad();
     await flushAsyncWork();
 
@@ -412,13 +412,13 @@ describe('LaunchpadApp feed navigation', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Got it' }));
 
     expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
-    expect(window.localStorage.getItem('career-launchpad-feed-onboarding-seen')).toBeNull();
+    expect(Number(window.localStorage.getItem(FEED_ONBOARDING_SEEN_KEY))).toBeGreaterThan(0);
 
     unmount();
     renderLaunchpad();
     await flushAsyncWork();
 
-    expect(screen.getByRole('dialog', { name: /hey, you can scroll/i })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
   });
 
   it('shows mobile feed onboarding copy and dismisses with Escape', async () => {
@@ -437,7 +437,98 @@ describe('LaunchpadApp feed navigation', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
 
     expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
-    expect(window.localStorage.getItem('career-launchpad-feed-onboarding-seen')).toBeNull();
+    expect(Number(window.localStorage.getItem(FEED_ONBOARDING_SEEN_KEY))).toBeGreaterThan(0);
+  });
+
+  it('does not show feed onboarding again once a dismissal is stored', async () => {
+    window.localStorage.setItem(FEED_ONBOARDING_SEEN_KEY, String(Date.now()));
+
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+
+    const heading = screen.getByRole('heading');
+    act(() => {
+      dispatchWheel(heading, 120);
+    });
+    await finishTransition();
+
+    expectHeading('The Career Path Was Not a Straight Line');
+  });
+
+  it('keeps onboarding hidden on a bare shared link when a dismissal is stored', async () => {
+    window.localStorage.setItem(FEED_ONBOARDING_SEEN_KEY, String(Date.now()));
+    window.history.replaceState({}, '', '/?content=nonlinear-career-path');
+
+    renderLaunchpad('nonlinear-career-path');
+    await flushAsyncWork();
+
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps onboarding hidden behind Learn More when a dismissal is stored', async () => {
+    window.localStorage.setItem(FEED_ONBOARDING_SEEN_KEY, String(Date.now()));
+
+    renderLaunchpad(fixtureContent[0].slug, fixtureContent, 'info');
+    await flushAsyncWork();
+
+    fireEvent.click(screen.getByTestId('learn-more-overlay'));
+    await flushAsyncWork();
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+  });
+
+  it('shows onboarding when the stored value is corrupt and replaces it on dismissal', async () => {
+    window.localStorage.setItem(FEED_ONBOARDING_SEEN_KEY, 'garbage');
+
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    const dialog = screen.getByRole('dialog', { name: /hey, you can scroll/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Got it' }));
+
+    expect(Number(window.localStorage.getItem(FEED_ONBOARDING_SEEN_KEY))).toBeGreaterThan(0);
+  });
+
+  it('treats opening search with Cmd+K as dismissing the onboarding', async () => {
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    expect(screen.getByRole('dialog', { name: /hey, you can scroll/i })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await flushAsyncWork();
+
+    expect(screen.getByPlaceholderText(/search careers/i)).toBeInTheDocument();
+    expect(Number(window.localStorage.getItem(FEED_ONBOARDING_SEEN_KEY))).toBeGreaterThan(0);
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await flushAsyncWork();
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps onboarding dismissed for the mount when the storage write fails', async () => {
+    const originalSetItem = window.localStorage.setItem.bind(window.localStorage);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string, value: string) => {
+      if (key === FEED_ONBOARDING_SEEN_KEY) throw new Error('quota exceeded');
+      originalSetItem(key, value);
+    });
+
+    renderLaunchpad();
+    await flushAsyncWork();
+
+    const dialog = screen.getByRole('dialog', { name: /hey, you can scroll/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Got it' }));
+    await flushAsyncWork();
+
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(FEED_ONBOARDING_SEEN_KEY)).toBeNull();
   });
 
   it('waits to show feed onboarding until an existing Learn More overlay closes', async () => {
@@ -491,6 +582,14 @@ describe('LaunchpadApp feed navigation', () => {
 
     expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText(/search careers/i)).toBeInTheDocument();
+    // The hint never rendered, so nothing is persisted — but it stays suppressed for this mount.
+    expect(window.localStorage.getItem(FEED_ONBOARDING_SEEN_KEY)).toBeNull();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await act(async () => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(screen.queryByRole('dialog', { name: /hey, you can scroll/i })).not.toBeInTheDocument();
   });
 
   it('opens a panel permalink over the matching feed item', async () => {
@@ -1742,5 +1841,37 @@ describe('BrowseDrawer integration (via LaunchpadApp)', () => {
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+describe('isFeedOnboardingSeen', () => {
+  const now = 1_700_000_000_000;
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+
+  it('treats a missing or empty value as not seen', () => {
+    expect(isFeedOnboardingSeen(null, now, null)).toBe(false);
+    expect(isFeedOnboardingSeen('', now, null)).toBe(false);
+  });
+
+  it('treats any stored timestamp as seen when there is no TTL', () => {
+    expect(isFeedOnboardingSeen(String(now - thirtyDays * 100), now, null)).toBe(true);
+  });
+
+  it('honours an unexpired TTL and expires an old timestamp', () => {
+    expect(isFeedOnboardingSeen(String(now - 1000), now, thirtyDays)).toBe(true);
+    expect(isFeedOnboardingSeen(String(now - thirtyDays - 1), now, thirtyDays)).toBe(false);
+  });
+
+  it('rejects corrupt, zero, and negative values', () => {
+    expect(isFeedOnboardingSeen('garbage', now, null)).toBe(false);
+    expect(isFeedOnboardingSeen('   ', now, null)).toBe(false);
+    expect(isFeedOnboardingSeen('0', now, null)).toBe(false);
+    expect(isFeedOnboardingSeen('-1', now, null)).toBe(false);
+    expect(isFeedOnboardingSeen('Infinity', now, null)).toBe(false);
+  });
+
+  it('treats a future timestamp as seen so a clock rollback cannot resurrect the hint', () => {
+    expect(isFeedOnboardingSeen(String(now + thirtyDays), now, null)).toBe(true);
+    expect(isFeedOnboardingSeen(String(now + thirtyDays), now, thirtyDays)).toBe(true);
   });
 });

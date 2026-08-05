@@ -53,6 +53,9 @@ const LearnMorePanel = dynamic(
 
 const LIKED_KEY = 'career-launchpad-liked-content';
 const LEGACY_SAVED_KEY = 'career-launchpad-saved-content';
+export const FEED_ONBOARDING_SEEN_KEY = 'career-launchpad-feed-onboarding-seen';
+// null = never re-show once dismissed; set to a millisecond duration (e.g. 30 days) to re-show after expiry
+export const FEED_ONBOARDING_TTL_MS: number | null = null;
 const NAVY = '#22224C';
 const BLUE = '#0092FF';
 const FEED_TRANSITION_MS = 280;
@@ -236,6 +239,37 @@ function readSavedIds(): string[] {
 
 function writeSavedIds(ids: string[]) {
   window.localStorage.setItem(LIKED_KEY, JSON.stringify(ids));
+}
+
+// Future timestamps (e.g. after a clock rollback) deliberately count as seen.
+export function isFeedOnboardingSeen(raw: string | null, now: number, ttlMs: number | null): boolean {
+  if (!raw) return false;
+  const seenAt = Number(raw);
+  if (!Number.isFinite(seenAt) || seenAt <= 0) return false;
+  if (ttlMs === null) return true;
+  return now - seenAt < ttlMs;
+}
+
+function hasSeenFeedOnboarding(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return isFeedOnboardingSeen(
+      window.localStorage.getItem(FEED_ONBOARDING_SEEN_KEY),
+      Date.now(),
+      FEED_ONBOARDING_TTL_MS
+    );
+  } catch {
+    return false;
+  }
+}
+
+function markFeedOnboardingSeen() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(FEED_ONBOARDING_SEEN_KEY, String(Date.now()));
+  } catch {
+    // Storage unavailable (private browsing, quota) — the hint shows again next visit.
+  }
 }
 
 function stopRailEvent(event: SyntheticEvent) {
@@ -508,6 +542,7 @@ export function LaunchpadApp({
   const activePlayerRef = useRef<FeedPlayerInstance | null>(null);
   const gumletAudioRecoveryShownRef = useRef(new Set<string>());
   const sharedLinkOnboardingTimerRef = useRef<number | null>(null);
+  const feedOnboardingSuppressedForSessionRef = useRef(false);
   const sessionStartTrackedRef = useRef(false);
   const currentFeedCardRef = useRef<HTMLDivElement | null>(null);
   const focusedFeedIdRef = useRef<string | null>(null);
@@ -559,13 +594,27 @@ export function LaunchpadApp({
     railFeedbackTimer.current = window.setTimeout(() => setActiveRailFeedback(null), RAIL_FEEDBACK_MS);
   }, []);
 
-  const cancelSharedLinkOnboarding = useCallback(() => {
-    if (!sharedLinkOnboardingTimerRef.current) return;
-    window.clearTimeout(sharedLinkOnboardingTimerRef.current);
-    sharedLinkOnboardingTimerRef.current = null;
-    setOnboardingChecked(true);
+  const dismissFeedOnboarding = useCallback(() => {
+    feedOnboardingSuppressedForSessionRef.current = true;
+    markFeedOnboardingSeen();
     setFeedOnboardingOpen(false);
   }, []);
+
+  const shouldShowFeedOnboarding =
+    onboardingChecked && feedOnboardingOpen && !selected && !searchOpen && !pathsDrawerOpen && !formatsDrawerOpen;
+
+  const cancelSharedLinkOnboarding = useCallback(() => {
+    if (sharedLinkOnboardingTimerRef.current !== null) {
+      window.clearTimeout(sharedLinkOnboardingTimerRef.current);
+      sharedLinkOnboardingTimerRef.current = null;
+      // Suppress for this mount, but don't persist — the hint never rendered.
+      feedOnboardingSuppressedForSessionRef.current = true;
+      setOnboardingChecked(true);
+      setFeedOnboardingOpen(false);
+      return;
+    }
+    if (shouldShowFeedOnboarding) dismissFeedOnboarding();
+  }, [shouldShowFeedOnboarding, dismissFeedOnboarding]);
 
   const trackVideoPause = useCallback(
     (reason: unknown) => {
@@ -644,10 +693,28 @@ export function LaunchpadApp({
   }, [previewContent.length]);
 
   useEffect(() => {
+    let cancelled = false;
     queueMicrotask(() => {
+      if (cancelled) return;
+
+      if (feedOnboardingSuppressedForSessionRef.current || hasSeenFeedOnboarding()) {
+        setOnboardingChecked(true);
+        setFeedOnboardingOpen(false);
+        return;
+      }
+
       if (initialLinkedContent && initialPanel !== 'info') {
         sharedLinkOnboardingTimerRef.current = window.setTimeout(() => {
           sharedLinkOnboardingTimerRef.current = null;
+          if (cancelled) return;
+
+          // A dismissal may have landed during the delay, including from another tab.
+          if (feedOnboardingSuppressedForSessionRef.current || hasSeenFeedOnboarding()) {
+            setOnboardingChecked(true);
+            setFeedOnboardingOpen(false);
+            return;
+          }
+
           setOnboardingChecked(true);
           setFeedOnboardingOpen(true);
         }, SHARED_LINK_ONBOARDING_DELAY_MS);
@@ -658,7 +725,8 @@ export function LaunchpadApp({
       setFeedOnboardingOpen(true);
     });
     return () => {
-      if (sharedLinkOnboardingTimerRef.current) {
+      cancelled = true;
+      if (sharedLinkOnboardingTimerRef.current !== null) {
         window.clearTimeout(sharedLinkOnboardingTimerRef.current);
         sharedLinkOnboardingTimerRef.current = null;
       }
@@ -877,13 +945,6 @@ export function LaunchpadApp({
   const stepPrev = useCallback(() => {
     navigateFeed('prev');
   }, [navigateFeed]);
-
-  const dismissFeedOnboarding = useCallback(() => {
-    setFeedOnboardingOpen(false);
-  }, []);
-
-  const shouldShowFeedOnboarding =
-    onboardingChecked && feedOnboardingOpen && !selected && !searchOpen && !pathsDrawerOpen && !formatsDrawerOpen;
 
   useEffect(() => {
     if (!pendingFeedFocusId || item?.id !== pendingFeedFocusId || selected) return;
