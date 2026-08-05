@@ -9,7 +9,7 @@ const KNOWN_CATEGORY_SLUGS: CategorySlug[] = [
   'how-i-got-here',
   'problems-to-solve',
   'post-secondary',
-  'skills-canada',
+  'skilled-trades',
 ];
 
 export type DbCategory = {
@@ -74,8 +74,14 @@ function normalizeContentRow(
   const categories = flattenCategories(row.content_categories ?? [], categoryBySlug);
   if (categories.length === 0) return null;
 
-  const nonEventCategories = categories.filter((slug) => slug !== 'skills-canada');
-  const primaryCategoryPool = nonEventCategories.length > 0 ? nonEventCategories : categories;
+  // While the DB still uses the legacy 'skills-canada' slug, that tag stays
+  // secondary (topical categories win primary). Once the DB row is renamed to
+  // 'skilled-trades' it competes normally by display order.
+  const hasLegacyEventTag = hasRawCategorySlug(row.content_categories ?? [], 'skills-canada');
+  const primaryEligible = hasLegacyEventTag
+    ? categories.filter((slug) => slug !== 'skilled-trades')
+    : categories;
+  const primaryCategoryPool = primaryEligible.length > 0 ? primaryEligible : categories;
   const primaryCategory = [...primaryCategoryPool].sort(
     (a, b) => categoryBySlug.get(a)!.displayOrder - categoryBySlug.get(b)!.displayOrder
   )[0];
@@ -142,8 +148,20 @@ function flattenCategories(
   return slugs.sort((a, b) => categoryBySlug.get(a)!.displayOrder - categoryBySlug.get(b)!.displayOrder);
 }
 
+function hasRawCategorySlug(contentCategories: DbContentCategory[], rawSlug: string): boolean {
+  return contentCategories.some((entry) => {
+    const nested = Array.isArray(entry.categories) ? entry.categories : [entry.categories];
+    return nested.some((category) => category?.slug === rawSlug);
+  });
+}
+
+const LEGACY_CATEGORY_ALIASES: Record<string, CategorySlug> = {
+  'day-in-the-life': 'on-the-job',
+  'skills-canada': 'skilled-trades',
+};
+
 function normalizeKnownCategory(slug: string | undefined): CategorySlug | null {
   if (!slug) return null;
-  const normalized = slug === 'day-in-the-life' ? 'on-the-job' : slug;
+  const normalized = LEGACY_CATEGORY_ALIASES[slug] ?? slug;
   return KNOWN_CATEGORY_SLUGS.includes(normalized as CategorySlug) ? (normalized as CategorySlug) : null;
 }

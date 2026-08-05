@@ -105,22 +105,23 @@ describe('BrowseDrawer — paths mode', () => {
     expect(categoryButtons).toHaveLength(fixtureCategories.length);
   });
 
-  it('renders Skills Canada first with its count and description', () => {
-    const skillsCanadaContent = Array.from({ length: 160 }, (_, index) => ({
+  it('renders Skilled Trades first with its count and description', () => {
+    // Content ids keep the historical skills-canada- prefix; only the category slug changed.
+    const skilledTradesContent = Array.from({ length: 160 }, (_, index) => ({
       ...fixtureContent[0],
       id: `skills-canada-${index + 1}`,
       slug: `skills-canada-${index + 1}`,
-      categories: ['skills-canada', 'on-the-job'] as CategorySlug[],
-      primaryCategory: 'on-the-job' as CategorySlug,
+      categories: ['skilled-trades', 'on-the-job'] as CategorySlug[],
+      primaryCategory: 'skilled-trades' as CategorySlug,
     }));
 
-    renderPathsDrawer({ content: skillsCanadaContent });
+    renderPathsDrawer({ content: skilledTradesContent });
 
     const drawer = screen.getByRole('dialog');
     const firstPathCard = drawer.querySelector('[data-slug]');
-    expect(firstPathCard).toHaveAttribute('data-slug', 'skills-canada');
+    expect(firstPathCard).toHaveAttribute('data-slug', 'skilled-trades');
     expect(firstPathCard).toHaveTextContent('160 stories');
-    expect(firstPathCard).toHaveTextContent('Skilled trade stories featured for Skills Canada.');
+    expect(firstPathCard).toHaveTextContent('Hands-on careers where skill pays: build, fix, make, and run real things.');
   });
 
   it('calls onToggleCategory with the slug when a path card is clicked', () => {

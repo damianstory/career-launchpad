@@ -14,7 +14,7 @@ import {
   Puzzle,
   Rocket,
   Sparkles,
-  Trophy,
+  Wrench,
   X,
 } from 'lucide-react';
 
@@ -32,7 +32,7 @@ const CATEGORY_ICON: Record<CategorySlug, typeof Rocket> = {
   'how-i-got-here': MapPin,
   'problems-to-solve': Puzzle,
   'post-secondary': GraduationCap,
-  'skills-canada': Trophy,
+  'skilled-trades': Wrench,
 };
 
 const FORMAT_ORDER = ['video', 'article'] as const satisfies readonly ContentFormat[];
@@ -53,7 +53,7 @@ const PATH_DESCRIPTION: Record<CategorySlug, string> = {
   'how-i-got-here': 'Real career paths, told by the people who walked them.',
   'problems-to-solve': 'Big problems Canadian workers are trying to solve.',
   'post-secondary': 'College, university, apprenticeship, or none of the above.',
-  'skills-canada': 'Skilled trade stories featured for Skills Canada.',
+  'skilled-trades': 'Hands-on careers where skill pays: build, fix, make, and run real things.',
 };
 
 const ALL_PATHS_DESCRIPTION = "Every path. Start here if you don't know where to start.";

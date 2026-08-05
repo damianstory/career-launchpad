@@ -31,17 +31,17 @@ describe('content filtering', () => {
 
   it('keeps multi-category filters as OR unions', () => {
     const content: LaunchpadContent[] = [
-      { ...fixtureContent[0], id: 'skills-on-job', categories: ['skills-canada', 'on-the-job'] },
+      { ...fixtureContent[0], id: 'trades-on-job', categories: ['skilled-trades', 'on-the-job'] },
       { ...fixtureContent[1], id: 'mindset-only', categories: ['mindsets'], primaryCategory: 'mindsets' },
       { ...fixtureContent[2], id: 'how-i-got-here-only', categories: ['how-i-got-here'] },
     ];
 
     const result = applyContentFilters(content, {
-      categories: ['skills-canada', 'mindsets'],
+      categories: ['skilled-trades', 'mindsets'],
       format: null,
     });
 
-    expect(result.map((item) => item.id)).toEqual(['skills-on-job', 'mindset-only']);
+    expect(result.map((item) => item.id)).toEqual(['trades-on-job', 'mindset-only']);
   });
 
   it('preserves matching item order', () => {
