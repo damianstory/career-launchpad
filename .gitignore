@@ -4,6 +4,7 @@
 .vercel/
 node_modules/
 supabase/.temp/
+tasks/
 tsconfig.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
