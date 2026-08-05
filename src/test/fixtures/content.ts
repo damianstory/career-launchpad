@@ -1,7 +1,7 @@
 import type { LaunchpadCategory, LaunchpadContent } from '@/types';
 
 export const fixtureCategories: LaunchpadCategory[] = [
-  { slug: 'skills-canada', name: 'Skills Canada', displayOrder: 0 },
+  { slug: 'skilled-trades', name: 'Skilled Trades', displayOrder: 0 },
   { slug: 'emerging-careers', name: 'Emerging Careers', displayOrder: 1 },
   { slug: 'on-the-job', name: 'On the Job', displayOrder: 2 },
   { slug: 'life-skills', name: 'Life Skills', displayOrder: 3 },

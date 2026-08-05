@@ -210,7 +210,7 @@ const CATEGORY_BLOCK_BG: Record<CategorySlug, string> = {
   'how-i-got-here': BLUE,
   'problems-to-solve': NAVY,
   'post-secondary': NAVY,
-  'skills-canada': NAVY,
+  'skilled-trades': NAVY,
 };
 
 const FORMAT_ICON: Record<ContentFormat, IconCmp> = {

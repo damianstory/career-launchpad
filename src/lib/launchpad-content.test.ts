@@ -59,7 +59,9 @@ describe('normalizeLaunchpadContent', () => {
     });
   });
 
-  it('keeps Skills Canada in categories but prefers the permanent category as primary', () => {
+  it('keeps a legacy skills-canada tag secondary while normalizing it to skilled-trades', () => {
+    // Pre-rename DB: the raw slug is still 'skills-canada', so the topical
+    // category stays primary even though the tag renders as skilled-trades.
     const result = normalizeLaunchpadContent(
       [
         row({
@@ -75,13 +77,14 @@ describe('normalizeLaunchpadContent', () => {
       ] as never
     );
 
+    expect(result.categories.map((category) => category.slug)).toEqual(['skilled-trades', 'on-the-job']);
     expect(result.items[0]).toMatchObject({
-      categories: ['skills-canada', 'on-the-job'],
+      categories: ['skilled-trades', 'on-the-job'],
       primaryCategory: 'on-the-job',
     });
   });
 
-  it('uses Skills Canada as primary when it is the only category', () => {
+  it('uses the legacy tag as primary when it is the only category', () => {
     const result = normalizeLaunchpadContent(
       [
         row({
@@ -92,8 +95,32 @@ describe('normalizeLaunchpadContent', () => {
     );
 
     expect(result.items[0]).toMatchObject({
-      categories: ['skills-canada'],
-      primaryCategory: 'skills-canada',
+      categories: ['skilled-trades'],
+      primaryCategory: 'skilled-trades',
+    });
+  });
+
+  it('lets a renamed skilled-trades row win primary by display order', () => {
+    // Post-rename DB: the raw slug is 'skilled-trades', so it competes
+    // normally and display_order 0 beats the topical category.
+    const result = normalizeLaunchpadContent(
+      [
+        row({
+          content_categories: [
+            { categories: { slug: 'skilled-trades', name: 'Skilled Trades', display_order: 0 } },
+            { categories: { slug: 'on-the-job', name: 'On the Job', display_order: 2 } },
+          ],
+        }),
+      ] as never,
+      [
+        { slug: 'skilled-trades', name: 'Skilled Trades', display_order: 0 },
+        { slug: 'on-the-job', name: 'On the Job', display_order: 2 },
+      ] as never
+    );
+
+    expect(result.items[0]).toMatchObject({
+      categories: ['skilled-trades', 'on-the-job'],
+      primaryCategory: 'skilled-trades',
     });
   });
 

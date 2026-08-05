@@ -39,7 +39,7 @@ KNOWN_CATEGORY_SLUGS = {
     "how-i-got-here",
     "problems-to-solve",
     "post-secondary",
-    "skills-canada",
+    "skilled-trades",
 }
 
 REQUIRED_FIELDS = (

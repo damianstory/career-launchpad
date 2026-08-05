@@ -1,0 +1,1001 @@
+{
+  "migration": "skills-canada-to-skilled-trades",
+  "category_uuid": "7cd3fa1b-ae72-4632-8fa5-c0d133b18802",
+  "rename": {
+    "from": {
+      "slug": "skills-canada",
+      "name": "Skills Canada",
+      "icon": "Trophy",
+      "display_order": 0
+    },
+    "to": {
+      "slug": "skilled-trades",
+      "name": "Skilled Trades",
+      "icon": "Wrench",
+      "display_order": 0
+    }
+  },
+  "source": {
+    "sheet_id": "1Y4qXlCn6q0chqyp7r-r2IB95MQ2eTOqpxQR9pjd8TPQ",
+    "sheet_title": "Career Launchpad \u2014 Skills Canada \u2192 Skilled Trades review",
+    "sheet_column": "Suggested decision (metadata-based)",
+    "sheet_modified_time": "2026-08-05T20:45:28.505Z",
+    "approved": "client approval relayed by Damian, 2026-08-05; recommendations adopted verbatim, ex-Job-Board rows keep their retirement re-homes",
+    "live_state_verified": "2026-08-05"
+  },
+  "counts": {
+    "total": 160,
+    "keep_skilled_trades": 101,
+    "remove_skilled_trades": 59,
+    "ex_job_board_exceptions": 7
+  },
+  "videos": [
+    {
+      "content_id": "skills-canada-001",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-002",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-003",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-004",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-005",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-006",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-007",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-008",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-009",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-010",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-011",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-012",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-013",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-014",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-015",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-016",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-017",
+      "approved_recommendation": "Post-Secondary",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "post-secondary"
+    },
+    {
+      "content_id": "skills-canada-018",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-019",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-020",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-021",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-022",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-023",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-024",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-025",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-026",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-027",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-028",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-029",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-030",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-031",
+      "approved_recommendation": "Problems",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "problems-to-solve"
+    },
+    {
+      "content_id": "skills-canada-032",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-033",
+      "approved_recommendation": "Emerging Careers",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "emerging-careers"
+    },
+    {
+      "content_id": "skills-canada-034",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-035",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-036",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-037",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-038",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-039",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-040",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-041",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-042",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-043",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-044",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-045",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-046",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-047",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-048",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-049",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-050",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-051",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-052",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-053",
+      "approved_recommendation": "Post-Secondary",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "post-secondary"
+    },
+    {
+      "content_id": "skills-canada-054",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-055",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-056",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-057",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-058",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-059",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-060",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-061",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-062",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-063",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-064",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-065",
+      "approved_recommendation": "Emerging Careers",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "emerging-careers"
+    },
+    {
+      "content_id": "skills-canada-066",
+      "approved_recommendation": "Emerging Careers",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "emerging-careers"
+    },
+    {
+      "content_id": "skills-canada-067",
+      "approved_recommendation": "Mindsets",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "mindsets"
+    },
+    {
+      "content_id": "skills-canada-068",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-069",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-070",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-071",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-072",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-073",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-074",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-075",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-076",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-077",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-078",
+      "approved_recommendation": "Mindsets",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "mindsets"
+    },
+    {
+      "content_id": "skills-canada-079",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-080",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-081",
+      "approved_recommendation": "Emerging Careers",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "emerging-careers"
+    },
+    {
+      "content_id": "skills-canada-082",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-083",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-084",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-085",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-086",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-087",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-088",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-089",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-090",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-091",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-092",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-093",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-094",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-095",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-096",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-097",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-098",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-099",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-100",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-101",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-102",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-103",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-104",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-105",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-106",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-107",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-108",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-109",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-110",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-111",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-112",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-113",
+      "approved_recommendation": "Emerging Careers",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "emerging-careers"
+    },
+    {
+      "content_id": "skills-canada-114",
+      "approved_recommendation": "Emerging Careers",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "emerging-careers"
+    },
+    {
+      "content_id": "skills-canada-115",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-116",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-117",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-118",
+      "approved_recommendation": "Life Skills",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "life-skills"
+    },
+    {
+      "content_id": "skills-canada-119",
+      "approved_recommendation": "Life Skills",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "life-skills"
+    },
+    {
+      "content_id": "skills-canada-120",
+      "approved_recommendation": "Life Skills",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "life-skills"
+    },
+    {
+      "content_id": "skills-canada-121",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-122",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-123",
+      "approved_recommendation": "Job Board",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job",
+      "note": "approved as Job Board; retains the topical home assigned by the job-board retirement (20260805062954)"
+    },
+    {
+      "content_id": "skills-canada-124",
+      "approved_recommendation": "Post-Secondary",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "post-secondary"
+    },
+    {
+      "content_id": "skills-canada-125",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-126",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-127",
+      "approved_recommendation": "Post-Secondary",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "post-secondary"
+    },
+    {
+      "content_id": "skills-canada-128",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-129",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-130",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-131",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-132",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-133",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-134",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-135",
+      "approved_recommendation": "Job Board",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "emerging-careers",
+      "note": "approved as Job Board; retains the topical home assigned by the job-board retirement (20260805062954)"
+    },
+    {
+      "content_id": "skills-canada-136",
+      "approved_recommendation": "Problems",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "problems-to-solve"
+    },
+    {
+      "content_id": "skills-canada-137",
+      "approved_recommendation": "Post-Secondary",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "post-secondary"
+    },
+    {
+      "content_id": "skills-canada-138",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-139",
+      "approved_recommendation": "Job Board",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job",
+      "note": "approved as Job Board; retains the topical home assigned by the job-board retirement (20260805062954)"
+    },
+    {
+      "content_id": "skills-canada-140",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-141",
+      "approved_recommendation": "Job Board",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job",
+      "note": "approved as Job Board; retains the topical home assigned by the job-board retirement (20260805062954)"
+    },
+    {
+      "content_id": "skills-canada-142",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-143",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-144",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-145",
+      "approved_recommendation": "Job Board",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job",
+      "note": "approved as Job Board; retains the topical home assigned by the job-board retirement (20260805062954)"
+    },
+    {
+      "content_id": "skills-canada-146",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-147",
+      "approved_recommendation": "Job Board",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job",
+      "note": "approved as Job Board; retains the topical home assigned by the job-board retirement (20260805062954)"
+    },
+    {
+      "content_id": "skills-canada-148",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-149",
+      "approved_recommendation": "How I Got Here",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "how-i-got-here"
+    },
+    {
+      "content_id": "skills-canada-150",
+      "approved_recommendation": "Post-Secondary",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "post-secondary"
+    },
+    {
+      "content_id": "skills-canada-151",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-152",
+      "approved_recommendation": "Job Board",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job",
+      "note": "approved as Job Board; retains the topical home assigned by the job-board retirement (20260805062954)"
+    },
+    {
+      "content_id": "skills-canada-153",
+      "approved_recommendation": "On the Job",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "on-the-job"
+    },
+    {
+      "content_id": "skills-canada-154",
+      "approved_recommendation": "Problems",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "problems-to-solve"
+    },
+    {
+      "content_id": "skills-canada-155",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-156",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-157",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-158",
+      "approved_recommendation": "Skilled Trades",
+      "action": "keep-skilled-trades",
+      "effective_topical_target": null
+    },
+    {
+      "content_id": "skills-canada-159",
+      "approved_recommendation": "Life Skills",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "life-skills"
+    },
+    {
+      "content_id": "skills-canada-160",
+      "approved_recommendation": "Life Skills",
+      "action": "remove-skilled-trades",
+      "effective_topical_target": "life-skills"
+    }
+  ]
+}
