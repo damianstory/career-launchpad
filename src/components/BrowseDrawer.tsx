@@ -9,7 +9,6 @@ import {
   ChevronRight,
   GraduationCap,
   Lightbulb,
-  ListChecks,
   MapPin,
   Play,
   Puzzle,
@@ -33,8 +32,6 @@ const CATEGORY_ICON: Record<CategorySlug, typeof Rocket> = {
   'how-i-got-here': MapPin,
   'problems-to-solve': Puzzle,
   'post-secondary': GraduationCap,
-  // Playbook-style listing: ListChecks fits better than generic icon
-  'job-board': ListChecks,
   'skills-canada': Trophy,
 };
 
@@ -56,7 +53,6 @@ const PATH_DESCRIPTION: Record<CategorySlug, string> = {
   'how-i-got-here': 'Real career paths, told by the people who walked them.',
   'problems-to-solve': 'Big problems Canadian workers are trying to solve.',
   'post-secondary': 'College, university, apprenticeship, or none of the above.',
-  'job-board': 'Real openings near you, refreshed weekly.',
   'skills-canada': 'Skilled trade stories featured for Skills Canada.',
 };
 

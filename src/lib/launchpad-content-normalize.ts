@@ -9,7 +9,6 @@ const KNOWN_CATEGORY_SLUGS: CategorySlug[] = [
   'how-i-got-here',
   'problems-to-solve',
   'post-secondary',
-  'job-board',
   'skills-canada',
 ];
 

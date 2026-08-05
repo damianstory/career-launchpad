@@ -10,7 +10,7 @@ Global constraints for every prompt:
 - The default media shape for videos is vertical 9:16 because the library is primarily YouTube Shorts and similar short-form video.
 - Do not make videos full-page or full-bleed by default. The screen may be immersive, but the video itself should remain a tall, narrow stage.
 - The feed should feel low-pressure and familiar, with one-tap depth through Learn More.
-- Use these categories: Emerging Careers, On the Job, Life Skills, Mindsets, How I Got Here, Problems to Solve, Post-Secondary, Job Board.
+- Use these categories: Emerging Careers, On the Job, Life Skills, Mindsets, How I Got Here, Problems to Solve, Post-Secondary.
 - Use these content formats: Videos, Articles, Playbooks.
 - The visual tone should be modern, trustworthy, content-first, and polished without feeling corporate or school-assignment-like.
 

@@ -9,7 +9,6 @@ export const fixtureCategories: LaunchpadCategory[] = [
   { slug: 'how-i-got-here', name: 'How I Got Here', displayOrder: 5 },
   { slug: 'problems-to-solve', name: 'Problems', displayOrder: 6 },
   { slug: 'post-secondary', name: 'Post-Secondary', displayOrder: 7 },
-  { slug: 'job-board', name: 'Job Board', displayOrder: 8 },
 ];
 
 export const fixtureContent: LaunchpadContent[] = [
