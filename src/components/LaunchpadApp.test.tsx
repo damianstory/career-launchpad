@@ -845,10 +845,11 @@ describe('LaunchpadApp feed navigation', () => {
     expect(within(drawer).queryByRole('button', { name: /Playbooks/i })).not.toBeInTheDocument();
   });
 
-  it('uses the full brand on desktop and the shortened brand on mobile', async () => {
+  it('renders the LaunchPad brand on desktop and mobile', async () => {
     const { unmount } = renderLaunchpad();
 
-    expect(screen.getByText('Career LaunchPAD')).toBeInTheDocument();
+    expect(screen.getByText('LaunchPad')).toBeInTheDocument();
+    expect(screen.queryByText('Career LaunchPAD')).not.toBeInTheDocument();
     expect(screen.queryByText('LaunchPAD')).not.toBeInTheDocument();
 
     unmount();
@@ -857,8 +858,9 @@ describe('LaunchpadApp feed navigation', () => {
     renderLaunchpad();
     await flushAsyncWork();
 
-    expect(screen.getByText('LaunchPAD')).toBeInTheDocument();
+    expect(screen.getByText('LaunchPad')).toBeInTheDocument();
     expect(screen.queryByText('Career LaunchPAD')).not.toBeInTheDocument();
+    expect(screen.queryByText('LaunchPAD')).not.toBeInTheDocument();
   });
 
   it('renders the centered mobile primary Learn More CTA and opens the panel from it', async () => {

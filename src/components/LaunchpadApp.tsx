@@ -1354,7 +1354,7 @@ function DesktopStage({
           }}
         >
           <BrandMark size={32} />
-          Career LaunchPAD
+          LaunchPad
         </div>
         <div style={{ flex: 1 }} />
 
@@ -1671,7 +1671,7 @@ function MobileStage({
         }}
       >
         <BrandMark size={28} />
-        <div style={{ fontWeight: 900, fontSize: 15 }}>LaunchPAD</div>
+        <div style={{ fontWeight: 900, fontSize: 15 }}>LaunchPad</div>
         <div style={{ flex: 1 }} />
 
         <button

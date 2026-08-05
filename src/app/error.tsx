@@ -28,7 +28,7 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
         <AlertTriangle size={28} color="#0092FF" />
         <h1 style={{ margin: '14px 0 8px', fontSize: 24, lineHeight: 1.1 }}>Content could not load</h1>
         <p style={{ margin: '0 0 20px', color: '#485163', lineHeight: 1.5 }}>
-          Career LaunchPAD could not reach the content library. Try again in a moment.
+          LaunchPad could not reach the content library. Try again in a moment.
         </p>
         <button
           type="button"
