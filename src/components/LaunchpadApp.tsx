@@ -41,6 +41,7 @@ import {
   shuffleContentForVisit,
 } from '@/lib/content';
 import { sanitizeSearchQuery, trackEvent } from '@/lib/analytics';
+import { normalizeKnownCategory } from '@/lib/launchpad-content-normalize';
 import type { CategorySlug, ContentFilters, ContentFormat, LaunchpadCategory, LaunchpadContent } from '@/types';
 
 import { BrowseDrawer } from '@/components/BrowseDrawer';
@@ -482,6 +483,7 @@ type LaunchpadAppProps = {
   initialCategories: LaunchpadCategory[];
   initialContentSlug?: string | null;
   initialPanel?: InitialPanel;
+  initialPathSlug?: string | null;
   feedSeed: string;
 };
 
@@ -490,6 +492,7 @@ export function LaunchpadApp({
   initialCategories,
   initialContentSlug = null,
   initialPanel = null,
+  initialPathSlug = null,
   feedSeed,
 }: LaunchpadAppProps) {
   const router = useRouter();
@@ -507,7 +510,17 @@ export function LaunchpadApp({
     if (!initialLinkedContent) return 0;
     return Math.max(0, unfilteredFeedContent.findIndex((entry) => entry.id === initialLinkedContent.id));
   }, [initialLinkedContent, unfilteredFeedContent]);
-  const [filters, setFilters] = useState<ContentFilters>({ categories: [], format: null });
+  const initialPathCategories = useMemo(() => {
+    if (!initialPathSlug) return [];
+    const slugs = initialPathSlug.split(',').map((slug) => normalizeKnownCategory(slug.trim().toLowerCase()));
+    return [...new Set(slugs.filter((slug): slug is CategorySlug => slug !== null))];
+  }, [initialPathSlug]);
+  // A resolved content deep link wins over a path link: focusFeedContent clears
+  // filters so the linked item is always visible.
+  const [filters, setFilters] = useState<ContentFilters>(() => ({
+    categories: initialLinkedContent ? [] : initialPathCategories,
+    format: null,
+  }));
   const [query, setQuery] = useState('');
   const [feedIdx, setFeedIdx] = useState(initialFeedIndex);
   const [savedIds, setSavedIds] = useState<string[]>([]);
@@ -531,6 +544,7 @@ export function LaunchpadApp({
   const feedDeckRef = useRef<HTMLDivElement | null>(null);
   const navLockedUntilRef = useRef(0);
   const processedInitialRouteRef = useRef<string | null>(null);
+  const processedInitialPathRef = useRef<string | null>(null);
   const activePlayerRef = useRef<FeedPlayerInstance | null>(null);
   const gumletAudioRecoveryShownRef = useRef(new Set<string>());
   const sharedLinkOnboardingTimerRef = useRef<number | null>(null);
@@ -736,6 +750,7 @@ export function LaunchpadApp({
   // Deep link
   useEffect(() => {
     const routeKey = `${initialContentSlug ?? ''}|${initialPanel ?? ''}`;
+    const invalidInitialPath = Boolean(initialPathSlug) && initialPathCategories.length === 0;
 
     if (initialContentSlug && processedInitialRouteRef.current !== routeKey) {
       processedInitialRouteRef.current = routeKey;
@@ -754,9 +769,28 @@ export function LaunchpadApp({
         const params = new URLSearchParams(searchParams.toString());
         params.delete('content');
         params.delete('panel');
+        if (invalidInitialPath) {
+          processedInitialPathRef.current = initialPathSlug;
+          params.delete('path');
+        }
         const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
         router.replace(nextUrl);
         queueMicrotask(() => showToast('Content not available'));
+      }
+    }
+
+    if (initialPathSlug && processedInitialPathRef.current !== initialPathSlug) {
+      processedInitialPathRef.current = initialPathSlug;
+      if (invalidInitialPath) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('path');
+        const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+        router.replace(nextUrl);
+        queueMicrotask(() => showToast('Path not available'));
+      } else if (!initialLinkedContent) {
+        for (const slug of initialPathCategories) {
+          trackEvent('category_filter', { metadata: { category: slug, action: 'add', source: 'direct_link' } });
+        }
       }
     }
 
@@ -778,6 +812,8 @@ export function LaunchpadApp({
     initialContentSlug,
     initialLinkedContent,
     initialPanel,
+    initialPathCategories,
+    initialPathSlug,
     pathname,
     router,
     searchParams,
@@ -898,6 +934,7 @@ export function LaunchpadApp({
       const url = new URL(window.location.href);
       url.searchParams.set('content', target.slug);
       url.searchParams.delete('panel');
+      url.searchParams.delete('path');
       try {
         await window.navigator.clipboard.writeText(url.toString());
       } catch {

@@ -175,7 +175,8 @@ function renderLaunchpad(
   initialContentSlug: string | null = null,
   content = fixtureContent,
   initialPanel: 'info' | null = null,
-  feedSeed = 'test-9'
+  feedSeed = 'test-9',
+  initialPathSlug: string | null = null
 ) {
   return render(
     <LaunchpadApp
@@ -183,6 +184,7 @@ function renderLaunchpad(
       initialCategories={fixtureCategories}
       initialContentSlug={initialContentSlug}
       initialPanel={initialPanel}
+      initialPathSlug={initialPathSlug}
       feedSeed={feedSeed}
     />
   );
@@ -1738,6 +1740,113 @@ describe('LaunchpadApp playback', () => {
 
     expect(replaceMock).toHaveBeenCalledWith('/');
     expect(screen.getByText(/content not available/i)).toBeInTheDocument();
+  });
+});
+
+describe('LaunchpadApp path deep links', () => {
+  it('seeds the category filter from a path link and shows it in the header CTA', async () => {
+    window.history.replaceState({}, '', '/?path=mindsets');
+
+    renderLaunchpad(null, fixtureContent, null, 'seed-1', 'mindsets');
+    await dismissFeedOnboarding();
+
+    expectHeading('An Article With No Learn More Copy');
+    dispatchWheel(navigationSurface(), 180);
+    await finishTransition();
+    expectHeading('The Skills That Travel With You');
+
+    expect(screen.queryByRole('button', { name: /9 paths/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mindsets/i })).toBeInTheDocument();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it('honors legacy category aliases in path links', async () => {
+    window.history.replaceState({}, '', '/?path=day-in-the-life');
+
+    renderLaunchpad(null, fixtureContent, null, 'seed-1', 'day-in-the-life');
+    await dismissFeedOnboarding();
+
+    expectHeading('What Your First Internship Actually Teaches You');
+    expect(screen.getByRole('button', { name: /on the job/i })).toBeInTheDocument();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it('seeds multiple categories from a comma-separated path link', async () => {
+    window.history.replaceState({}, '', '/?path=mindsets,life-skills');
+
+    renderLaunchpad(null, fixtureContent, null, 'seed-1', 'mindsets,life-skills');
+    await dismissFeedOnboarding();
+
+    expect(screen.getByRole('button', { name: /2 paths/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /9 paths/i })).not.toBeInTheDocument();
+  });
+
+  it('strips invalid path links, keeps the feed unfiltered, and explains recovery', async () => {
+    window.history.replaceState({}, '', '/?path=not-a-real-path');
+
+    renderLaunchpad(null, fixtureContent, null, 'test-9', 'not-a-real-path');
+    await dismissFeedOnboarding();
+
+    expect(replaceMock).toHaveBeenCalledWith('/');
+    expect(screen.getByText(/path not available/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /9 paths/i })).toBeInTheDocument();
+  });
+
+  it('lets a content deep link win over a path link', async () => {
+    window.history.replaceState({}, '', '/?path=mindsets&content=nonlinear-career-path');
+
+    renderLaunchpad('nonlinear-career-path', fixtureContent, null, 'test-9', 'mindsets');
+    await flushAsyncWork();
+
+    expect(screen.getByTestId('feed-media-card-video-nonlinear-path')).toHaveAttribute('data-current', 'true');
+    // Filters stay empty so the linked item is guaranteed visible.
+    expect(screen.getByRole('button', { name: /9 paths/i })).toBeInTheDocument();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it('still seeds the path filter when the content slug in the link is invalid', async () => {
+    window.history.replaceState({}, '', '/?path=mindsets&content=missing-slug');
+
+    renderLaunchpad('missing-slug', fixtureContent, null, 'seed-1', 'mindsets');
+    await flushAsyncWork();
+
+    expect(replaceMock).toHaveBeenCalledWith('/?path=mindsets');
+    expect(screen.getByText(/content not available/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mindsets/i })).toBeInTheDocument();
+  });
+
+  it('drops the path param from shared content links', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    });
+    window.history.replaceState({}, '', '/?path=mindsets');
+
+    renderLaunchpad(null, fixtureContent, null, 'seed-1', 'mindsets');
+    await dismissFeedOnboarding();
+
+    fireEvent.click(within(desktopRail()).getByRole('button', { name: 'Share' }));
+    await flushAsyncWork();
+
+    expect(writeText).toHaveBeenCalledTimes(1);
+    const copied = new URL(writeText.mock.calls[0][0]);
+    expect(copied.searchParams.get('content')).toBe('article-empty-learn-more');
+    expect(copied.searchParams.has('path')).toBe(false);
+  });
+
+  it('tracks a single direct-link category_filter event per seeded path', async () => {
+    window.history.replaceState({}, '', '/?path=mindsets');
+
+    renderLaunchpad(null, fixtureContent, null, 'seed-1', 'mindsets');
+    await dismissFeedOnboarding();
+
+    dispatchWheel(navigationSurface(), 180);
+    await finishTransition();
+
+    const events = storedEvents().filter((event) => event.eventType === 'category_filter');
+    expect(events).toHaveLength(1);
+    expect(events[0].metadata).toEqual({ category: 'mindsets', action: 'add', source: 'direct_link' });
   });
 });
 

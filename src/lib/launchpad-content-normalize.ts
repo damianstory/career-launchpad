@@ -160,7 +160,7 @@ const LEGACY_CATEGORY_ALIASES: Record<string, CategorySlug> = {
   'skills-canada': 'skilled-trades',
 };
 
-function normalizeKnownCategory(slug: string | undefined): CategorySlug | null {
+export function normalizeKnownCategory(slug: string | undefined): CategorySlug | null {
   if (!slug) return null;
   const normalized = LEGACY_CATEGORY_ALIASES[slug] ?? slug;
   return KNOWN_CATEGORY_SLUGS.includes(normalized as CategorySlug) ? (normalized as CategorySlug) : null;
