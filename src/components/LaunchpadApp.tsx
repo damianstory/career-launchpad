@@ -301,9 +301,10 @@ function usePrefersReducedMotion(): boolean {
   return reducedMotion;
 }
 
-function isInteractiveShortcutTarget(target: EventTarget | null): boolean {
+function blocksFeedShortcuts(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
-  return Boolean(target.closest('input, textarea, select, button, a, [contenteditable="true"]'));
+  const interactive = target.closest('input, textarea, select, button, a, [contenteditable="true"]');
+  return Boolean(interactive && !interactive.hasAttribute('data-feed-activator'));
 }
 
 function isPlayableContent(item: LaunchpadContent | undefined): boolean {
@@ -1088,7 +1089,7 @@ export function LaunchpadApp({
         return;
       }
       if (selected || searchOpen || shouldShowFeedOnboarding) return;
-      if (isInteractiveShortcutTarget(e.target) || isInteractiveShortcutTarget(document.activeElement)) return;
+      if (blocksFeedShortcuts(e.target) || blocksFeedShortcuts(document.activeElement)) return;
       if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'j') {
         e.preventDefault();
         stepNext();
@@ -2008,6 +2009,12 @@ function FeedMediaDeck({
           onAutoplayModeChange={onAutoplayModeChange}
           onPlayerReady={onPlayerReady}
           onGumletAudioState={onGumletAudioState}
+          onArticleOutbound={(href) =>
+            trackEvent('outbound_click', {
+              contentId: current.item.id,
+              metadata: { href },
+            })
+          }
         />
       </div>
       {!isMobileVariant && (
@@ -2419,6 +2426,69 @@ function GumletVideoPlayer({
   );
 }
 
+function ArticleCardLayer({
+  title,
+  mobile,
+  href,
+  onOutbound,
+}: {
+  title: string;
+  mobile: boolean;
+  href?: string;
+  onOutbound?: (href: string) => void;
+}) {
+  const style: CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    padding: mobile ? '20px 20px calc(136px + env(safe-area-inset-bottom))' : '32px 20px 104px',
+    display: 'flex',
+    alignItems: mobile ? 'flex-end' : undefined,
+    flexDirection: mobile ? undefined : 'column',
+    justifyContent: mobile ? undefined : 'flex-end',
+    color: 'var(--white)',
+    textDecoration: 'none',
+    zIndex: 4,
+  };
+  const copy = (
+    <div data-testid="media-article-copy">
+      {!mobile && (
+        <div
+          aria-hidden="true"
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            opacity: 0.85,
+            marginBottom: 10,
+          }}
+        >
+          The read
+        </div>
+      )}
+      <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.01em' }}>{title}</div>
+    </div>
+  );
+
+  if (href && onOutbound) {
+    return (
+      <a
+        className="media-article-activator"
+        data-feed-activator="true"
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => onOutbound(href)}
+        style={style}
+      >
+        {copy}
+      </a>
+    );
+  }
+
+  return <div style={style}>{copy}</div>;
+}
+
 function MediaStage({
   item,
   nextItem,
@@ -2431,6 +2501,7 @@ function MediaStage({
   onPlayerReady,
   onGumletAudioState,
   onVideoEnd,
+  onArticleOutbound,
 }: {
   item: LaunchpadContent;
   nextItem: LaunchpadContent | null;
@@ -2443,11 +2514,13 @@ function MediaStage({
   onPlayerReady: (player: FeedPlayerInstance | null) => void;
   onGumletAudioState: (state: GumletAudioState) => void;
   onVideoEnd: () => void;
+  onArticleOutbound?: (href: string) => void;
 }) {
   const progressTracked = useRef(new Set<number>());
   const videoSource = getVideoSource(item.mediaUrl);
   const isPlayableVideo = item.format === 'video' && Boolean(videoSource);
   const isMobileVariant = variant === 'mobile';
+  const articleUrl = item.format === 'article' ? item.articleUrl : undefined;
 
   // Video progress milestones
   useEffect(() => {
@@ -2546,23 +2619,12 @@ function MediaStage({
           </>
         )}
         {item.format === 'article' && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              padding: '20px 20px calc(136px + env(safe-area-inset-bottom))',
-              display: 'flex',
-              alignItems: 'flex-end',
-              color: 'var(--white)',
-            }}
-          >
-            <div
-              data-testid="media-article-copy"
-              style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.01em' }}
-            >
-              {item.title}
-            </div>
-          </div>
+          <ArticleCardLayer
+            title={item.title}
+            mobile
+            href={articleUrl}
+            onOutbound={onArticleOutbound}
+          />
         )}
       </div>
     );
@@ -2694,35 +2756,12 @@ function MediaStage({
           </div>
         )}
         {item.format === 'article' && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              padding: '32px 20px 104px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              color: 'var(--white)',
-            }}
-          >
-            <div data-testid="media-article-copy">
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  opacity: 0.85,
-                  marginBottom: 10,
-                }}
-              >
-                The read
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.15, letterSpacing: '-0.01em' }}>
-                {item.title}
-              </div>
-            </div>
-          </div>
+          <ArticleCardLayer
+            title={item.title}
+            mobile={false}
+            href={articleUrl}
+            onOutbound={onArticleOutbound}
+          />
         )}
       </div>
       {nextItem && (

@@ -271,6 +271,21 @@ async function dismissFeedOnboarding() {
   await flushAsyncWork();
 }
 
+async function navigateToFirstInternshipArticle() {
+  await dismissFeedOnboarding();
+
+  act(() => {
+    dispatchWheel(navigationSurface(), 90);
+  });
+  await finishTransition();
+  act(() => {
+    dispatchWheel(navigationSurface(), 90);
+  });
+  await finishTransition();
+
+  expect(screen.getByTestId('feed-media-card-article-first-internship')).toHaveAttribute('data-current', 'true');
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   reducedMotion = false;
@@ -804,16 +819,7 @@ describe('LaunchpadApp feed navigation', () => {
 
   it('uses Read it as the primary CTA on article cards and opens the panel from it', async () => {
     renderLaunchpad();
-    await dismissFeedOnboarding();
-
-    act(() => {
-      dispatchWheel(navigationSurface(), 90);
-    });
-    await finishTransition();
-    act(() => {
-      dispatchWheel(navigationSurface(), 90);
-    });
-    await finishTransition();
+    await navigateToFirstInternshipArticle();
 
     const primaryCta = screen.getByTestId('learn-more-primary-cta');
     expect(primaryCta).toHaveAttribute('data-variant', 'desktop');
@@ -824,6 +830,73 @@ describe('LaunchpadApp feed navigation', () => {
     await flushAsyncWork();
 
     expect(screen.getByRole('dialog', { name: /what your first internship/i })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['desktop', false],
+    ['mobile', true],
+  ])('links the full %s article card directly outbound and tracks the click once', async (_label, isMobile) => {
+    mobileViewport = isMobile;
+    installMatchMedia();
+    const article = fixtureContent[3];
+    renderLaunchpad(null, [article]);
+    await dismissFeedOnboarding();
+
+    const articleLink = screen.getByRole('link', { name: article.title });
+    expect(articleLink).toHaveAttribute('data-feed-activator', 'true');
+    expect(articleLink).toHaveAttribute('href', article.articleUrl);
+    expect(articleLink).toHaveAttribute('target', '_blank');
+    expect(articleLink).toHaveAttribute('rel', expect.stringContaining('noopener'));
+    expect(screen.getByTestId('media-article-copy').closest('a')).toBe(articleLink);
+
+    fireEvent.click(articleLink);
+
+    const articleEvents = storedEvents().filter((event) => event.contentId === article.id);
+    expect(articleEvents.filter((event) => event.eventType === 'outbound_click')).toHaveLength(1);
+    expect(articleEvents.filter((event) => event.eventType === 'content_open')).toHaveLength(0);
+    expect(articleEvents.filter((event) => event.eventType === 'learn_more_open')).toHaveLength(0);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('keeps feed shortcuts active while preserving outgoing article copy without an activator', async () => {
+    renderLaunchpad();
+    await navigateToFirstInternshipArticle();
+
+    const articleLink = screen.getByRole('link', { name: 'What Your First Internship Actually Teaches You' });
+    articleLink.focus();
+    expect(articleLink).toHaveFocus();
+
+    fireEvent.keyDown(window, { key: 'ArrowDown' });
+
+    const outgoingCard = screen.getByTestId('feed-media-card-article-first-internship');
+    expect(feedDeck()).toHaveAttribute('data-transitioning', 'true');
+    expect(within(outgoingCard).getByText('What Your First Internship Actually Teaches You')).toBeInTheDocument();
+    expect(within(outgoingCard).queryByRole('link')).not.toBeInTheDocument();
+    expect(
+      outgoingCard.querySelector('a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])')
+    ).toBeNull();
+
+    await finishTransition();
+    expect(screen.queryByTestId('feed-media-card-article-first-internship')).not.toBeInTheDocument();
+  });
+
+  it('keeps mobile feed swipes working when the gesture begins on the article link', async () => {
+    mobileViewport = true;
+    installMatchMedia();
+    renderLaunchpad();
+    await navigateToFirstInternshipArticle();
+
+    const articleLink = screen.getByRole('link', { name: 'What Your First Internship Actually Teaches You' });
+    act(() => {
+      dispatchTouch(articleLink, 'touchstart', 100, 300);
+      dispatchTouch(articleLink, 'touchmove', 104, 236);
+    });
+
+    expect(feedDeck()).toHaveAttribute('data-transitioning', 'true');
+    expect(storedEvents().filter((event) => event.eventType === 'outbound_click')).toHaveLength(0);
+
+    await finishTransition();
+    expect(screen.queryByTestId('feed-media-card-article-first-internship')).not.toBeInTheDocument();
   });
 
   it.each([
